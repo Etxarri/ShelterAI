@@ -1,0 +1,20 @@
+# Web Framework
+fastapi
+uvicorn[standard]
+pydantic
+
+# Data Science & Machine Learning
+numpy
+pandas
+scikit-learn
+joblib
+
+# Testing
+pytest
+httpx
+
+# Code Quality
+pylint
+black
+
+# pip install -r requirements.txt
