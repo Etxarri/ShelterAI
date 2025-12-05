@@ -1,0 +1,106 @@
+[
+    {
+        "id": "9dbc785f4c1c816a",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "f6f2187d.f17ca8",
+        "type": "tab",
+        "label": "Test Conexión BD",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "301245f94e1239d9",
+        "type": "postgreSQLConfig",
+        "name": "",
+        "host": "postgres",
+        "hostFieldType": "str",
+        "port": 5432,
+        "portFieldType": "num",
+        "database": "shelterai",
+        "databaseFieldType": "str",
+        "ssl": "false",
+        "sslFieldType": "bool",
+        "applicationName": "",
+        "applicationNameType": "str",
+        "max": 10,
+        "maxFieldType": "num",
+        "idle": 1000,
+        "idleFieldType": "num",
+        "connectionTimeout": 10000,
+        "connectionTimeoutFieldType": "num",
+        "user": "root",
+        "userFieldType": "str",
+        "password": "root",
+        "passwordFieldType": "str"
+    },
+    {
+        "id": "inject_test",
+        "type": "inject",
+        "z": "f6f2187d.f17ca8",
+        "name": "DISPARAR TEST",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "SELECT NOW() as connection_test;",
+        "payloadType": "str",
+        "x": 160,
+        "y": 120,
+        "wires": [
+            [
+                "postgres_node"
+            ]
+        ]
+    },
+    {
+        "id": "debug_node",
+        "type": "debug",
+        "z": "f6f2187d.f17ca8",
+        "name": "RESULTADO EXITOSO",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 640,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "postgres_node",
+        "type": "postgresql",
+        "z": "f6f2187d.f17ca8",
+        "name": "BD ShelterAI",
+        "query": "",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": "",
+        "outputs": 1,
+        "x": 400,
+        "y": 120,
+        "wires": [
+            [
+                "debug_node"
+            ]
+        ]
+    }
+]
