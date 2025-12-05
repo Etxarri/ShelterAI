@@ -18,7 +18,6 @@ services:
       retries: 5
 
   # --- SERVICIO DE INTEGRACIÓN (NODE-RED) ---
-# --- SERVICIO DE INTEGRACIÓN (NODE-RED) ---
   nodered:
     image: nodered/node-red:latest
     container_name: shelterai-nodered
@@ -34,5 +33,10 @@ services:
     # --- LA LÍNEA MÁGICA ---
     # Esto fuerza la instalación automática cada vez que se levanta el contenedor
     command: sh -c "cd /data && npm install --no-audit --no-fund && npm start -- --userDir /data"
+
+volumes:
+  postgres-data:
+  # NOTA: He borrado 'node-red-data' de aquí porque al usar './' arriba
+  # ya no es un volumen gestionado por Docker, sino una carpeta tuya.
 
 #docker compose up -d
