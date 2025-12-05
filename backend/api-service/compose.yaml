@@ -32,7 +32,7 @@ services:
         condition: service_healthy
     # --- LA LÍNEA MÁGICA ---
     # Esto fuerza la instalación automática cada vez que se levanta el contenedor
-    command: sh -c "cd /data && npm install --no-audit --no-fund && npm start -- --userDir /data"
+    command: sh -c "cd /data && npm install --no-audit --no-fund && node-red --userDir /data"
 
 volumes:
   postgres-data:
