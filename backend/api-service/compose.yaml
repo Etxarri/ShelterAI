@@ -18,24 +18,21 @@ services:
       retries: 5
 
   # --- SERVICIO DE INTEGRACIÓN (NODE-RED) ---
+# --- SERVICIO DE INTEGRACIÓN (NODE-RED) ---
   nodered:
     image: nodered/node-red:latest
     container_name: shelterai-nodered
     ports:
       - "1880:1880"
     volumes:
-      # CAMBIO CLAVE: El punto '.' al principio indica "esta carpeta local".
-      # Así tus archivos se guardan en tu proyecto y Git puede verlos.
       - ./node-red-data:/data
     environment:
       - TZ=Europe/Madrid
     depends_on:
       postgres:
         condition: service_healthy
-
-volumes:
-  postgres-data:
-  # NOTA: He borrado 'node-red-data' de aquí porque al usar './' arriba
-  # ya no es un volumen gestionado por Docker, sino una carpeta tuya.
+    # --- LA LÍNEA MÁGICA ---
+    # Esto fuerza la instalación automática cada vez que se levanta el contenedor
+    command: sh -c "cd /data && npm install --no-audit --no-fund && npm start -- --userDir /data"
 
 #docker compose up -d
