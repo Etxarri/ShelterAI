@@ -1,10 +1,10 @@
 package com.shelterai.simulator_os.model;
 
 public enum PriorityLevel {
-    ELDERLY(4),    // Máxima prioridad
+    ELDERLY(4),
     PREGNANT(3),
     CHILD(2),
-    ADULT(1);      // Mínima prioridad
+    ADULT(1);     
 
     private final int value;
     PriorityLevel(int value) { this.value = value; }
