@@ -1,0 +1,119 @@
+import 'package:flutter/material.dart';
+
+import '../services/api_service.dart';
+import '../widgets/refugee_card.dart';
+import '../widgets/shelter_card.dart';
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('ShelterAI'),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Bienvenido a ShelterAI',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text('Asignación inteligente de personas a refugios disponibles.'),
+            const SizedBox(height: 16),
+
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.person),
+                    label: const Text('Añadir refugiado'),
+                    onPressed: () => Navigator.pushNamed(context, '/add_refugee'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.people),
+                    label: const Text('Refugiados'),
+                    onPressed: () => Navigator.pushNamed(context, '/refugees'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.home),
+                    label: const Text('Refugios'),
+                    onPressed: () => Navigator.pushNamed(context, '/shelters'),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+            const Divider(),
+
+            const Text('Resumen rápido', style: TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+
+            FutureBuilder<List<Map<String, dynamic>>>(
+              future: ApiService.getRefugees(),
+              builder: (context, snap) {
+                final count = snap.hasData ? snap.data!.length : null;
+                return ListTile(
+                  leading: const Icon(Icons.people_outline),
+                  title: const Text('Total refugiados (simulado)'),
+                  subtitle: Text(count != null ? '$count registrados' : 'cargando...'),
+                );
+              },
+            ),
+
+            FutureBuilder<List<Map<String, dynamic>>>(
+              future: ApiService.getShelters(),
+              builder: (context, snap) {
+                final count = snap.hasData ? snap.data!.length : null;
+                return ListTile(
+                  leading: const Icon(Icons.house_outlined),
+                  title: const Text('Refugios disponibles (simulado)'),
+                  subtitle: Text(count != null ? '$count registrados' : 'cargando...'),
+                );
+              },
+            ),
+
+            const SizedBox(height: 12),
+            const Divider(),
+
+            const Text('Vistas rápidas', style: TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+
+            // show sample items
+            FutureBuilder<List<Map<String, dynamic>>>(
+              future: ApiService.getShelters(),
+              builder: (context, snap) {
+                final items = snap.data ?? [];
+                if (items.isEmpty) return const SizedBox.shrink();
+                // show first shelter as preview
+                return ShelterCard(data: items.first);
+              },
+            ),
+
+            const SizedBox(height: 8),
+            FutureBuilder<List<Map<String, dynamic>>>(
+              future: ApiService.getRefugees(),
+              builder: (context, snap) {
+                final items = snap.data ?? [];
+                if (items.isEmpty) return const SizedBox.shrink();
+                return RefugeeCard(data: items.first);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
