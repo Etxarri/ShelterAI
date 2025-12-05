@@ -19,20 +19,23 @@ services:
 
   # --- SERVICIO DE INTEGRACIÓN (NODE-RED) ---
   nodered:
-    image: nodered/node-red:latest
+    build: .
+    image: shelterai-nodered:local
     container_name: shelterai-nodered
     ports:
       - "1880:1880"
     volumes:
-      - ./node-red-data:/data
+      # Montamos sólo los archivos del flujo y ajustes que queremos versionar
+      - ./node-red-data/flows.json:/data/flows.json
+      - ./node-red-data/settings.js:/data/settings.js
+      - ./node-red-data/package.json:/data/package.json:ro
     environment:
       - TZ=Europe/Madrid
     depends_on:
       postgres:
         condition: service_healthy
-    # --- LA LÍNEA MÁGICA ---
-    # Esto fuerza la instalación automática cada vez que se levanta el contenedor
-    command: sh -c "cd /data && npm install --no-audit --no-fund && node-red --userDir /data"
+    # Usamos la imagen custom que ya trae los nodos instalados
+    # (no es necesario ejecutar npm install en runtime)
 
 volumes:
   postgres-data:
