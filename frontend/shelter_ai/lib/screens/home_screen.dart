@@ -67,7 +67,7 @@ class HomeScreen extends StatelessWidget {
                 final count = snap.hasData ? snap.data!.length : null;
                 return ListTile(
                   leading: const Icon(Icons.people_outline),
-                  title: const Text('Total refugiados (simulado)'),
+                  title: const Text('Total refugiados'),
                   subtitle: Text(count != null ? '$count registrados' : 'cargando...'),
                 );
               },
@@ -79,7 +79,7 @@ class HomeScreen extends StatelessWidget {
                 final count = snap.hasData ? snap.data!.length : null;
                 return ListTile(
                   leading: const Icon(Icons.house_outlined),
-                  title: const Text('Refugios disponibles (simulado)'),
+                  title: const Text('Refugios disponibles'),
                   subtitle: Text(count != null ? '$count registrados' : 'cargando...'),
                 );
               },
