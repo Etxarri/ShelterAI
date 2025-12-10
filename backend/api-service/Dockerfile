@@ -3,10 +3,11 @@ FROM nodered/node-red:latest
 # Ejecutar como root para instalar dependencias
 USER root
 
-# Copiamos package.json, flows.json y settings a /tmp (temporales)
+# Copiamos package.json, flows.json, settings y schemas a /tmp (temporales)
 COPY node-red-data/package.json /tmp/package.json
 COPY node-red-data/flows.json /tmp/flows.json
 COPY node-red-data/settings.js /tmp/settings.js
+COPY node-red-data/schemas /tmp/schemas
 
 # Creamos script de inicialización
 RUN echo '#!/bin/sh' > /usr/local/bin/init-nodered.sh && \
@@ -15,6 +16,8 @@ RUN echo '#!/bin/sh' > /usr/local/bin/init-nodered.sh && \
     echo '  cp /tmp/flows.json /data/flows.json' >> /usr/local/bin/init-nodered.sh && \
     echo '  cp /tmp/package.json /data/package.json' >> /usr/local/bin/init-nodered.sh && \
     echo '  cp /tmp/settings.js /data/settings.js' >> /usr/local/bin/init-nodered.sh && \
+    echo '  mkdir -p /data/schemas' >> /usr/local/bin/init-nodered.sh && \
+    echo '  cp -r /tmp/schemas/* /data/schemas/' >> /usr/local/bin/init-nodered.sh && \
     echo '  cd /data && npm install --no-audit --no-fund' >> /usr/local/bin/init-nodered.sh && \
     echo '  touch /data/.initialized' >> /usr/local/bin/init-nodered.sh && \
     echo 'fi' >> /usr/local/bin/init-nodered.sh && \
