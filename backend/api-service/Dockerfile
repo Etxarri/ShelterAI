@@ -1,32 +1,25 @@
+# 1. Usamos la imagen base oficial
 FROM nodered/node-red:latest
 
-# Ejecutar como root para instalar dependencias
+# 2. Cambiamos a root para tener permisos de instalación global
 USER root
 
-# Copiamos package.json, flows.json, settings y schemas a /tmp (temporales)
-COPY node-red-data/package.json /tmp/package.json
-COPY node-red-data/flows.json /tmp/flows.json
-COPY node-red-data/settings.js /tmp/settings.js
-COPY node-red-data/schemas /tmp/schemas
+# 3. Nos movemos a la carpeta del CÓDIGO de Node-RED (No a la de datos de usuario)
+# Instalar aquí hace que el plugin sea parte del núcleo del contenedor.
+WORKDIR /usr/src/node-red
 
-# Creamos script de inicialización
-RUN echo '#!/bin/sh' > /usr/local/bin/init-nodered.sh && \
-    echo 'if [ ! -f /data/.initialized ]; then' >> /usr/local/bin/init-nodered.sh && \
-    echo '  echo "Primera inicialización - Copiando archivos..."' >> /usr/local/bin/init-nodered.sh && \
-    echo '  cp /tmp/flows.json /data/flows.json' >> /usr/local/bin/init-nodered.sh && \
-    echo '  cp /tmp/package.json /data/package.json' >> /usr/local/bin/init-nodered.sh && \
-    echo '  cp /tmp/settings.js /data/settings.js' >> /usr/local/bin/init-nodered.sh && \
-    echo '  mkdir -p /data/schemas' >> /usr/local/bin/init-nodered.sh && \
-    echo '  cp -r /tmp/schemas/* /data/schemas/' >> /usr/local/bin/init-nodered.sh && \
-    echo '  cd /data && npm install --no-audit --no-fund' >> /usr/local/bin/init-nodered.sh && \
-    echo '  touch /data/.initialized' >> /usr/local/bin/init-nodered.sh && \
-    echo 'fi' >> /usr/local/bin/init-nodered.sh && \
-    echo 'chown -R node-red:node-red /data' >> /usr/local/bin/init-nodered.sh && \
-    echo 'exec npm start -- --userDir /data' >> /usr/local/bin/init-nodered.sh && \
-    chmod +x /usr/local/bin/init-nodered.sh
+# 4. INSTALACIÓN DE PLUGINS (Aquí es donde ocurre la magia)
+# Al ponerlo aquí, Docker "hornea" el plugin dentro de la imagen.
+# Ya no hace falta Internet al arrancar, ni package.json en /data.
+RUN npm install node-red-contrib-postgresql
 
-# Volvemos al usuario por defecto
+# (Opcional) Si necesitas más plugins en el futuro, añádelos aquí:
+# RUN npm install node-red-dashboard
+
+# 5. Volvemos a la carpeta de datos y al usuario normal por seguridad
+WORKDIR /data
 USER node-red
 
-# Usamos el script de inicialización
-CMD ["/usr/local/bin/init-nodered.sh"]
+# 6. No necesitamos CMD ni scripts raros.
+# Usamos el arranque por defecto de Node-RED, que leerá tu carpeta ./node-red-data
+# gracias al volumen que definimos en el compose.yaml.
