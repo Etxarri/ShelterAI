@@ -25,21 +25,20 @@ services:
     ports:
       - "1880:1880"
     volumes:
-      # Montamos sólo los archivos del flujo y ajustes que queremos versionar
-      - ./node-red-data/flows.json:/data/flows.json
-      - ./node-red-data/settings.js:/data/settings.js
-      - ./node-red-data/package.json:/data/package.json:ro
+      # Usamos volumen nombrado para evitar bloqueos de archivos en Windows
+      - nodered-data:/data
     environment:
       - TZ=Europe/Madrid
+      - FLOWS=flows.json
     depends_on:
       postgres:
         condition: service_healthy
-    # Usamos la imagen custom que ya trae los nodos instalados
-    # (no es necesario ejecutar npm install en runtime)
+    # El script init-nodered.sh copiará flows.json inicial si no existe
+    # Los cambios se guardarán en el volumen nodered-data
 
 volumes:
   postgres-data:
-  # NOTA: He borrado 'node-red-data' de aquí porque al usar './' arriba
-  # ya no es un volumen gestionado por Docker, sino una carpeta tuya.
+  nodered-data:
+    # Volumen gestionado por Docker - evita conflictos de bloqueo
 
 #docker compose up -d
