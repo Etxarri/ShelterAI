@@ -56,9 +56,9 @@ jobs:
             -Dsonar.java.binaries=target/classes
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2.16.0
+        uses: subosito/flutter-action@44ac965b96f18d999802d4b807e3256d5a3f9fa1  # v2.16.0
         with:
-          flutter-version: '3.24.0'
+          flutter-version: '3.29.1'
           channel: 'stable'
 
       - name: Install Flutter dependencies
@@ -74,7 +74,7 @@ jobs:
         run: flutter test --coverage || echo "No tests available yet"
 
       - name: SonarCloud Scan for Flutter
-        uses: SonarSource/sonarcloud-github-action@v3.1.0
+        uses: SonarSource/sonarcloud-github-action@e44258b109568baa0df60ed515909fc6c72cba92  # v3.1.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
