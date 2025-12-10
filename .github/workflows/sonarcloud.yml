@@ -80,7 +80,7 @@ jobs:
         with:
           projectBaseDir: frontend/shelter_ai
           args: >
-            -Dsonar.projectKey=Etxarri_ShelterAI_Flutter
+            -Dsonar.projectKey=Etxarri_ShelterAI
             -Dsonar.organization=etxarri
             -Dsonar.sources=lib
             -Dsonar.tests=test
