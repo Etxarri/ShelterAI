@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../services/api_service.dart';
-import '../widgets/refugee_card.dart';
-import '../widgets/shelter_card.dart';
+import 'package:shelter_ai/services/api_service.dart';
+import 'package:shelter_ai/widgets/refugee_card.dart';
+import 'package:shelter_ai/widgets/shelter_card.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});

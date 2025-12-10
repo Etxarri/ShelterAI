@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
+// 👇 ESTA LÍNEA ES LA QUE ARREGLA EL ERROR DE CONEXIÓN
+import 'package:shelter_ai/services/api_service.dart';
 
 class AddRefugeeScreen extends StatefulWidget {
   const AddRefugeeScreen({super.key});
@@ -63,7 +64,7 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
       'special_needs': _specialNeedsCtrl.text.trim(),
       'education_level': _educationCtrl.text.trim(),
       'employment_status': _employmentCtrl.text.trim(),
-      'registration_date': DateTime.now().toIso8601String().split('T')[0], // YYYY-MM-DD
+      'registration_date': DateTime.now().toIso8601String().split('T')[0],
       'family_id': _familyIdCtrl.text.isEmpty ? null : int.tryParse(_familyIdCtrl.text.trim()),
     };
 
@@ -124,33 +125,15 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
                 decoration: const InputDecoration(labelText: 'Género'),
               ),
               const SizedBox(height: 8),
-              TextFormField(
-                controller: _nationalityCtrl,
-                decoration: const InputDecoration(labelText: 'Nacionalidad'),
-              ),
+              TextFormField(controller: _nationalityCtrl, decoration: const InputDecoration(labelText: 'Nacionalidad')),
               const SizedBox(height: 8),
-              TextFormField(
-                controller: _languagesCtrl,
-                decoration: const InputDecoration(labelText: 'Idiomas (separados por comas)'),
-              ),
+              TextFormField(controller: _languagesCtrl, decoration: const InputDecoration(labelText: 'Idiomas (separados por comas)')),
               const SizedBox(height: 8),
-              TextFormField(
-                controller: _phoneCtrl,
-                decoration: const InputDecoration(labelText: 'Teléfono'),
-                keyboardType: TextInputType.phone,
-              ),
+              TextFormField(controller: _phoneCtrl, decoration: const InputDecoration(labelText: 'Teléfono'), keyboardType: TextInputType.phone),
               const SizedBox(height: 8),
-              TextFormField(
-                controller: _emailCtrl,
-                decoration: const InputDecoration(labelText: 'Email'),
-                keyboardType: TextInputType.emailAddress,
-              ),
+              TextFormField(controller: _emailCtrl, decoration: const InputDecoration(labelText: 'Email'), keyboardType: TextInputType.emailAddress),
               const SizedBox(height: 8),
-              TextFormField(
-                controller: _medicalCtrl,
-                decoration: const InputDecoration(labelText: 'Condiciones médicas'),
-                maxLines: 2,
-              ),
+              TextFormField(controller: _medicalCtrl, decoration: const InputDecoration(labelText: 'Condiciones médicas'), maxLines: 2),
               const SizedBox(height: 8),
               SwitchListTile(
                 title: const Text('Tiene discapacidad'),
@@ -158,33 +141,15 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
                 onChanged: (v) => setState(() => _hasDisability = v),
               ),
               const SizedBox(height: 8),
-              TextFormField(
-                controller: _vulnerabilityCtrl,
-                decoration: const InputDecoration(labelText: 'Puntuación de vulnerabilidad'),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              ),
+              TextFormField(controller: _vulnerabilityCtrl, decoration: const InputDecoration(labelText: 'Puntuación de vulnerabilidad'), keyboardType: const TextInputType.numberWithOptions(decimal: true)),
               const SizedBox(height: 8),
-              TextFormField(
-                controller: _specialNeedsCtrl,
-                decoration: const InputDecoration(labelText: 'Necesidades especiales'),
-                maxLines: 2,
-              ),
+              TextFormField(controller: _specialNeedsCtrl, decoration: const InputDecoration(labelText: 'Necesidades especiales'), maxLines: 2),
               const SizedBox(height: 8),
-              TextFormField(
-                controller: _educationCtrl,
-                decoration: const InputDecoration(labelText: 'Nivel educativo'),
-              ),
+              TextFormField(controller: _educationCtrl, decoration: const InputDecoration(labelText: 'Nivel educativo')),
               const SizedBox(height: 8),
-              TextFormField(
-                controller: _employmentCtrl,
-                decoration: const InputDecoration(labelText: 'Estado laboral'),
-              ),
+              TextFormField(controller: _employmentCtrl, decoration: const InputDecoration(labelText: 'Estado laboral')),
               const SizedBox(height: 8),
-              TextFormField(
-                controller: _familyIdCtrl,
-                decoration: const InputDecoration(labelText: 'ID de familia (opcional)'),
-                keyboardType: TextInputType.number,
-              ),
+              TextFormField(controller: _familyIdCtrl, decoration: const InputDecoration(labelText: 'ID de familia (opcional)'), keyboardType: TextInputType.number),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _save,
