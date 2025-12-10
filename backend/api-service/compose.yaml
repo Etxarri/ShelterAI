@@ -38,7 +38,7 @@ services:
 
 volumes:
   postgres-data:
-  nodered-data:
+  #nodered-data:
     # Volumen gestionado por Docker - evita conflictos de bloqueo
 
 #docker compose up -d
