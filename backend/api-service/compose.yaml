@@ -25,20 +25,16 @@ services:
     ports:
       - "1880:1880"
     volumes:
-      # Usamos volumen nombrado para evitar bloqueos de archivos en Windows
-      - nodered-data:/data
+      # CORRECCIÓN CLAVE: Usamos './' para que Docker lea la carpeta del proyecto
+      # Así Git y Docker ven los mismos archivos.
+      - ./node-red-data:/data
     environment:
       - TZ=Europe/Madrid
       - FLOWS=flows.json
     depends_on:
       postgres:
         condition: service_healthy
-    # El script init-nodered.sh copiará flows.json inicial si no existe
-    # Los cambios se guardarán en el volumen nodered-data
 
 volumes:
   postgres-data:
-  #nodered-data:
-    # Volumen gestionado por Docker - evita conflictos de bloqueo
-
-#docker compose up -d
+  # nodered-data:  <-- ELIMINADO. No queremos que Docker gestione esto, queremos gestionarlo nosotros con Git.
