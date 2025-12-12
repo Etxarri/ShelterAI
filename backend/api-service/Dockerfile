@@ -1,25 +1,20 @@
-# 1. Usamos la imagen base oficial
+# Imagen base oficial de Node-RED
 FROM nodered/node-red:latest
 
-# 2. Cambiamos a root para tener permisos de instalación global
+# Cambiar a root para instalar globalmente
 USER root
 
-# 3. Nos movemos a la carpeta del CÓDIGO de Node-RED (No a la de datos de usuario)
-# Instalar aquí hace que el plugin sea parte del núcleo del contenedor.
+# Instalar el plugin en la carpeta de Node-RED (no globalmente)
+# Esto asegura que Node-RED lo encuentra
 WORKDIR /usr/src/node-red
-
-# 4. INSTALACIÓN DE PLUGINS (Aquí es donde ocurre la magia)
-# Al ponerlo aquí, Docker "hornea" el plugin dentro de la imagen.
-# Ya no hace falta Internet al arrancar, ni package.json en /data.
 RUN npm install node-red-contrib-postgresql
 
-# (Opcional) Si necesitas más plugins en el futuro, añádelos aquí:
-# RUN npm install node-red-dashboard
+# NO cambiar WORKDIR al final para no interferir con el ENTRYPOINT relativo
 
-# 5. Volvemos a la carpeta de datos y al usuario normal por seguridad
-WORKDIR /data
+# Volver al usuario node-red
 USER node-red
 
-# 6. No necesitamos CMD ni scripts raros.
-# Usamos el arranque por defecto de Node-RED, que leerá tu carpeta ./node-red-data
-# gracias al volumen que definimos en el compose.yaml.
+# Heredar el ENTRYPOINT y CMD de la imagen base
+# (no necesitamos especificar nada, se heredan automáticamente)
+
+
