@@ -1,0 +1,7 @@
+services:
+  # --- SERVICIO FRONTEND (FLUTTER WEB) ---
+  frontend:
+    build: .
+    container_name: shelterai-frontend
+    ports:
+      - "8080:80"
