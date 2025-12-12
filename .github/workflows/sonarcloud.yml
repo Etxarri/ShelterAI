@@ -41,10 +41,10 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Build and Test Backend
-        working-directory: backend/api-service
+      - name: Build and Test Simulator OS
+        working-directory: backend/simulator-os
         run: |
-          mvn -B -Dspring.profiles.active=test verify
+          mvn -B verify
           mvn -B jacoco:report
 
       - name: SonarCloud Analysis (Backend)
