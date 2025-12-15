@@ -4,8 +4,21 @@ import '../services/api_service.dart';
 import '../widgets/refugee_card.dart';
 import '../widgets/shelter_card.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _refreshKey = 0;
+
+  void _refresh() {
+    setState(() {
+      _refreshKey++;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +46,10 @@ class HomeScreen extends StatelessWidget {
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.person),
                     label: const Text('Añadir refugiado'),
-                    onPressed: () => Navigator.pushNamed(context, '/add_refugee'),
+                    onPressed: () async {
+                      final result = await Navigator.pushNamed(context, '/add_refugee');
+                      if (result == true) _refresh();
+                    },
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -62,6 +78,7 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 8),
 
             FutureBuilder<List<Map<String, dynamic>>>(
+              key: ValueKey('refugees_count_$_refreshKey'),
               future: ApiService.getRefugees(),
               builder: (context, snap) {
                 final count = snap.hasData ? snap.data!.length : null;
@@ -104,6 +121,7 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 8),
             FutureBuilder<List<Map<String, dynamic>>>(
+              key: ValueKey('refugee_preview_$_refreshKey'),
               future: ApiService.getRefugees(),
               builder: (context, snap) {
                 final items = snap.data ?? [];

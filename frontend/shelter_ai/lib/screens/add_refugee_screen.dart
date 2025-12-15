@@ -17,14 +17,10 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
   String _gender = 'Masculino';
   final TextEditingController _nationalityCtrl = TextEditingController();
   final TextEditingController _languagesCtrl = TextEditingController();
-  final TextEditingController _phoneCtrl = TextEditingController();
-  final TextEditingController _emailCtrl = TextEditingController();
   final TextEditingController _medicalCtrl = TextEditingController();
   bool _hasDisability = false;
   final TextEditingController _vulnerabilityCtrl = TextEditingController();
   final TextEditingController _specialNeedsCtrl = TextEditingController();
-  final TextEditingController _educationCtrl = TextEditingController();
-  final TextEditingController _employmentCtrl = TextEditingController();
   final TextEditingController _familyIdCtrl = TextEditingController();
 
   @override
@@ -34,13 +30,9 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
     _ageCtrl.dispose();
     _nationalityCtrl.dispose();
     _languagesCtrl.dispose();
-    _phoneCtrl.dispose();
-    _emailCtrl.dispose();
     _medicalCtrl.dispose();
     _vulnerabilityCtrl.dispose();
     _specialNeedsCtrl.dispose();
-    _educationCtrl.dispose();
-    _employmentCtrl.dispose();
     _familyIdCtrl.dispose();
     super.dispose();
   }
@@ -55,16 +47,11 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
       'gender': _gender,
       'nationality': _nationalityCtrl.text.trim(),
       'languages_spoken': _languagesCtrl.text.trim(),
-      'phone_number': _phoneCtrl.text.trim(),
-      'email': _emailCtrl.text.trim(),
-      'medical_conditions': _medicalCtrl.text.trim(),
-      'has_disability': _hasDisability,
-      'vulnerability_score': double.tryParse(_vulnerabilityCtrl.text.trim()) ?? 0.0,
-      'special_needs': _specialNeedsCtrl.text.trim(),
-      'education_level': _educationCtrl.text.trim(),
-      'employment_status': _employmentCtrl.text.trim(),
-      'registration_date': DateTime.now().toIso8601String().split('T')[0], // YYYY-MM-DD
       'family_id': _familyIdCtrl.text.isEmpty ? null : int.tryParse(_familyIdCtrl.text.trim()),
+      'medical_conditions': _medicalCtrl.text.trim(),
+      'special_needs': _specialNeedsCtrl.text.trim(),
+      'vulnerability_score': int.tryParse(_vulnerabilityCtrl.text.trim()) ?? 0,
+      'has_disability': _hasDisability,
     };
 
     try {
@@ -135,18 +122,6 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
               ),
               const SizedBox(height: 8),
               TextFormField(
-                controller: _phoneCtrl,
-                decoration: const InputDecoration(labelText: 'Teléfono'),
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _emailCtrl,
-                decoration: const InputDecoration(labelText: 'Email'),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
                 controller: _medicalCtrl,
                 decoration: const InputDecoration(labelText: 'Condiciones médicas'),
                 maxLines: 2,
@@ -161,23 +136,13 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
               TextFormField(
                 controller: _vulnerabilityCtrl,
                 decoration: const InputDecoration(labelText: 'Puntuación de vulnerabilidad'),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _specialNeedsCtrl,
                 decoration: const InputDecoration(labelText: 'Necesidades especiales'),
                 maxLines: 2,
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _educationCtrl,
-                decoration: const InputDecoration(labelText: 'Nivel educativo'),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _employmentCtrl,
-                decoration: const InputDecoration(labelText: 'Estado laboral'),
               ),
               const SizedBox(height: 8),
               TextFormField(
