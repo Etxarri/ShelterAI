@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../services/api_service.dart';
-import '../widgets/refugee_card.dart';
+import 'package:shelter_ai/services/api_service.dart';
+import 'package:shelter_ai/widgets/refugee_card.dart';
 
 class RefugeeListScreen extends StatefulWidget {
   const RefugeeListScreen({super.key});

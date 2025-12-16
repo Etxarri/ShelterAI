@@ -1,16 +1,19 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'dart:convert';
 
 import 'package:shelter_ai/main.dart';
+import 'package:shelter_ai/services/api_service.dart';
 
 void main() {
   testWidgets('Main app shows home welcome and add button', (WidgetTester tester) async {
+    // Setup mock para evitar llamadas reales a la API
+    final mockClient = MockClient((request) async {
+      return http.Response(json.encode([]), 200);
+    });
+    ApiService.client = mockClient;
+
     // Build the app
     await tester.pumpWidget(const ShelterAIApp());
     // Wait for any async builders to finish

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../services/api_service.dart';
-import '../widgets/shelter_card.dart';
+import 'package:shelter_ai/services/api_service.dart';
+import 'package:shelter_ai/widgets/shelter_card.dart';
 
 class ShelterListScreen extends StatelessWidget {
   const ShelterListScreen({super.key});

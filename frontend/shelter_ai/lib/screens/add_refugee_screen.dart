@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
+// 👇 ESTA LÍNEA ES LA QUE ARREGLA EL ERROR DE CONEXIÓN
+import 'package:shelter_ai/services/api_service.dart';
 
 class AddRefugeeScreen extends StatefulWidget {
   const AddRefugeeScreen({super.key});
@@ -111,15 +112,9 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
                 decoration: const InputDecoration(labelText: 'Género'),
               ),
               const SizedBox(height: 8),
-              TextFormField(
-                controller: _nationalityCtrl,
-                decoration: const InputDecoration(labelText: 'Nacionalidad'),
-              ),
+              TextFormField(controller: _nationalityCtrl, decoration: const InputDecoration(labelText: 'Nacionalidad')),
               const SizedBox(height: 8),
-              TextFormField(
-                controller: _languagesCtrl,
-                decoration: const InputDecoration(labelText: 'Idiomas (separados por comas)'),
-              ),
+              TextFormField(controller: _languagesCtrl, decoration: const InputDecoration(labelText: 'Idiomas (separados por comas)')),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _medicalCtrl,
@@ -139,11 +134,7 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 8),
-              TextFormField(
-                controller: _specialNeedsCtrl,
-                decoration: const InputDecoration(labelText: 'Necesidades especiales'),
-                maxLines: 2,
-              ),
+              TextFormField(controller: _specialNeedsCtrl, decoration: const InputDecoration(labelText: 'Necesidades especiales'), maxLines: 2),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _familyIdCtrl,
