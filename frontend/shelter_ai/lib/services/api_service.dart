@@ -6,7 +6,7 @@ class ApiService {
   // Base URL for Node-RED API - ajusta esto a tu configuración
   static const String baseUrl = 'http://localhost:1880/api';
   
-  // 🔴 CAMBIO CLAVE: Creamos un cliente que podemos sustituir en los tests
+  // Creamos un cliente que podemos sustituir en los tests
   static http.Client client = http.Client();
 
   // GET /api/refugees - Obtener todos los refugiados
@@ -45,7 +45,7 @@ class ApiService {
     }
   }
 
-  // POST /api/refugees - Añadir un nuevo refugiado
+  // POST /api/refugees - Añadir un nuevo refugiado (sin asignación)
   static Future<Map<String, dynamic>> addRefugee(Map<String, dynamic> refugee) async {
     try {
       final response = await client.post(Uri.parse('$baseUrl/refugees'),
@@ -84,6 +84,32 @@ class ApiService {
     } catch (e) {
       // ignore: avoid_print
       print('Error adding refugee: $e');
+      rethrow;
+    }
+  }
+
+  // POST /api/refugees-with-assignment - Crear refugiado CON asignación automática de IA
+  static Future<Map<String, dynamic>> addRefugeeWithAssignment(Map<String, dynamic> refugee) async {
+    try {
+      final response = await client.post(
+        Uri.parse('$baseUrl/refugees-with-assignment'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(refugee),
+      );
+      
+      // ignore: avoid_print
+      print('Código respuesta assignment: ${response.statusCode}');
+      // ignore: avoid_print
+      print('Cuerpo respuesta assignment: "${response.body}"');
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return json.decode(response.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to add refugee with assignment: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      // ignore: avoid_print
+      print('Error adding refugee with assignment: $e');
       rethrow;
     }
   }
@@ -138,6 +164,24 @@ class ApiService {
     } catch (e) {
       // ignore: avoid_print
       print('Error fetching available shelters: $e');
+      rethrow;
+    }
+  }
+
+  // GET /api/assignments/refugee/:refugeeId - Obtener asignaciones de un refugiado
+  static Future<List<Map<String, dynamic>>> getAssignments(String refugeeId) async {
+    try {
+      final response = await client.get(Uri.parse('$baseUrl/assignments/$refugeeId'));
+      
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.cast<Map<String, dynamic>>();
+      } else {
+        throw Exception('Failed to load assignments: ${response.statusCode}');
+      }
+    } catch (e) {
+      // ignore: avoid_print
+      print('Error fetching assignments: $e');
       rethrow;
     }
   }

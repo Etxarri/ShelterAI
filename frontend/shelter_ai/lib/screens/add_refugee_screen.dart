@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-// 👇 ESTA LÍNEA ES LA QUE ARREGLA EL ERROR DE CONEXIÓN
 import 'package:shelter_ai/services/api_service.dart';
+import 'package:shelter_ai/models/refugee_assignment_response.dart';
+import 'package:shelter_ai/screens/assignment_detail_screen.dart';
 
 class AddRefugeeScreen extends StatefulWidget {
   const AddRefugeeScreen({super.key});
@@ -38,8 +39,12 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
     super.dispose();
   }
 
+  bool _isLoading = false;
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
 
     final Map<String, dynamic> payload = {
       'first_name': _firstNameCtrl.text.trim(),
@@ -49,21 +54,158 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
       'nationality': _nationalityCtrl.text.trim(),
       'languages_spoken': _languagesCtrl.text.trim(),
       'family_id': _familyIdCtrl.text.isEmpty ? null : int.tryParse(_familyIdCtrl.text.trim()),
-      'medical_conditions': _medicalCtrl.text.trim(),
-      'special_needs': _specialNeedsCtrl.text.trim(),
+      'medical_conditions': _medicalCtrl.text.trim().isEmpty ? null : _medicalCtrl.text.trim(),
+      'special_needs': _specialNeedsCtrl.text.trim().isEmpty ? null : _specialNeedsCtrl.text.trim(),
       'vulnerability_score': int.tryParse(_vulnerabilityCtrl.text.trim()) ?? 0,
       'has_disability': _hasDisability,
     };
 
     try {
-      await ApiService.addRefugee(payload);
+      // Usar el endpoint con asignación automática
+      final response = await ApiService.addRefugeeWithAssignment(payload);
+      final assignmentResponse = RefugeeAssignmentResponse.fromJson(response);
+      
+      setState(() => _isLoading = false);
+      
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Refugiado guardado')));
-      Navigator.of(context).pop(true);
+      
+      // Mostrar resultado y navegar a la pantalla de detalles
+      _showSuccessDialog(assignmentResponse);
     } catch (e) {
+      setState(() => _isLoading = false);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
+  }
+
+  void _showSuccessDialog(RefugeeAssignmentResponse response) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green, size: 32),
+            SizedBox(width: 12),
+            Expanded(child: Text('Refugiado Registrado')),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${response.refugee.fullName}',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 16),
+            Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.home, color: Colors.blue, size: 20),
+                      SizedBox(width: 8),
+                      Text('Refugio Asignado:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    response.assignment.shelterName,
+                    style: TextStyle(fontSize: 16, color: Colors.blue.shade800),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildScoreCard(
+                    'Prioridad',
+                    response.assignment.priorityScore,
+                    response.assignment.priorityColor,
+                  ),
+                ),
+                SizedBox(width: 8),
+                Expanded(
+                  child: _buildScoreCard(
+                    'Confianza',
+                    response.assignment.confidencePercentage,
+                    Colors.teal,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Cerrar diálogo
+              Navigator.of(context).pop(true); // Volver a la lista
+            },
+            child: Text('Cerrar'),
+          ),
+          ElevatedButton.icon(
+            icon: Icon(Icons.info_outline),
+            label: Text('Ver Detalles'),
+            onPressed: () {
+              Navigator.of(context).pop(); // Cerrar diálogo
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (context) => AssignmentDetailScreen(
+                    response: response,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScoreCard(String label, double value, Color color) {
+    return Container(
+      padding: EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            label,
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+          ),
+          SizedBox(height: 4),
+          Text(
+            '${value.toStringAsFixed(0)}${label == 'Confianza' ? '%' : ''}',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

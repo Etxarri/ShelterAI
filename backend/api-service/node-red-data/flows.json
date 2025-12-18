@@ -28,6 +28,13 @@
         "info": "API REST para gestión de asignaciones"
     },
     {
+        "id": "tab_ai_integration",
+        "type": "tab",
+        "label": "AI Integration",
+        "disabled": false,
+        "info": "Integración con el servicio de IA para asignación automática de refugios"
+    },
+    {
         "id": "301245f94e1239d9",
         "type": "postgreSQLConfig",
         "name": "ShelterAI DB",
@@ -424,7 +431,8 @@
         "y": 80,
         "wires": [
             [
-                "refugee_response"
+                "refugee_response",
+                "35f3ec724bd95540"
             ]
         ]
     },
@@ -450,8 +458,13 @@
         "type": "function",
         "z": "tab_refugees",
         "name": "Prepare Query",
-        "func": "msg.queryParameters = [parseInt(msg.req.params.id)];\nmsg.payload = \"SELECT * FROM refugees WHERE id = $1\";\nreturn msg;",
+        "func": "const data = msg.payload;\n\nmsg.topic = `INSERT INTO refugees (first_name, last_name, age, gender, nationality, languages_spoken, family_id, medical_conditions, has_disability, special_needs, vulnerability_score, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    parseInt(msg.req.params.id)\n];\n\nreturn msg;",
         "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
         "x": 380,
         "y": 140,
         "wires": [
@@ -465,7 +478,7 @@
         "type": "postgresql",
         "z": "tab_refugees",
         "name": "Query Refugee",
-        "query": "",
+        "query": "{{msg.topic}}",
         "postgreSQLConfig": "301245f94e1239d9",
         "split": false,
         "rowsPerMsg": "",
@@ -625,11 +638,12 @@
         "split": false,
         "rowsPerMsg": "",
         "outputs": 1,
-        "x": 570,
+        "x": 560,
         "y": 320,
         "wires": [
             [
-                "refugee_created_response"
+                "refugee_created_response",
+                "c9f9b61729708a1f"
             ]
         ]
     },
@@ -729,7 +743,8 @@
         "y": 440,
         "wires": [
             [
-                "refugee_delete_response"
+                "refugee_delete_response",
+                "0f71a093d5abb7e6"
             ]
         ]
     },
@@ -807,6 +822,57 @@
         "headers": {},
         "x": 1020,
         "y": 320,
+        "wires": []
+    },
+    {
+        "id": "c9f9b61729708a1f",
+        "type": "debug",
+        "z": "tab_refugees",
+        "name": "debug 6",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 820,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "35f3ec724bd95540",
+        "type": "debug",
+        "z": "tab_refugees",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 580,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "0f71a093d5abb7e6",
+        "type": "debug",
+        "z": "tab_refugees",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 649.2000122070312,
+        "y": 522.2000122070312,
         "wires": []
     },
     {
@@ -1192,7 +1258,7 @@
         "split": false,
         "rowsPerMsg": "",
         "outputs": 1,
-        "x": 380,
+        "x": 420,
         "y": 80,
         "wires": [
             [
@@ -1209,8 +1275,8 @@
         "method": "get",
         "upload": false,
         "swaggerDoc": "",
-        "x": 160,
-        "y": 140,
+        "x": 210,
+        "y": 720,
         "wires": [
             [
                 "assignment_get_by_id_prepare"
@@ -1222,13 +1288,19 @@
         "type": "function",
         "z": "tab_assignments",
         "name": "Prepare Query",
-        "func": "msg.queryParameters = [parseInt(msg.req.params.id)];\nmsg.payload = \"SELECT * FROM assignments WHERE id = $1\";\nreturn msg;",
+        "func": "var idRefugiado = (msg.req && msg.req.params && msg.req.params.id) || msg.payload || 1;\nvar idNumero = parseInt(idRefugiado);\n\nmsg.topic = `SELECT * FROM assignments WHERE refugee_id = $1 ORDER BY created_at DESC`;\n\nmsg.params = [\n    idNumero\n];\n\n// Pasamos los parámetros al payload para que el nodo Postgres los lea\nmsg.payload = msg.params;\n\nreturn msg;",
         "outputs": 1,
-        "x": 390,
-        "y": 140,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 720,
         "wires": [
             [
-                "assignment_get_by_id_query"
+                "assignment_get_by_id_query",
+                "9aafc1cfb84bc8c1"
             ]
         ]
     },
@@ -1242,11 +1314,12 @@
         "split": false,
         "rowsPerMsg": "",
         "outputs": 1,
-        "x": 600,
-        "y": 140,
+        "x": 730,
+        "y": 720,
         "wires": [
             [
-                "assignment_single_response"
+                "5685489b661371a8",
+                "assignment_http_response"
             ]
         ]
     },
@@ -1272,7 +1345,7 @@
         "type": "function",
         "z": "tab_assignments",
         "name": "Prepare Query",
-        "func": "msg.queryParameters = [parseInt(msg.req.params.refugeeId)];\nmsg.payload = \"SELECT * FROM assignments WHERE refugee_id = $1 ORDER BY id\";\nreturn msg;",
+        "func": "msg.params = [parseInt(msg.req.params.refugeeId)];\nmsg.topic = \"SELECT a.*, s.name as shelter_name FROM assignments a LEFT JOIN shelters s ON a.shelter_id = s.id WHERE a.refugee_id = $1 ORDER BY a.id DESC\";\nreturn msg;",
         "outputs": 1,
         "x": 470,
         "y": 200,
@@ -1495,9 +1568,7 @@
         "x": 600,
         "y": 440,
         "wires": [
-            [
-                "assignment_single_response"
-            ]
+            []
         ]
     },
     {
@@ -1546,7 +1617,8 @@
         "y": 500,
         "wires": [
             [
-                "assignment_delete_response"
+                "assignment_delete_response",
+                "435d2f91358fdeb3"
             ]
         ]
     },
@@ -1559,21 +1631,6 @@
         "outputs": 1,
         "x": 810,
         "y": 80,
-        "wires": [
-            [
-                "assignment_http_response"
-            ]
-        ]
-    },
-    {
-        "id": "assignment_single_response",
-        "type": "function",
-        "z": "tab_assignments",
-        "name": "Format Single",
-        "func": "if (msg.payload && msg.payload.length > 0) {\n    msg.statusCode = 200;\n    msg.payload = msg.payload[0];\n} else {\n    msg.statusCode = 404;\n    msg.payload = { error: \"Assignment not found\" };\n}\nreturn msg;",
-        "outputs": 1,
-        "x": 800,
-        "y": 140,
         "wires": [
             [
                 "assignment_http_response"
@@ -1618,7 +1675,369 @@
         "statusCode": "",
         "headers": {},
         "x": 1020,
-        "y": 280,
+        "y": 720,
+        "wires": []
+    },
+    {
+        "id": "5685489b661371a8",
+        "type": "debug",
+        "z": "tab_assignments",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 860,
+        "y": 800,
+        "wires": []
+    },
+    {
+        "id": "9aafc1cfb84bc8c1",
+        "type": "debug",
+        "z": "tab_assignments",
+        "name": "debug 5",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 600,
+        "y": 800,
+        "wires": []
+    },
+    {
+        "id": "435d2f91358fdeb3",
+        "type": "debug",
+        "z": "tab_assignments",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 740,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "ai_assign_shelter_endpoint",
+        "type": "http in",
+        "z": "tab_ai_integration",
+        "name": "POST /api/ai/assign-shelter",
+        "url": "/api/ai/assign-shelter",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 170,
+        "y": 100,
+        "wires": [
+            [
+                "ai_prepare_request"
+            ]
+        ]
+    },
+    {
+        "id": "ai_prepare_request",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Preparar datos para IA",
+        "func": "// Guardar datos originales del refugiado\nconst refugeeData = msg.payload;\n\n// Preparar payload para el servicio de IA\nmsg.payload = {\n    first_name: refugeeData.first_name,\n    last_name: refugeeData.last_name,\n    age: refugeeData.age,\n    gender: refugeeData.gender,\n    nationality: refugeeData.nationality,\n    languages_spoken: refugeeData.languages_spoken,\n    medical_conditions: refugeeData.medical_conditions,\n    has_disability: refugeeData.has_disability || false,\n    vulnerability_score: refugeeData.vulnerability_score || 0.0,\n    special_needs: refugeeData.special_needs,\n    family_id: refugeeData.family_id\n};\n\n// Guardar en contexto para usar después\nmsg.refugeeData = refugeeData;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 430,
+        "y": 100,
+        "wires": [
+            [
+                "ai_call_service"
+            ]
+        ]
+    },
+    {
+        "id": "ai_call_service",
+        "type": "http request",
+        "z": "tab_ai_integration",
+        "name": "Llamar servicio IA",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://ai-service:8000/api/assign-shelter",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [
+            {
+                "keyType": "Content-Type",
+                "keyValue": "",
+                "valueType": "application/json",
+                "valueValue": ""
+            }
+        ],
+        "x": 670,
+        "y": 100,
+        "wires": [
+            [
+                "ai_process_response"
+            ]
+        ]
+    },
+    {
+        "id": "ai_process_response",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Procesar respuesta IA",
+        "func": "// La respuesta del servicio IA contiene:\n// - shelter_id: ID del refugio asignado\n// - shelter_name: Nombre del refugio\n// - confidence_score: Confianza de la asignación\n// - priority_score: Prioridad calculada\n// - explanation: Explicación de la asignación\n\nconst aiResponse = msg.payload;\n\n// Formatear respuesta completa\nmsg.payload = {\n    shelter_id: aiResponse.shelter_id,\n    shelter_name: aiResponse.shelter_name,\n    confidence_score: aiResponse.confidence_score,\n    priority_score: aiResponse.priority_score,\n    explanation: aiResponse.explanation,\n    alternative_shelters: aiResponse.alternative_shelters || []\n};\n\nmsg.statusCode = 200;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 900,
+        "y": 100,
+        "wires": [
+            [
+                "ai_http_response"
+            ]
+        ]
+    },
+    {
+        "id": "ai_http_response",
+        "type": "http response",
+        "z": "tab_ai_integration",
+        "name": "Respuesta HTTP",
+        "statusCode": "",
+        "headers": {},
+        "x": 1130,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "refugee_post_with_ai",
+        "type": "http in",
+        "z": "tab_ai_integration",
+        "name": "POST /api/refugees-with-assignment",
+        "url": "/api/refugees-with-assignment",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 160,
+        "wires": [
+            [
+                "save_refugee_first"
+            ]
+        ]
+    },
+    {
+        "id": "save_refugee_first",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Preparar INSERT refugiado",
+        "func": "const data = msg.payload;\n\n// Guardar datos completos para después\nflow.set('tempRefugeeData', data);\n\nmsg.topic = `INSERT INTO refugees (first_name, last_name, age, gender, nationality, languages_spoken, family_id, medical_conditions, has_disability, special_needs, vulnerability_score, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    data.first_name, \n    data.last_name, \n    data.age, \n    data.gender,\n    data.nationality, \n    data.languages_spoken, \n    data.family_id,\n    data.medical_conditions,\n    data.has_disability || false,\n    data.special_needs, \n    data.vulnerability_score || 0\n];\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 160,
+        "wires": [
+            [
+                "insert_refugee_db"
+            ]
+        ]
+    },
+    {
+        "id": "insert_refugee_db",
+        "type": "postgresql",
+        "z": "tab_ai_integration",
+        "name": "Guardar refugiado",
+        "query": "{{msg.topic}}",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": "",
+        "outputs": 1,
+        "x": 730,
+        "y": 160,
+        "wires": [
+            [
+                "prepare_ai_call"
+            ]
+        ]
+    },
+    {
+        "id": "prepare_ai_call",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Guardar refugiado para contexto",
+        "func": "// El refugiado ya está guardado en la BD\nconst savedRefugee = msg.payload[0];\n\n// Guardar refugiado para la respuesta final\nflow.set('savedRefugee', savedRefugee);\n\n// IMPORTANTE: Limpiar params para la siguiente consulta\ndelete msg.params;\ndelete msg.topic;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1010,
+        "y": 160,
+        "wires": [
+            [
+                "query_available_shelters"
+            ]
+        ]
+    },
+    {
+        "id": "query_available_shelters",
+        "type": "postgresql",
+        "z": "tab_ai_integration",
+        "name": "Obtener refugios disponibles",
+        "query": "SELECT id, name, max_capacity, current_occupancy, has_medical_facilities, has_childcare, has_disability_access, languages_spoken FROM shelters WHERE current_occupancy < max_capacity ORDER BY id",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": "",
+        "outputs": 1,
+        "x": 160,
+        "y": 240,
+        "wires": [
+            [
+                "prepare_ai_request"
+            ]
+        ]
+    },
+    {
+        "id": "prepare_ai_request",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Preparar request para IA",
+        "func": "const savedRefugee = flow.get('savedRefugee');\nconst availableShelters = msg.payload;\n\n// Verificar que hay refugios disponibles\nif (!availableShelters || availableShelters.length === 0) {\n    msg.statusCode = 400;\n    msg.payload = { error: \"No hay refugios disponibles en este momento\" };\n    return msg;\n}\n\n// Preparar payload para el servicio de IA\nmsg.payload = {\n    refugee: {\n        first_name: savedRefugee.first_name,\n        last_name: savedRefugee.last_name,\n        age: savedRefugee.age,\n        gender: savedRefugee.gender,\n        nationality: savedRefugee.nationality,\n        languages_spoken: savedRefugee.languages_spoken,\n        medical_conditions: savedRefugee.medical_conditions,\n        has_disability: savedRefugee.has_disability,\n        vulnerability_score: savedRefugee.vulnerability_score,\n        special_needs: savedRefugee.special_needs,\n        family_id: savedRefugee.family_id\n    },\n    available_shelters: availableShelters\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 450,
+        "y": 240,
+        "wires": [
+            [
+                "call_ai_for_assignment"
+            ]
+        ]
+    },
+    {
+        "id": "call_ai_for_assignment",
+        "type": "http request",
+        "z": "tab_ai_integration",
+        "name": "Obtener asignación IA",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://ai-service:8000/api/assign-shelter",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [
+            {
+                "keyType": "Content-Type",
+                "keyValue": "",
+                "valueType": "application/json",
+                "valueValue": ""
+            }
+        ],
+        "x": 700,
+        "y": 240,
+        "wires": [
+            [
+                "create_assignment"
+            ]
+        ]
+    },
+    {
+        "id": "create_assignment",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Crear asignación en BD",
+        "func": "const aiResponse = msg.payload;\nconst savedRefugee = flow.get('savedRefugee');\n\n// Preparar INSERT de la asignación\nmsg.topic = `INSERT INTO assignments (refugee_id, shelter_id, assigned_at, status, priority_score, explanation, assigned_by, created_at, updated_at) VALUES ($1, $2, CURRENT_TIMESTAMP, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    savedRefugee.id,\n    aiResponse.shelter_id,\n    'pending',\n    aiResponse.priority_score,\n    aiResponse.explanation,\n    'AI-System'\n];\n\n// Guardar respuesta IA para después\nflow.set('aiResponse', aiResponse);\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 190,
+        "y": 340,
+        "wires": [
+            [
+                "insert_assignment_db"
+            ]
+        ]
+    },
+    {
+        "id": "insert_assignment_db",
+        "type": "postgresql",
+        "z": "tab_ai_integration",
+        "name": "Guardar asignación",
+        "query": "{{msg.topic}}",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": "",
+        "outputs": 1,
+        "x": 510,
+        "y": 340,
+        "wires": [
+            [
+                "format_final_response"
+            ]
+        ]
+    },
+    {
+        "id": "format_final_response",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Formatear respuesta final",
+        "func": "const savedRefugee = flow.get('savedRefugee');\nconst aiResponse = flow.get('aiResponse');\nconst assignment = msg.payload[0];\n\n// Respuesta completa\nmsg.payload = {\n    refugee: savedRefugee,\n    assignment: {\n        id: assignment.id,\n        shelter_id: aiResponse.shelter_id,\n        shelter_name: aiResponse.shelter_name,\n        priority_score: aiResponse.priority_score,\n        confidence_score: aiResponse.confidence_score,\n        explanation: aiResponse.explanation,\n        status: assignment.status,\n        assigned_at: assignment.assigned_at\n    },\n    alternative_shelters: aiResponse.alternative_shelters || []\n};\n\nmsg.statusCode = 201;\n\n// Limpiar variables de flujo\nflow.set('tempRefugeeData', null);\nflow.set('savedRefugee', null);\nflow.set('aiResponse', null);\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 770,
+        "y": 340,
+        "wires": [
+            [
+                "final_http_response"
+            ]
+        ]
+    },
+    {
+        "id": "final_http_response",
+        "type": "http response",
+        "z": "tab_ai_integration",
+        "name": "Respuesta HTTP",
+        "statusCode": "",
+        "headers": {},
+        "x": 1010,
+        "y": 340,
         "wires": []
     }
 ]

@@ -1,5 +1,6 @@
+version: '3.8'
+
 services:
-  # --- SERVICIO DE BASE DE DATOS (POSTGRES) ---
   postgres:
     image: postgres:16-alpine
     container_name: shelterai-postgres
@@ -16,8 +17,9 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks: # Asignamos explícitamente la red
+      - shelterai-network
 
-  # --- SERVICIO DE INTEGRACIÓN (NODE-RED) ---
   nodered:
     build: .
     image: shelterai-nodered:local
@@ -25,8 +27,6 @@ services:
     ports:
       - "1880:1880"
     volumes:
-      # CORRECCIÓN CLAVE: Usamos './' para que Docker lea la carpeta del proyecto
-      # Así Git y Docker ven los mismos archivos.
       - ./node-red-data:/data
     environment:
       - TZ=Europe/Madrid
@@ -34,7 +34,16 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks: # Asignamos explícitamente la red
+      - shelterai-network
 
 volumes:
   postgres-data:
-  # nodered-data:  <-- ELIMINADO. No queremos que Docker gestione esto, queremos gestionarlo nosotros con Git.
+
+# --- CONFIGURACIÓN DE RED ---
+networks:
+  shelterai-network:
+    name: shelterai-network
+    driver: bridge
+    # IMPORTANTE: Aquí NO ponemos "external: true"
+    # Este archivo es el que CREA la red.
