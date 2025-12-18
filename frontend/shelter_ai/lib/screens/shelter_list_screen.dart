@@ -9,15 +9,18 @@ class ShelterListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Refugios')),
+      appBar: AppBar(title: const Text('Shelters')),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: ApiService.getShelters(),
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());
           }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
           final items = snapshot.data ?? [];
-          if (items.isEmpty) return const Center(child: Text('No hay datos'));
+          if (items.isEmpty) return const Center(child: Text('No data'));
           return ListView.separated(
             padding: const EdgeInsets.all(8),
             itemBuilder: (context, index) => ShelterCard(data: items[index]),

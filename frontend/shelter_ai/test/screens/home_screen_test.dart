@@ -25,9 +25,9 @@ void main() {
   group('HomeScreen Tests', () {
 
     // ----------------------------------------------------------------------
-    // TEST 1: ELEMENTOS BÁSICOS DE LA PANTALLA
+    // TEST 1: BASIC SCREEN ELEMENTS
     // ----------------------------------------------------------------------
-    testWidgets('Muestra título y botones principales', (WidgetTester tester) async {
+    testWidgets('Shows title and main buttons', (WidgetTester tester) async {
       final mockClient = MockClient((request) async {
         return http.Response(json.encode([]), 200);
       });
@@ -36,20 +36,20 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      // Verificar que el título está presente
+      // Verify the title is present
       expect(find.text('ShelterAI'), findsOneWidget);
-      expect(find.text('Bienvenido a ShelterAI'), findsOneWidget);
+      expect(find.text('Welcome to ShelterAI'), findsOneWidget);
       
-      // Verificar que los tres botones principales están presentes
-      expect(find.text('Añadir refugiado'), findsOneWidget);
-      expect(find.text('Refugiados'), findsOneWidget);
-      expect(find.text('Refugios'), findsOneWidget);
+      // Verify the three main buttons are present
+      expect(find.text('Add Refugee'), findsOneWidget);
+      expect(find.text('Refugees'), findsOneWidget);
+      expect(find.text('Shelters'), findsOneWidget);
     });
 
     // ----------------------------------------------------------------------
-    // TEST 2: RESUMEN RÁPIDO CON DATOS
+    // TEST 2: QUICK SUMMARY WITH DATA
     // ----------------------------------------------------------------------
-    testWidgets('Muestra resumen rápido con datos', (WidgetTester tester) async {
+    testWidgets('Shows quick summary with data', (WidgetTester tester) async {
       setScreenSize(tester);
 
       final mockClient = MockClient((request) async {
@@ -88,23 +88,23 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      // Verificar que se muestra el resumen rápido
-      expect(find.text('Resumen rápido'), findsOneWidget);
-      expect(find.text('Total refugiados'), findsOneWidget);
-      expect(find.text('2 registrados'), findsOneWidget);
-      expect(find.text('Refugios disponibles'), findsOneWidget);
-      expect(find.text('1 registrados'), findsOneWidget);
+      // Verify quick summary is displayed
+      expect(find.text('Quick Summary'), findsOneWidget);
+      expect(find.text('Total Refugees'), findsOneWidget);
+      expect(find.text('2 registered'), findsOneWidget);
+      expect(find.text('Available Shelters'), findsOneWidget);
+      expect(find.text('1 registered'), findsOneWidget);
 
-      // Verificar que se muestran las vistas rápidas
-      expect(find.text('Vistas rápidas'), findsOneWidget);
+      // Verify quick views are displayed
+      expect(find.text('Quick Views'), findsOneWidget);
       expect(find.byType(ShelterCard), findsOneWidget);
       expect(find.byType(RefugeeCard), findsOneWidget);
     });
 
     // ----------------------------------------------------------------------
-    // TEST 3: LISTA VACÍA
+    // TEST 3: EMPTY LIST
     // ----------------------------------------------------------------------
-    testWidgets('Maneja correctamente cuando no hay datos', (WidgetTester tester) async {
+    testWidgets('Handles correctly when there is no data', (WidgetTester tester) async {
       final mockClient = MockClient((request) async {
         return http.Response(json.encode([]), 200);
       });
@@ -113,18 +113,18 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      // Los contadores deberían mostrar 0
-      expect(find.text('0 registrados'), findsNWidgets(2));
+      // Counters should show 0
+      expect(find.text('0 registered'), findsNWidgets(2));
       
-      // No deberían aparecer tarjetas en las vistas rápidas
+      // Cards should not appear in quick views
       expect(find.byType(ShelterCard), findsNothing);
       expect(find.byType(RefugeeCard), findsNothing);
     });
 
     // ----------------------------------------------------------------------
-    // TEST 4: NAVEGACIÓN
+    // TEST 4: NAVIGATION
     // ----------------------------------------------------------------------
-    testWidgets('Los botones de navegación funcionan', (WidgetTester tester) async {
+    testWidgets('Navigation buttons work', (WidgetTester tester) async {
       final mockClient = MockClient((request) async {
         return http.Response(json.encode([]), 200);
       });
@@ -149,8 +149,8 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      // Test navegación a refugiados
-      await tester.tap(find.text('Refugiados'));
+      // Test navigation to refugees
+      await tester.tap(find.text('Refugees'));
       await tester.pumpAndSettle();
       expect(refugeesRouteVisited, true);
       expect(find.text('Refugees Screen'), findsOneWidget);

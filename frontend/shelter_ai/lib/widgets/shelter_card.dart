@@ -6,18 +6,18 @@ class ShelterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = data['name'] ?? 'Refugio';
+    final name = data['name'] ?? 'Shelter';
     final maxCapacity = data['max_capacity'] ?? '-';
     final currentOccupancy = data['current_occupancy'] ?? 0;
     final shelterType = data['shelter_type'] ?? '';
     final address = data['address'] ?? '';
     
-    // Calcular espacios disponibles
+    // Calculate available spaces
     final available = maxCapacity != '-' 
         ? (maxCapacity - currentOccupancy) 
         : '-';
     
-    // Construir subtítulo con información relevante
+    // Build subtitle with relevant information
     final typeInfo = shelterType.isNotEmpty ? '$shelterType • ' : '';
     final capacityInfo = 'Cap: $maxCapacity • Ocup: $currentOccupancy • Disp: $available';
     

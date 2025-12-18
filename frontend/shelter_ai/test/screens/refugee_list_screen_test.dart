@@ -9,14 +9,14 @@ import 'package:shelter_ai/screens/refugee_list_screen.dart';
 import 'package:shelter_ai/widgets/refugee_card.dart';
 
 void main() {
-  // Helper para envolver la pantalla en MaterialApp
+  // Helper to wrap the screen in MaterialApp
   Widget createWidgetUnderTest() {
     return const MaterialApp(
       home: RefugeeListScreen(),
     );
   }
 
-  // Helper para pantalla grande (evita errores de renderizado en listas largas)
+  // Helper for large screen (avoids rendering errors in long lists)
   void setScreenSize(WidgetTester tester) {
     tester.view.physicalSize = const Size(800, 2400);
     tester.view.devicePixelRatio = 1.0;
@@ -26,10 +26,10 @@ void main() {
   group('RefugeeListScreen Tests', () {
 
     // ----------------------------------------------------------------------
-    // TEST 1: ESTADO DE CARGA (CircularProgressIndicator)
+    // TEST 1: LOADING STATE (CircularProgressIndicator)
     // ----------------------------------------------------------------------
-    testWidgets('Muestra indicador de carga mientras espera la API', (WidgetTester tester) async {
-      // Mock que tarda un poco en responder (para que nos dé tiempo a ver la carga)
+    testWidgets('Shows loading indicator while waiting for API', (WidgetTester tester) async {
+      // Mock that takes a while to respond (to give us time to see loading)
       final mockClient = MockClient((request) async {
         await Future.delayed(const Duration(milliseconds: 500)); 
         return http.Response('[]', 200);
@@ -38,40 +38,40 @@ void main() {
 
       await tester.pumpWidget(createWidgetUnderTest());
 
-      // 🛑 NO usamos pumpAndSettle aquí, porque queremos ver el "durante", no el "final".
-      // Usamos pump(Duration) para avanzar solo un poquito el tiempo.
+      // 🛑 DO NOT use pumpAndSettle here, because we want to see "during", not "final".
+      // Use pump(Duration) to advance just a little bit of time.
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       
-      // Ahora sí dejamos que termine para limpiar el test
+      // Now let it finish to clean up the test
       await tester.pumpAndSettle();
     });
 
     // ----------------------------------------------------------------------
-    // TEST 2: LISTA VACÍA ("No hay datos")
+    // TEST 2: EMPTY LIST ("No data")
     // ----------------------------------------------------------------------
-    testWidgets('Muestra mensaje cuando no hay refugiados', (WidgetTester tester) async {
+    testWidgets('Shows message when there are no refugees', (WidgetTester tester) async {
       final mockClient = MockClient((request) async {
-        return http.Response(json.encode([]), 200); // Lista vacía
+        return http.Response(json.encode([]), 200); // Empty list
       });
       ApiService.client = mockClient;
 
       await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle(); // Esperamos a que termine la carga
+      await tester.pumpAndSettle(); // Wait for loading to finish
 
-      expect(find.text('No hay datos'), findsOneWidget);
+      expect(find.text('No data'), findsOneWidget);
       expect(find.byType(RefugeeCard), findsNothing);
     });
 
     // ----------------------------------------------------------------------
-    // TEST 3: CON DATOS (Muestra RefugeeCards)
+    // TEST 3: WITH DATA (Shows RefugeeCards)
     // ----------------------------------------------------------------------
-    testWidgets('Muestra lista de tarjetas cuando la API devuelve datos', (WidgetTester tester) async {
+    testWidgets('Shows list of cards when API returns data', (WidgetTester tester) async {
       setScreenSize(tester);
 
       final mockClient = MockClient((request) async {
-        // Devolvemos 2 refugiados simulados
+        // Return 2 simulated refugees
         final mockData = [
           {
             'first_name': 'Juan',
@@ -93,15 +93,15 @@ void main() {
       ApiService.client = mockClient;
 
       await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle(); // Esperamos a que se pinte todo
+      await tester.pumpAndSettle(); // Wait for everything to paint
 
-      // Verificamos que ya NO sale el loading ni el texto de vacío
+      // Verify loading is gone and empty text is gone
       expect(find.byType(CircularProgressIndicator), findsNothing);
-      expect(find.text('No hay datos'), findsNothing);
+      expect(find.text('No data'), findsNothing);
 
-      // Verificamos que hay una lista y tarjetas
+      // Verify there's a list and cards
       expect(find.byType(ListView), findsOneWidget);
-      // Debería haber 2 tarjetas RefugeeCard
+      // Should have 2 RefugeeCard widgets
       expect(find.byType(RefugeeCard), findsNWidgets(2));
     });
 

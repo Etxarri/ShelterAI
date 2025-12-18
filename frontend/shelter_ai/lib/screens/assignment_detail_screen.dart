@@ -16,13 +16,13 @@ class AssignmentDetailScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Asignación de ${refugee.fullName}'),
+        title: Text('Assignment for ${refugee.fullName}'),
       ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header con información del refugiado
+            // Header with refugee information
             Container(
               color: Colors.blue.shade50,
               padding: EdgeInsets.all(16),
@@ -56,7 +56,7 @@ class AssignmentDetailScreen extends StatelessWidget {
               ),
             ),
 
-            // Refugio asignado
+            // Assigned shelter
             Padding(
               padding: EdgeInsets.all(16),
               child: Card(
@@ -71,7 +71,7 @@ class AssignmentDetailScreen extends StatelessWidget {
                           Icon(Icons.home, color: Colors.blue, size: 28),
                           SizedBox(width: 12),
                           Text(
-                            'Refugio Asignado',
+                            'Assigned Shelter',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -104,7 +104,7 @@ class AssignmentDetailScreen extends StatelessWidget {
                                size: 20),
                           SizedBox(width: 8),
                           Text(
-                            'Estado: ${assignment.statusDisplay}',
+                            'Status: ${assignment.statusDisplay}',
                             style: TextStyle(
                               color: assignment.statusColor,
                               fontWeight: FontWeight.w600,
@@ -118,7 +118,7 @@ class AssignmentDetailScreen extends StatelessWidget {
               ),
             ),
 
-            // Puntuaciones
+            // Scores
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: Row(
@@ -126,7 +126,7 @@ class AssignmentDetailScreen extends StatelessWidget {
                   Expanded(
                     child: _buildScoreCard(
                       context,
-                      'Prioridad',
+                      'Priority',
                       assignment.priorityScore,
                       assignment.priorityLevel,
                       assignment.priorityColor,
@@ -137,7 +137,7 @@ class AssignmentDetailScreen extends StatelessWidget {
                   Expanded(
                     child: _buildScoreCard(
                       context,
-                      'Confianza',
+                      'Confidence',
                       assignment.confidencePercentage,
                       '${assignment.confidencePercentage.toStringAsFixed(0)}%',
                       Colors.teal,
@@ -148,7 +148,7 @@ class AssignmentDetailScreen extends StatelessWidget {
               ),
             ),
 
-            // Explicación detallada
+            // Detailed explanation
             Padding(
               padding: EdgeInsets.all(16),
               child: Card(
@@ -163,7 +163,7 @@ class AssignmentDetailScreen extends StatelessWidget {
                           Icon(Icons.info_outline, color: Colors.orange),
                           SizedBox(width: 8),
                           Text(
-                            'Motivo de la Asignación',
+                            'Assignment Reason',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -194,7 +194,7 @@ class AssignmentDetailScreen extends StatelessWidget {
               ),
             ),
 
-            // Alternativas disponibles
+            // Available alternatives
             if (assignment.alternativeShelters.isNotEmpty)
               Padding(
                 padding: EdgeInsets.all(16),
@@ -210,7 +210,7 @@ class AssignmentDetailScreen extends StatelessWidget {
                             Icon(Icons.alt_route, color: Colors.purple),
                             SizedBox(width: 8),
                             Text(
-                              'Alternativas Disponibles',
+                                'Available Alternatives',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -268,7 +268,7 @@ class AssignmentDetailScreen extends StatelessWidget {
                 ),
               ),
 
-            // Información del refugiado
+            // Refugee information
             Padding(
               padding: EdgeInsets.all(16),
               child: Card(
@@ -283,7 +283,7 @@ class AssignmentDetailScreen extends StatelessWidget {
                           Icon(Icons.person, color: Colors.green),
                           SizedBox(width: 8),
                           Text(
-                            'Información del Refugiado',
+                            'Refugee Information',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -292,19 +292,19 @@ class AssignmentDetailScreen extends StatelessWidget {
                         ],
                       ),
                       SizedBox(height: 12),
-                      _buildInfoRow('Idiomas', refugee.languagesSpoken ?? 'N/A'),
+                      _buildInfoRow('Languages', refugee.languagesSpoken ?? 'N/A'),
                       if (refugee.medicalConditions != null && refugee.medicalConditions!.isNotEmpty)
-                        _buildInfoRow('Condiciones Médicas', refugee.medicalConditions!),
+                        _buildInfoRow('Medical Conditions', refugee.medicalConditions!),
                       if (refugee.specialNeeds != null && refugee.specialNeeds!.isNotEmpty)
-                        _buildInfoRow('Necesidades Especiales', refugee.specialNeeds!),
+                        _buildInfoRow('Special Needs', refugee.specialNeeds!),
                       _buildInfoRow(
-                        'Discapacidad',
-                        refugee.hasDisability ? 'Sí' : 'No',
+                        'Disability',
+                        refugee.hasDisability ? 'Yes' : 'No',
                         icon: refugee.hasDisability ? Icons.accessible : Icons.check_circle,
                         iconColor: refugee.hasDisability ? Colors.orange : Colors.green,
                       ),
                       _buildInfoRow(
-                        'Puntuación de Vulnerabilidad',
+                        'Vulnerability Score',
                         '${refugee.vulnerabilityScore.toStringAsFixed(0)}/100',
                       ),
                     ],
@@ -339,7 +339,7 @@ class AssignmentDetailScreen extends StatelessWidget {
             padding: EdgeInsets.symmetric(vertical: 16),
           ),
           child: Text(
-            'Volver',
+            'Back',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ),

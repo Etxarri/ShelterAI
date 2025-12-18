@@ -33,11 +33,11 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Text(
-              'Bienvenido a ShelterAI',
+              'Welcome to ShelterAI',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const Text('Asignación inteligente de personas a refugios disponibles.'),
+            const Text('Intelligent assignment of people to available shelters.'),
             const SizedBox(height: 16),
 
             Row(
@@ -45,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.person),
-                    label: const Text('Añadir refugiado'),
+                    label: const Text('Add Refugee'),
                     onPressed: () async {
                       final result = await Navigator.pushNamed(context, '/add_refugee');
                       if (result == true) _refresh();
@@ -56,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.people),
-                    label: const Text('Refugiados'),
+                    label: const Text('Refugees'),
                     onPressed: () => Navigator.pushNamed(context, '/refugees'),
                   ),
                 ),
@@ -64,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.home),
-                    label: const Text('Refugios'),
+                    label: const Text('Shelters'),
                     onPressed: () => Navigator.pushNamed(context, '/shelters'),
                   ),
                 ),
@@ -74,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 20),
             const Divider(),
 
-            const Text('Resumen rápido', style: TextStyle(fontWeight: FontWeight.w600)),
+            const Text('Quick Summary', style: TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
 
             FutureBuilder<List<Map<String, dynamic>>>(
@@ -84,8 +84,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 final count = snap.hasData ? snap.data!.length : null;
                 return ListTile(
                   leading: const Icon(Icons.people_outline),
-                  title: const Text('Total refugiados'),
-                  subtitle: Text(count != null ? '$count registrados' : 'cargando...'),
+                  title: const Text('Total Refugees'),
+                  subtitle: Text(count != null ? '$count registered' : 'loading...'),
                 );
               },
             ),
@@ -96,8 +96,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 final count = snap.hasData ? snap.data!.length : null;
                 return ListTile(
                   leading: const Icon(Icons.house_outlined),
-                  title: const Text('Refugios disponibles'),
-                  subtitle: Text(count != null ? '$count registrados' : 'cargando...'),
+                  title: const Text('Available Shelters'),
+                  subtitle: Text(count != null ? '$count registered' : 'loading...'),
                 );
               },
             ),
@@ -105,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 12),
             const Divider(),
 
-            const Text('Vistas rápidas', style: TextStyle(fontWeight: FontWeight.w600)),
+            const Text('Quick Views', style: TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
 
             // show sample items

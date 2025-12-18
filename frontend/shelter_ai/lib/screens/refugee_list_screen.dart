@@ -28,7 +28,7 @@ class _RefugeeListScreenState extends State<RefugeeListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Refugiados')),
+      appBar: AppBar(title: const Text('Refugees')),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _refugeesFuture,
         builder: (context, snapshot) {
@@ -36,7 +36,7 @@ class _RefugeeListScreenState extends State<RefugeeListScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           final items = snapshot.data ?? [];
-          if (items.isEmpty) return const Center(child: Text('No hay datos'));
+          if (items.isEmpty) return const Center(child: Text('No data'));
           return RefreshIndicator(
             onRefresh: () async {
               _loadRefugees();

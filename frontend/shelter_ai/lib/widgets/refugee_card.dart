@@ -9,23 +9,23 @@ class RefugeeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Construir nombre completo
+    // Build full name
     final firstName = data['first_name'] ?? '';
     final lastName = data['last_name'] ?? '';
     final fullName = '$firstName $lastName'.trim();
-    final displayName = fullName.isEmpty ? 'Sin nombre' : fullName;
+    final displayName = fullName.isEmpty ? 'No name' : fullName;
     
-    // Construir información de necesidades
+    // Build needs information
     final age = data['age']?.toString() ?? '-';
     final specialNeeds = data['special_needs'] ?? '';
     final medicalConditions = data['medical_conditions'] ?? '';
-    final hasDisability = data['has_disability'] == true ? 'Discapacidad' : '';
+    final hasDisability = data['has_disability'] == true ? 'Disability' : '';
     
-    // Combinar necesidades
+    // Combine needs
     final needs = [specialNeeds, medicalConditions, hasDisability]
         .where((s) => s.isNotEmpty)
         .join(', ');
-    final displayNeeds = needs.isEmpty ? 'Ninguna' : needs;
+    final displayNeeds = needs.isEmpty ? 'None' : needs;
     
     return Card(
       elevation: 2,
@@ -42,10 +42,10 @@ class RefugeeCard extends StatelessWidget {
           displayName,
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: Text('Edad: $age • Necesidades: $displayNeeds'),
+        subtitle: Text('Age: $age • Needs: $displayNeeds'),
         trailing: IconButton(
           icon: Icon(Icons.analytics_outlined, color: Colors.blue),
-          tooltip: 'Ver Asignación de IA',
+          tooltip: 'View AI Assignment',
           onPressed: () => _viewAssignment(context),
         ),
       ),
@@ -57,12 +57,12 @@ class RefugeeCard extends StatelessWidget {
     
     if (refugeeId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se puede obtener la asignación')),
+        SnackBar(content: Text('Cannot get assignment')),
       );
       return;
     }
 
-    // Mostrar loading
+    // Show loading
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -75,7 +75,7 @@ class RefugeeCard extends StatelessWidget {
               children: [
                 CircularProgressIndicator(),
                 SizedBox(height: 16),
-                Text('Obteniendo asignación...'),
+                Text('Getting assignment...'),
               ],
             ),
           ),
@@ -84,32 +84,32 @@ class RefugeeCard extends StatelessWidget {
     );
 
     try {
-      // Obtener las asignaciones del refugiado
+      // Get refugee assignments
       final assignments = await ApiService.getAssignments(refugeeId.toString());
       
       if (!context.mounted) return;
-      Navigator.of(context).pop(); // Cerrar loading
+      Navigator.of(context).pop(); // Close loading
 
       if (assignments.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Este refugiado no tiene asignación aún'),
+            content: Text('This refugee has no assignment yet'),
             backgroundColor: Colors.orange,
           ),
         );
         return;
       }
 
-      // Tomar la primera asignación (la más reciente)
+      // Take the first assignment (the most recent)
       final assignmentData = assignments.first;
       
-      // Crear el objeto de respuesta
+      // Create the response object
       final response = RefugeeAssignmentResponse.fromJson({
         'refugee': data,
         'assignment': assignmentData,
       });
 
-      // Navegar a la pantalla de detalles
+      // Navigate to the detail screen
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => AssignmentDetailScreen(response: response),
@@ -117,11 +117,11 @@ class RefugeeCard extends StatelessWidget {
       );
     } catch (e) {
       if (!context.mounted) return;
-      Navigator.of(context).pop(); // Cerrar loading
+      Navigator.of(context).pop(); // Close loading
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error al obtener asignación: $e'),
+          content: Text('Error getting assignment: $e'),
           backgroundColor: Colors.red,
         ),
       );

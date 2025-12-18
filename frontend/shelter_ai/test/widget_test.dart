@@ -20,7 +20,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify welcome text and a primary action button exist
-    expect(find.text('Bienvenido a ShelterAI'), findsOneWidget);
-    expect(find.text('Añadir refugiado'), findsOneWidget);
+    expect(find.text('Welcome to ShelterAI'), findsOneWidget);
+    expect(find.text('Add Refugee'), findsOneWidget);
   });
 }

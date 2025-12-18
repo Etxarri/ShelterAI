@@ -9,15 +9,12 @@ import 'package:shelter_ai/screens/shelter_list_screen.dart';
 import 'package:shelter_ai/widgets/shelter_card.dart';
 
 void main() {
-  
-  // Helper básico
+  // Basic helper
   Widget createWidgetUnderTest() {
-    return const MaterialApp(
-      home: ShelterListScreen(),
-    );
+    return const MaterialApp(home: ShelterListScreen());
   }
 
-  // Helper para pantalla grande (evita overflow en listas)
+  // Helper for large screen (avoids overflow in lists)
   void setScreenSize(WidgetTester tester) {
     tester.view.physicalSize = const Size(800, 2400);
     tester.view.devicePixelRatio = 1.0;
@@ -25,68 +22,69 @@ void main() {
   }
 
   group('ShelterListScreen Tests', () {
-
     // ----------------------------------------------------------------------
-    // TEST 1: ESTADO DE CARGA (Loading)
+    // TEST 1: LOADING STATE (Loading)
     // ----------------------------------------------------------------------
-    testWidgets('Muestra loading mientras carga', (WidgetTester tester) async {
-      // Mock que tarda un poco
+    testWidgets('Shows loading while loading', (WidgetTester tester) async {
+      // Mock that takes a while
       final mockClient = MockClient((request) async {
-        await Future.delayed(const Duration(milliseconds: 100)); 
+        await Future.delayed(const Duration(milliseconds: 100));
         return http.Response('[]', 200);
       });
       ApiService.client = mockClient;
 
       await tester.pumpWidget(createWidgetUnderTest());
 
-      // Solo avanzamos un frame, no esperamos a que termine (pump, NO pumpAndSettle)
-      await tester.pump(); 
+      // Only advance one frame, don't wait for finish (pump, NOT pumpAndSettle)
+      await tester.pump();
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      
-      // Limpiamos terminando la animación
+
+      // Clean up by finishing animation
       await tester.pumpAndSettle();
     });
 
     // ----------------------------------------------------------------------
-    // TEST 2: LISTA VACÍA (Empty State)
+    // TEST 2: EMPTY LIST (Empty State)
     // ----------------------------------------------------------------------
-    testWidgets('Muestra "No hay datos" si la lista está vacía', (WidgetTester tester) async {
+    testWidgets('Shows "No data" if the list is empty', (
+      WidgetTester tester,
+    ) async {
       final mockClient = MockClient((request) async {
-        return http.Response(json.encode([]), 200); // Array vacío
+        return http.Response(json.encode([]), 200); // Empty array
       });
       ApiService.client = mockClient;
 
       await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle(); // Esperamos a que termine todo
+      await tester.pumpAndSettle(); // Wait for everything to finish
 
-      expect(find.text('No hay datos'), findsOneWidget);
+      expect(find.text('No data'), findsOneWidget);
       expect(find.byType(ShelterCard), findsNothing);
     });
 
     // ----------------------------------------------------------------------
-    // TEST 3: CON DATOS (Happy Path)
+    // TEST 3: WITH DATA (Happy Path)
     // ----------------------------------------------------------------------
-    testWidgets('Muestra lista de tarjetas de refugios', (WidgetTester tester) async {
+    testWidgets('Shows list of shelter cards', (WidgetTester tester) async {
       setScreenSize(tester);
 
       final mockClient = MockClient((request) async {
-        // Datos simulados de refugios con campos que coinciden con shelter_card
+        // Simulated shelter data with fields matching shelter_card
         final mockData = [
           {
             'name': 'Refugio Central',
             'address': 'Calle Mayor 1',
             'max_capacity': 100,
             'current_occupancy': 50,
-            'shelter_type': 'Temporal'
+            'shelter_type': 'Temporal',
           },
           {
             'name': 'Albergue Norte',
             'address': 'Av. Libertad 20',
             'max_capacity': 60,
             'current_occupancy': 10,
-            'shelter_type': 'Permanente'
-          }
+            'shelter_type': 'Permanente',
+          },
         ];
         return http.Response(json.encode(mockData), 200);
       });
@@ -95,17 +93,36 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      // Verificamos que NO sale loading ni vacío
+      // Verify loading and empty state are not shown
       expect(find.byType(CircularProgressIndicator), findsNothing);
-      expect(find.text('No hay datos'), findsNothing);
+      expect(find.text('No data'), findsNothing);
 
-      // Verificamos que salen las tarjetas
+      // Verify cards are shown
       expect(find.byType(ListView), findsOneWidget);
-      expect(find.byType(ShelterCard), findsNWidgets(2)); // Esperamos 2 tarjetas
-      
-      // Opcional: Verificar que sale el nombre de un refugio
+      expect(find.byType(ShelterCard), findsNWidgets(2)); // Expect 2 cards
+
+      // Optional: Verify a shelter name appears
       expect(find.text('Refugio Central'), findsOneWidget);
     });
 
+    // ----------------------------------------------------------------------
+    // TEST 4: ERROR STATE
+    // ----------------------------------------------------------------------
+    testWidgets('Shows error message if API fails', (
+      WidgetTester tester,
+    ) async {
+      final mockClient = MockClient((request) async {
+        return http.Response('Server Error', 500);
+      });
+      ApiService.client = mockClient;
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      // Assuming the screen shows "Error: Server Error" or similar SnackBar/Text
+      // If it shows a SnackBar, we might need to look for it specifically.
+      // Based on main.dart behavior or standard behavior:
+      expect(find.textContaining('Error'), findsAtLeastNWidgets(1));
+    });
   });
 }
