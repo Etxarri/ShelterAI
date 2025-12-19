@@ -198,21 +198,4 @@ class ApiService {
       rethrow;
     }
   }
-
-  // Mock data for development/testing
-  static List<Map<String, dynamic>> _getMockRefugees() {
-    return [
-      {'name': 'Amina', 'age': 29, 'needs': 'Medical'},
-      {'name': 'Omar', 'age': 42, 'needs': 'Family'},
-      {'name': 'Lina', 'age': 8, 'needs': 'Child, school'},
-    ];
-  }
-
-  static List<Map<String, dynamic>> _getMockShelters() {
-    return [
-      {'name': 'Refugio Central', 'capacity': 120, 'occupancy': 72},
-      {'name': 'Albergue Norte', 'capacity': 60, 'occupancy': 55},
-      {'name': 'Centro Temporal', 'capacity': 40, 'occupancy': 12},
-    ];
-  }
 }

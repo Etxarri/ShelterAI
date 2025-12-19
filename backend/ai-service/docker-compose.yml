@@ -9,7 +9,6 @@ services:
     environment:
       - ENVIRONMENT=development
       - LOG_LEVEL=info
-      # Si necesitas conectar a la DB desde aquí, usa el host: shelterai-postgres
       - DATABASE_URL=postgresql://root:root@shelterai-postgres:5432/shelterai
     volumes:
       - ./inference_api:/app
@@ -23,4 +22,4 @@ services:
 networks:
   shelterai-network:
     name: shelterai-network
-    external: true  # <--- IMPORTANTE: Esto le dice que la red YA EXISTE (creada por el otro compose)
+    external: true

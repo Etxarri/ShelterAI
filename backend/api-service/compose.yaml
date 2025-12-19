@@ -17,7 +17,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    networks: # Asignamos explícitamente la red
+    networks:
       - shelterai-network
 
   nodered:
@@ -34,7 +34,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    networks: # Asignamos explícitamente la red
+    networks:
       - shelterai-network
 
 volumes:
@@ -45,5 +45,3 @@ networks:
   shelterai-network:
     name: shelterai-network
     driver: bridge
-    # IMPORTANTE: Aquí NO ponemos "external: true"
-    # Este archivo es el que CREA la red.

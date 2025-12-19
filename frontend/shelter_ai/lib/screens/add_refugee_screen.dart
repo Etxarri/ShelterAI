@@ -271,12 +271,6 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
                 onChanged: (v) => setState(() => _hasDisability = v),
               ),
               const SizedBox(height: 8),
-              TextFormField(
-                controller: _vulnerabilityCtrl,
-                decoration: const InputDecoration(labelText: 'Vulnerability Score'),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 8),
               TextFormField(controller: _specialNeedsCtrl, decoration: const InputDecoration(labelText: 'Special Needs'), maxLines: 2),
               const SizedBox(height: 8),
               TextFormField(
