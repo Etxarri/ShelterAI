@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -11,12 +13,53 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U shelterai -d shelterai"]
+      test: ["CMD-SHELL", "pg_isready -U root -d shelterai"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - shelterai-network
+
+  ai-service:
+    image: shelterai-ai-service:latest
+    container_name: shelterai-ai-service
+    environment:
+      DATABASE_URL: postgresql://root:root@shelterai-postgres:5432/shelterai
+      MODEL_PATH: /app/models/shelter_model.pkl
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - shelterai-network
+
+  nodered:
+    build: .
+    image: shelterai-nodered:local
+    container_name: shelterai-nodered
+    ports:
+      - "1880:1880"
+    volumes:
+      - ./node-red-data:/data
+    environment:
+      - TZ=Europe/Madrid
+      - FLOWS=flows.json
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ai-service:
+        condition: service_started
+    networks:
+      - shelterai-network
 
 volumes:
   postgres-data:
 
-# docker compose up -d
+# --- CONFIGURACIÓN DE RED ---
+networks:
+  shelterai-network:
+    name: shelterai-network
+    driver: bridge
