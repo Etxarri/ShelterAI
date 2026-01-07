@@ -35,6 +35,13 @@
         "info": "Integración con el servicio de IA para asignación automática de refugios"
     },
     {
+        "id": "tab_login",
+        "type": "tab",
+        "label": "Auth API",
+        "disabled": false,
+        "info": "API para autenticación y login"
+    },
+    {
         "id": "301245f94e1239d9",
         "type": "postgreSQLConfig",
         "name": "ShelterAI DB",
@@ -431,8 +438,7 @@
         "y": 80,
         "wires": [
             [
-                "refugee_response",
-                "35f3ec724bd95540"
+                "refugee_response"
             ]
         ]
     },
@@ -642,8 +648,7 @@
         "y": 320,
         "wires": [
             [
-                "refugee_created_response",
-                "c9f9b61729708a1f"
+                "refugee_created_response"
             ]
         ]
     },
@@ -743,8 +748,7 @@
         "y": 440,
         "wires": [
             [
-                "refugee_delete_response",
-                "0f71a093d5abb7e6"
+                "refugee_delete_response"
             ]
         ]
     },
@@ -822,57 +826,6 @@
         "headers": {},
         "x": 1020,
         "y": 320,
-        "wires": []
-    },
-    {
-        "id": "c9f9b61729708a1f",
-        "type": "debug",
-        "z": "tab_refugees",
-        "name": "debug 6",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 820,
-        "y": 500,
-        "wires": []
-    },
-    {
-        "id": "35f3ec724bd95540",
-        "type": "debug",
-        "z": "tab_refugees",
-        "name": "debug 2",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 580,
-        "y": 40,
-        "wires": []
-    },
-    {
-        "id": "0f71a093d5abb7e6",
-        "type": "debug",
-        "z": "tab_refugees",
-        "name": "debug 3",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 649.2000122070312,
-        "y": 522.2000122070312,
         "wires": []
     },
     {
@@ -2038,6 +1991,179 @@
         "headers": {},
         "x": 1010,
         "y": 340,
+        "wires": []
+    },
+    {
+        "id": "login_post",
+        "type": "http in",
+        "z": "tab_login",
+        "name": "POST /api/login",
+        "url": "/api/login",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 160,
+        "y": 100,
+        "wires": [
+            [
+                "login_validation"
+            ]
+        ]
+    },
+    {
+        "id": "login_validation",
+        "type": "function",
+        "z": "tab_login",
+        "name": "Validar y Preparar",
+        "func": "// Validar esquema JSON del request\nconst jsonSchema = {\n  type: 'object',\n  required: ['email', 'password'],\n  properties: {\n    email: {\n      type: 'string',\n      format: 'email'\n    },\n    password: {\n      type: 'string',\n      minLength: 1\n    }\n  }\n};\n\nfunction validateJsonSchema(data, schema) {\n  if (typeof data !== 'object' || data === null) {\n    return false;\n  }\n  \n  if (schema.required) {\n    for (const field of schema.required) {\n      if (!(field in data)) {\n        return false;\n      }\n    }\n  }\n  \n  const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\n  if (!emailRegex.test(data.email)) {\n    return false;\n  }\n  \n  if (typeof data.password !== 'string' || data.password.length === 0) {\n    return false;\n  }\n  \n  return true;\n}\n\n// Validar entrada\nif (!validateJsonSchema(msg.payload, jsonSchema)) {\n  msg.statusCode = 400;\n  msg.payload = {\n    success: false,\n    message: 'Validación fallida: email inválido o password vacío'\n  };\n  return msg;\n}\n\n// Preparar query SQL para consultar usuario\nconst email = msg.payload.email;\nconst password = msg.payload.password;\n\n// Guardamos password en msg para verificarlo después\nmsg.passwordToVerify = password;\n\nmsg.query = 'SELECT id, email, password, full_name, role FROM users WHERE email = $1';\nmsg.params = [email];\n\nmsg.payload = null;\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 410,
+        "y": 100,
+        "wires": [
+            [
+                "login_db_query"
+            ]
+        ]
+    },
+    {
+        "id": "login_db_query",
+        "type": "postgresql",
+        "z": "tab_login",
+        "name": "Consultar Usuario",
+        "query": "",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": "",
+        "outputs": 1,
+        "x": 650,
+        "y": 100,
+        "wires": [
+            [
+                "login_verify"
+            ]
+        ]
+    },
+    {
+        "id": "login_verify",
+        "type": "function",
+        "z": "tab_login",
+        "name": "Verificar y Responder",
+        "func": "try {\n  const result = msg.payload;\n  const passwordFromRequest = msg.passwordToVerify;\n  \n  // Verificar si el usuario existe\n  if (!Array.isArray(result) || result.length === 0) {\n    msg.statusCode = 401;\n    msg.payload = {\n      success: false,\n      message: 'Email o contraseña incorrectos'\n    };\n    return msg;\n  }\n  \n  const user = result[0];\n  \n  // Comparar contraseña (en prototipo es comparación directa)\n  // En producción: usar bcrypt.compare()\n  if (user.password !== passwordFromRequest) {\n    msg.statusCode = 401;\n    msg.payload = {\n      success: false,\n      message: 'Email o contraseña incorrectos'\n    };\n    return msg;\n  }\n  \n  // ÉXITO: Credentials válidas, devolver role\n  msg.statusCode = 200;\n  msg.payload = {\n    success: true,\n    user_id: user.id,\n    name: user.full_name,\n    role: user.role, // 'worker' o 'refugee'\n    token: 'simulated_token_' + Date.now() // Token simulado\n  };\n  \n  // Limpiar datos sensibles\n  delete msg.passwordToVerify;\n  \n  return msg;\n  \n} catch (err) {\n  msg.statusCode = 500;\n  msg.payload = {\n    success: false,\n    message: 'Error procesando login'\n  };\n  return msg;\n}",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 880,
+        "y": 100,
+        "wires": [
+            [
+                "login_http_response"
+            ]
+        ]
+    },
+    {
+        "id": "login_http_response",
+        "type": "http response",
+        "z": "tab_login",
+        "name": "HTTP Response",
+        "statusCode": "",
+        "headers": {},
+        "x": 1110,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "22c0c426bf478142",
+        "type": "http in",
+        "z": "tab_login",
+        "name": "POST /api/register",
+        "url": "/api/register",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 170,
+        "y": 160,
+        "wires": [
+            [
+                "e2216cfe7183366c"
+            ]
+        ]
+    },
+    {
+        "id": "e2216cfe7183366c",
+        "type": "function",
+        "z": "tab_login",
+        "name": "Validar y Preparar",
+        "func": "// 1. Extraemos los datos que vienen del formulario (Frontend)\nvar nombre = msg.payload.name;\nvar email = msg.payload.email;\nvar password = msg.payload.password;\n\n// 2. Validación básica de seguridad (por si acaso falla el frontend)\nif (!email || !password || !nombre) {\n    msg.statusCode = 400;\n    msg.payload = { error: \"Faltan datos: nombre, email o contraseña\" };\n    return null; // Detenemos el flujo aquí\n}\n\n// 3. Preparamos la Query SQL (INSERT)\n// Fíjate que ponemos el rol 'refugee' fijo, porque es un auto-registro.\nmsg.query = \"INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role\";\n\n// 4. Preparamos los parámetros (Array)\n// Usamos 'refugee' como cuarto parámetro para cumplir con el CHECK de la base de datos\nmsg.params = [nombre, email, password, 'refugee'];\n\n// 5. Limpiamos el payload para que no moleste al nodo de Postgres\nmsg.payload = null;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 410,
+        "y": 160,
+        "wires": [
+            [
+                "78899a30e92aecbe"
+            ]
+        ]
+    },
+    {
+        "id": "78899a30e92aecbe",
+        "type": "postgresql",
+        "z": "tab_login",
+        "name": "Consultar Usuario",
+        "query": "",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": "",
+        "outputs": 1,
+        "x": 650,
+        "y": 160,
+        "wires": [
+            [
+                "5e41704bfdb79d59"
+            ]
+        ]
+    },
+    {
+        "id": "5e41704bfdb79d59",
+        "type": "function",
+        "z": "tab_login",
+        "name": "Verificar y Responder",
+        "func": "// El nodo PostgreSQL devuelve un array con las filas insertadas\n// gracias al \"RETURNING\" que pusimos en la query.\nvar filas = msg.payload;\n\nif (filas && filas.length > 0) {\n    var usuarioNuevo = filas[0];\n\n    // Construimos la respuesta EXACTAMENTE igual que en el Login\n    // Así el frontend puede guardar el token y entrar directamente.\n    msg.statusCode = 201; // 201 Created (es lo correcto para registros)\n    msg.payload = {\n        \"success\": true,\n        \"user_id\": usuarioNuevo.id,\n        \"name\": usuarioNuevo.full_name,\n        \"email\": usuarioNuevo.email,\n        \"role\": usuarioNuevo.role, // Será 'refugee'\n        \"token\": \"simulated_token_\" + Date.now() // Token para que entre directo\n    };\n} else {\n    // Si por lo que sea no devuelve filas (raro si no dio error antes)\n    msg.statusCode = 500;\n    msg.payload = { \"error\": \"No se pudo recuperar el usuario creado\" };\n}\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 880,
+        "y": 160,
+        "wires": [
+            [
+                "cb383e10764124f8"
+            ]
+        ]
+    },
+    {
+        "id": "cb383e10764124f8",
+        "type": "http response",
+        "z": "tab_login",
+        "name": "HTTP Response",
+        "statusCode": "",
+        "headers": {},
+        "x": 1110,
+        "y": 160,
         "wires": []
     }
 ]

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:shelter_ai/services/api_service.dart';
 import 'package:shelter_ai/models/refugee_assignment_response.dart';
 import 'package:shelter_ai/screens/assignment_detail_screen.dart';
+import 'package:shelter_ai/providers/auth_state.dart';
+import 'package:shelter_ai/screens/qr_scan_screen.dart';
+import 'dart:convert';
 
 class AddRefugeeScreen extends StatefulWidget {
   const AddRefugeeScreen({super.key});
@@ -42,6 +45,49 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
   // ignore: unused_field
   bool _isLoading = false;
 
+  Future<void> _scanQr() async {
+    final auth = AuthScope.of(context);
+    if (auth.role != UserRole.worker) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Solo trabajadores pueden escanear QR')),
+      );
+      return;
+    }
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const QrScanScreen()),
+    );
+    if (result is String) {
+      _applyQrData(result);
+    }
+  }
+
+  void _applyQrData(String data) {
+    try {
+      final Map<String, dynamic> map = jsonDecode(data) as Map<String, dynamic>;
+      _firstNameCtrl.text = (map['first_name'] ?? '').toString();
+      _lastNameCtrl.text = (map['last_name'] ?? '').toString();
+      _ageCtrl.text = (map['age'] ?? '').toString();
+      _gender = (map['gender'] ?? 'Masculino').toString();
+      _nationalityCtrl.text = (map['nationality'] ?? '').toString();
+      _languagesCtrl.text = (map['languages_spoken'] ?? '').toString();
+      _medicalCtrl.text = (map['medical_conditions'] ?? '').toString();
+      _hasDisability =
+          (map['has_disability'] == true || map['has_disability'] == 'true');
+      _specialNeedsCtrl.text = (map['special_needs'] ?? '').toString();
+      _familyIdCtrl.text = (map['family_id'] ?? '').toString();
+      _vulnerabilityCtrl.text = (map['vulnerability_score'] ?? '').toString();
+      setState(() {});
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Datos cargados desde QR')));
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('QR inválido: $e')));
+    }
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -54,9 +100,16 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
       'gender': _gender,
       'nationality': _nationalityCtrl.text.trim(),
       'languages_spoken': _languagesCtrl.text.trim(),
-      'family_id': _familyIdCtrl.text.isEmpty ? null : int.tryParse(_familyIdCtrl.text.trim()),
-      'medical_conditions': _medicalCtrl.text.trim().isEmpty ? null : _medicalCtrl.text.trim(),
-      'special_needs': _specialNeedsCtrl.text.trim().isEmpty ? null : _specialNeedsCtrl.text.trim(),
+      'family_id':
+          _familyIdCtrl.text.isEmpty
+              ? null
+              : int.tryParse(_familyIdCtrl.text.trim()),
+      'medical_conditions':
+          _medicalCtrl.text.trim().isEmpty ? null : _medicalCtrl.text.trim(),
+      'special_needs':
+          _specialNeedsCtrl.text.trim().isEmpty
+              ? null
+              : _specialNeedsCtrl.text.trim(),
       'vulnerability_score': int.tryParse(_vulnerabilityCtrl.text.trim()) ?? 0,
       'has_disability': _hasDisability,
     };
@@ -65,21 +118,18 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
       // Use the endpoint with automatic assignment
       final response = await ApiService.addRefugeeWithAssignment(payload);
       final assignmentResponse = RefugeeAssignmentResponse.fromJson(response);
-      
+
       setState(() => _isLoading = false);
-      
+
       if (!mounted) return;
-      
+
       // Show result and navigate to detail screen
       _showSuccessDialog(assignmentResponse);
     } catch (e) {
       setState(() => _isLoading = false);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
       );
     }
   }
@@ -88,96 +138,100 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.green, size: 32),
-            SizedBox(width: 12),
-            Expanded(child: Text('Refugee Registered')),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '${response.refugee.fullName}',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+      builder:
+          (context) => AlertDialog(
+            title: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 32),
+                SizedBox(width: 12),
+                Expanded(child: Text('Refugee Registered')),
+              ],
             ),
-            SizedBox(height: 16),
-            Container(
-              padding: EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${response.refugee.fullName}',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 16),
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.home, color: Colors.blue, size: 20),
-                      SizedBox(width: 8),
-                      Text('Assigned Shelter:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Row(
+                        children: [
+                          Icon(Icons.home, color: Colors.blue, size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            'Assigned Shelter:',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        response.assignment.shelterName,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.blue.shade800,
+                        ),
+                      ),
                     ],
                   ),
-                  SizedBox(height: 4),
-                  Text(
-                    response.assignment.shelterName,
-                    style: TextStyle(fontSize: 16, color: Colors.blue.shade800),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildScoreCard(
-                    'Priority',
-                    response.assignment.priorityScore,
-                    response.assignment.priorityColor,
-                  ),
                 ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: _buildScoreCard(
-                    'Confidence',
-                    response.assignment.confidencePercentage,
-                    Colors.teal,
-                  ),
+                SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildScoreCard(
+                        'Priority',
+                        response.assignment.priorityScore,
+                        response.assignment.priorityColor,
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: _buildScoreCard(
+                        'Confidence',
+                        response.assignment.confidencePercentage,
+                        Colors.teal,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // Close dialog
-              Navigator.of(context).pop(true); // Return to list
-            },
-            child: Text('Close'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close dialog
+                  Navigator.of(context).pop(true); // Return to list
+                },
+                child: Text('Close'),
+              ),
+              ElevatedButton.icon(
+                icon: Icon(Icons.info_outline),
+                label: Text('View Details'),
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close dialog
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder:
+                          (context) =>
+                              AssignmentDetailScreen(response: response),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
-          ElevatedButton.icon(
-            icon: Icon(Icons.info_outline),
-            label: Text('View Details'),
-            onPressed: () {
-              Navigator.of(context).pop(); // Close dialog
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                  builder: (context) => AssignmentDetailScreen(
-                    response: response,
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
     );
   }
 
@@ -212,7 +266,17 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Refugee')),
+      appBar: AppBar(
+        title: const Text('Add Refugee'),
+        actions: [
+          if (AuthScope.of(context).role == UserRole.worker)
+            IconButton(
+              tooltip: 'Escanear QR',
+              onPressed: _scanQr,
+              icon: const Icon(Icons.qr_code_scanner),
+            ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -223,13 +287,15 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
               TextFormField(
                 controller: _firstNameCtrl,
                 decoration: const InputDecoration(labelText: 'First Name'),
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                validator:
+                    (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _lastNameCtrl,
                 decoration: const InputDecoration(labelText: 'Last Name'),
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                validator:
+                    (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
               const SizedBox(height: 8),
               TextFormField(
@@ -255,13 +321,23 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
                 decoration: const InputDecoration(labelText: 'Gender'),
               ),
               const SizedBox(height: 8),
-              TextFormField(controller: _nationalityCtrl, decoration: const InputDecoration(labelText: 'Nationality')),
+              TextFormField(
+                controller: _nationalityCtrl,
+                decoration: const InputDecoration(labelText: 'Nationality'),
+              ),
               const SizedBox(height: 8),
-              TextFormField(controller: _languagesCtrl, decoration: const InputDecoration(labelText: 'Languages (comma separated)')),
+              TextFormField(
+                controller: _languagesCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Languages (comma separated)',
+                ),
+              ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _medicalCtrl,
-                decoration: const InputDecoration(labelText: 'Medical Conditions'),
+                decoration: const InputDecoration(
+                  labelText: 'Medical Conditions',
+                ),
                 maxLines: 2,
               ),
               const SizedBox(height: 8),
@@ -271,11 +347,17 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
                 onChanged: (v) => setState(() => _hasDisability = v),
               ),
               const SizedBox(height: 8),
-              TextFormField(controller: _specialNeedsCtrl, decoration: const InputDecoration(labelText: 'Special Needs'), maxLines: 2),
+              TextFormField(
+                controller: _specialNeedsCtrl,
+                decoration: const InputDecoration(labelText: 'Special Needs'),
+                maxLines: 2,
+              ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _familyIdCtrl,
-                decoration: const InputDecoration(labelText: 'Family ID (optional)'),
+                decoration: const InputDecoration(
+                  labelText: 'Family ID (optional)',
+                ),
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 16),
