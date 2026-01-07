@@ -446,26 +446,5 @@
                 "file": "/usr/src/node-red/node_modules/node-red-contrib-postgresql/postgresql.js"
             }
         }
-    },
-    "node-red-node-email": {
-        "name": "node-red-node-email",
-        "version": "5.0.2",
-        "local": false,
-        "user": false,
-        "nodes": {
-            "email": {
-                "name": "email",
-                "types": [
-                    "e-mail",
-                    "e-mail in",
-                    "e-mail mta"
-                ],
-                "enabled": true,
-                "local": false,
-                "user": false,
-                "module": "node-red-node-email",
-                "file": "/usr/src/node-red/node_modules/node-red-node-email/61-email.js"
-            }
-        }
     }
 }

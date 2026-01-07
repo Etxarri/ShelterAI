@@ -1958,7 +1958,8 @@
         "y": 340,
         "wires": [
             [
-                "format_final_response"
+                "format_final_response",
+                "f8d2af34315caed4"
             ]
         ]
     },
@@ -1991,6 +1992,43 @@
         "headers": {},
         "x": 1010,
         "y": 340,
+        "wires": []
+    },
+    {
+        "id": "f8d2af34315caed4",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Preparar Correo",
+        "func": "// Recuperamos datos del mensaje anterior\n// Ajusta estas rutas según cómo venga tu msg.payload final\nvar refugiado = msg.payload.refugee || {}; // Ojo: asegurate de tener el email aquí\nvar asignacion = msg.payload.assignment || {};\nvar refugio = msg.payload.assignment.shelter_name || \"un centro seguro\";\n\n// Si no hay email, cortamos para no dar error\nif (!refugiado.email) {\n    return null;\n}\n\n// 1. Destinatario\nmsg.to = refugiado.email;\n\n// 2. Asunto\nmsg.topic = \"Asignación de Refugio Confirmada - ShelterAI\";\n\n// 3. Cuerpo del mensaje (HTML para que quede bonito)\nmsg.payload = `\n    <h3>Hola, ${refugiado.first_name} ${refugiado.last_name}</h3>\n    <p>Te informamos de que se te ha asignado plaza en el siguiente refugio:</p>\n    \n    <div style=\"background-color: #f0f0f0; padding: 15px; border-radius: 5px;\">\n        <h2>📍 ${refugio}</h2>\n        <p><strong>Estado:</strong> Confirmado</p>\n        <p><strong>Fecha:</strong> ${new Date().toLocaleDateString()}</p>\n    </div>\n\n    <p>Por favor, acude lo antes posible. Presenta este correo a tu llegada.</p>\n    <br>\n    <p>Atentamente,<br>El equipo de ShelterAI</p>\n`;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 800,
+        "y": 440,
+        "wires": [
+            [
+                "fea17ba555215174"
+            ]
+        ]
+    },
+    {
+        "id": "fea17ba555215174",
+        "type": "e-mail",
+        "z": "tab_ai_integration",
+        "server": "smtp.gmail.com",
+        "port": "465",
+        "authtype": "BASIC",
+        "saslformat": true,
+        "token": "oauth2Response.access_token",
+        "secure": true,
+        "tls": true,
+        "name": "",
+        "dname": "",
+        "x": 1050,
+        "y": 440,
         "wires": []
     },
     {

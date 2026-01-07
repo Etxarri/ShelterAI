@@ -1,0 +1,121 @@
+0 verbose cli /usr/local/bin/node /usr/local/bin/npm
+1 info using npm@10.8.2
+2 info using node@v20.19.6
+3 silly config load:file:/usr/local/lib/node_modules/npm/npmrc
+4 silly config load:file:/data/.npmrc
+5 silly config load:file:/usr/src/node-red/.npmrc
+6 silly config load:file:/usr/local/etc/npmrc
+7 verbose title npm install node-red-node-email@5.0.4
+8 verbose argv "install" "--no-audit" "--no-update-notifier" "--no-fund" "--save" "--save-prefix" "~" "--omit" "dev" "--engine-strict" "node-red-node-email@5.0.4"
+9 verbose logfile logs-max:10 dir:/data/.npm/_logs/2026-01-07T09_56_14_320Z-
+10 verbose logfile /data/.npm/_logs/2026-01-07T09_56_14_320Z-debug-0.log
+11 silly packumentCache heap:2050228224 maxSize:512557056 maxEntrySize:256278528
+12 silly logfile done cleaning log files
+13 silly idealTree buildDeps
+14 silly fetch manifest ajv@^8.12.0
+15 silly packumentCache full:https://registry.npmjs.org/ajv cache-miss
+16 http fetch GET 200 https://registry.npmjs.org/ajv 751ms (cache miss)
+17 silly packumentCache full:https://registry.npmjs.org/ajv set size:undefined disposed:false
+18 silly fetch manifest node-red-node-email@5.0.4
+19 silly packumentCache full:https://registry.npmjs.org/node-red-node-email cache-miss
+20 http fetch GET 200 https://registry.npmjs.org/node-red-node-email 341ms (cache miss)
+21 silly packumentCache full:https://registry.npmjs.org/node-red-node-email set size:undefined disposed:false
+22 silly placeDep ROOT ajv@8.17.1 OK for: node-red-project@0.0.1 want: ^8.12.0
+23 silly placeDep ROOT node-red-node-email@5.0.4 OK for: node-red-project@0.0.1 want: 5.0.4
+24 silly fetch manifest fast-uri@^3.0.1
+25 silly packumentCache full:https://registry.npmjs.org/fast-uri cache-miss
+26 silly fetch manifest fast-deep-equal@^3.1.3
+27 silly packumentCache full:https://registry.npmjs.org/fast-deep-equal cache-miss
+28 silly fetch manifest require-from-string@^2.0.2
+29 silly packumentCache full:https://registry.npmjs.org/require-from-string cache-miss
+30 silly fetch manifest json-schema-traverse@^1.0.0
+31 silly packumentCache full:https://registry.npmjs.org/json-schema-traverse cache-miss
+32 http fetch GET 200 https://registry.npmjs.org/json-schema-traverse 127ms (cache miss)
+33 silly packumentCache full:https://registry.npmjs.org/json-schema-traverse set size:undefined disposed:false
+34 http fetch GET 200 https://registry.npmjs.org/fast-uri 217ms (cache miss)
+35 silly packumentCache full:https://registry.npmjs.org/fast-uri set size:undefined disposed:false
+36 http fetch GET 200 https://registry.npmjs.org/require-from-string 220ms (cache miss)
+37 silly packumentCache full:https://registry.npmjs.org/require-from-string set size:undefined disposed:false
+38 http fetch GET 200 https://registry.npmjs.org/fast-deep-equal 225ms (cache miss)
+39 silly packumentCache full:https://registry.npmjs.org/fast-deep-equal set size:undefined disposed:false
+40 silly placeDep ROOT fast-deep-equal@3.1.3 OK for: ajv@8.17.1 want: ^3.1.3
+41 silly placeDep ROOT fast-uri@3.1.0 OK for: ajv@8.17.1 want: ^3.0.1
+42 silly placeDep ROOT json-schema-traverse@1.0.0 OK for: ajv@8.17.1 want: ^1.0.0
+43 silly placeDep ROOT require-from-string@2.0.2 OK for: ajv@8.17.1 want: ^2.0.2
+44 silly reify mark retired [ '/data/node_modules/pg-cloudflare' ]
+45 silly reify mark retired [ '/data/node_modules/mustache' ]
+46 silly reify mark retired [ '/data/node_modules/node-red-contrib-postgresql' ]
+47 silly reify mark retired [ '/data/node_modules/pg-cursor' ]
+48 silly reify mark retired [ '/data/node_modules/pg' ]
+49 silly reify mark retired [ '/data/node_modules/pg-connection-string' ]
+50 silly reify mark retired [ '/data/node_modules/pg-int8' ]
+51 silly reify mark retired [ '/data/node_modules/pgpass' ]
+52 silly reify mark retired [ '/data/node_modules/pg-pool' ]
+53 silly reify mark retired [ '/data/node_modules/pg-protocol' ]
+54 silly reify mark retired [ '/data/node_modules/postgres-bytea' ]
+55 silly reify mark retired [ '/data/node_modules/pg-types' ]
+56 silly reify mark retired [ '/data/node_modules/postgres-array' ]
+57 silly reify mark retired [ '/data/node_modules/postgres-interval' ]
+58 silly reify mark retired [ '/data/node_modules/split2' ]
+59 silly reify mark retired [ '/data/node_modules/postgres-date' ]
+60 silly reify mark retired [ '/data/node_modules/xtend' ]
+61 silly reify moves {
+61 silly reify   '/data/node_modules/pg-cloudflare': '/data/node_modules/.pg-cloudflare-9SlD6y6H',
+61 silly reify   '/data/node_modules/mustache': '/data/node_modules/.mustache-ROQ2oY93',
+61 silly reify   '/data/node_modules/node-red-contrib-postgresql': '/data/node_modules/.node-red-contrib-postgresql-IYEB5yK7',
+61 silly reify   '/data/node_modules/pg-cursor': '/data/node_modules/.pg-cursor-Q7WoAoA4',
+61 silly reify   '/data/node_modules/pg': '/data/node_modules/.pg-UAyuT6GF',
+61 silly reify   '/data/node_modules/pg-connection-string': '/data/node_modules/.pg-connection-string-cJ1nl38n',
+61 silly reify   '/data/node_modules/pg-int8': '/data/node_modules/.pg-int8-gBUoX8CQ',
+61 silly reify   '/data/node_modules/pgpass': '/data/node_modules/.pgpass-vCRx4PLW',
+61 silly reify   '/data/node_modules/pg-pool': '/data/node_modules/.pg-pool-qzBxIC0y',
+61 silly reify   '/data/node_modules/pg-protocol': '/data/node_modules/.pg-protocol-lUoQErD8',
+61 silly reify   '/data/node_modules/postgres-bytea': '/data/node_modules/.postgres-bytea-7ONO4ad6',
+61 silly reify   '/data/node_modules/pg-types': '/data/node_modules/.pg-types-wZxxzuUP',
+61 silly reify   '/data/node_modules/postgres-array': '/data/node_modules/.postgres-array-9j3wHI49',
+61 silly reify   '/data/node_modules/postgres-interval': '/data/node_modules/.postgres-interval-bCQFrdgU',
+61 silly reify   '/data/node_modules/split2': '/data/node_modules/.split2-YyIajAst',
+61 silly reify   '/data/node_modules/postgres-date': '/data/node_modules/.postgres-date-0N9kjo1a',
+61 silly reify   '/data/node_modules/xtend': '/data/node_modules/.xtend-RyJXfljO'
+61 silly reify }
+62 silly tarball no local data for node-red-node-email@https://registry.npmjs.org/node-red-node-email/-/node-red-node-email-5.0.4.tgz. Extracting by manifest.
+63 http fetch GET 200 https://registry.npmjs.org/node-red-node-email/-/node-red-node-email-5.0.4.tgz 7697ms (cache miss)
+64 silly tarball no local data for fast-uri@https://registry.npmjs.org/fast-uri/-/fast-uri-3.1.0.tgz. Extracting by manifest.
+65 silly tarball no local data for json-schema-traverse@https://registry.npmjs.org/json-schema-traverse/-/json-schema-traverse-1.0.0.tgz. Extracting by manifest.
+66 silly tarball no local data for require-from-string@https://registry.npmjs.org/require-from-string/-/require-from-string-2.0.2.tgz. Extracting by manifest.
+67 silly tarball no local data for fast-deep-equal@https://registry.npmjs.org/fast-deep-equal/-/fast-deep-equal-3.1.3.tgz. Extracting by manifest.
+68 silly tarball no local data for ajv@https://registry.npmjs.org/ajv/-/ajv-8.17.1.tgz. Extracting by manifest.
+69 http fetch GET 200 https://registry.npmjs.org/require-from-string/-/require-from-string-2.0.2.tgz 979ms (cache miss)
+70 http fetch GET 200 https://registry.npmjs.org/fast-deep-equal/-/fast-deep-equal-3.1.3.tgz 1105ms (cache miss)
+71 http fetch GET 200 https://registry.npmjs.org/json-schema-traverse/-/json-schema-traverse-1.0.0.tgz 1164ms (cache miss)
+72 http fetch GET 200 https://registry.npmjs.org/fast-uri/-/fast-uri-3.1.0.tgz 1728ms (cache miss)
+73 http fetch GET 200 https://registry.npmjs.org/ajv/-/ajv-8.17.1.tgz 4523ms (cache miss)
+74 silly ADD node_modules/require-from-string
+75 silly ADD node_modules/json-schema-traverse
+76 silly ADD node_modules/fast-uri
+77 silly ADD node_modules/fast-deep-equal
+78 silly ADD node_modules/node-red-node-email
+79 silly ADD node_modules/ajv
+80 silly CHANGE node_modules/xtend
+81 silly CHANGE node_modules/postgres-date
+82 silly CHANGE node_modules/split2
+83 silly CHANGE node_modules/postgres-interval
+84 silly CHANGE node_modules/postgres-array
+85 silly CHANGE node_modules/pg-types
+86 silly CHANGE node_modules/postgres-bytea
+87 silly CHANGE node_modules/pg-protocol
+88 silly CHANGE node_modules/pg-pool
+89 silly CHANGE node_modules/pgpass
+90 silly CHANGE node_modules/pg-int8
+91 silly CHANGE node_modules/pg-connection-string
+92 silly CHANGE node_modules/pg
+93 silly CHANGE node_modules/pg-cursor
+94 silly CHANGE node_modules/node-red-contrib-postgresql
+95 silly CHANGE node_modules/mustache
+96 silly CHANGE node_modules/pg-cloudflare
+97 verbose cwd /data
+98 verbose os Linux 6.6.87.2-microsoft-standard-WSL2
+99 verbose node v20.19.6
+100 verbose npm  v10.8.2
+101 verbose exit 0
+102 info ok
