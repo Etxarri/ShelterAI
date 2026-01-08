@@ -75,7 +75,7 @@ class RefugeeCard extends StatelessWidget {
               children: [
                 CircularProgressIndicator(),
                 SizedBox(height: 16),
-                Text('Getting assignment...'),
+                Text('Getting AI recommendation...'),
               ],
             ),
           ),
@@ -84,37 +84,46 @@ class RefugeeCard extends StatelessWidget {
     );
 
     try {
-      // Get refugee assignments
+      // First, check if refugee has existing assignments
       final assignments = await ApiService.getAssignments(refugeeId.toString());
       
       if (!context.mounted) return;
-      Navigator.of(context).pop(); // Close loading
+      
+      if (assignments.isNotEmpty) {
+        // Has existing assignment, show it
+        Navigator.of(context).pop(); // Close loading
+        
+        final assignmentData = assignments.first;
+        final response = RefugeeAssignmentResponse.fromJson({
+          'refugee': data,
+          'assignment': assignmentData,
+        });
 
-      if (assignments.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('This refugee has no assignment yet'),
-            backgroundColor: Colors.orange,
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => AssignmentDetailScreen(response: response),
           ),
         );
-        return;
+      } else {
+        // No assignment, get AI recommendation
+        final recommendationResponse = await ApiService.getAIRecommendation(refugeeId.toString());
+        
+        if (!context.mounted) return;
+        Navigator.of(context).pop(); // Close loading
+        
+        // Create response object from recommendation
+        final response = RefugeeAssignmentResponse.fromJson(recommendationResponse);
+
+        // Navigate to the detail screen
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => AssignmentDetailScreen(
+              response: response,
+              isRecommendation: true,  // Flag para indicar que es solo recomendación
+            ),
+          ),
+        );
       }
-
-      // Take the first assignment (the most recent)
-      final assignmentData = assignments.first;
-      
-      // Create the response object
-      final response = RefugeeAssignmentResponse.fromJson({
-        'refugee': data,
-        'assignment': assignmentData,
-      });
-
-      // Navigate to the detail screen
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => AssignmentDetailScreen(response: response),
-        ),
-      );
     } catch (e) {
       if (!context.mounted) return;
       Navigator.of(context).pop(); // Close loading

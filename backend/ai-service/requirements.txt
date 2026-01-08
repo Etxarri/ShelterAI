@@ -1,24 +1,29 @@
 # Web Framework
-fastapi
-uvicorn[standard]
-pydantic
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+pydantic==2.5.3
+
+# Database
+sqlalchemy==2.0.25
+psycopg2-binary>=2.9.0  # Sin versión fija para usar wheel precompilado
+python-dotenv==1.0.0
 
 # Data Science & Machine Learning
-numpy
-pandas
-scikit-learn
-joblib
-hdbscan
-matplotlib
-seaborn
-umap-learn
+numpy==1.26.3
+pandas==2.1.4
+scikit-learn==1.4.0
+joblib==1.3.2
+hdbscan==0.8.33
+matplotlib==3.8.2
+seaborn==0.13.1
+umap-learn==0.5.5
 
 # Testing
-pytest
-httpx
+pytest==7.4.3
+httpx==0.26.0
 
 # Code Quality
-pylint
-black
+pylint==3.0.3
+black==23.12.1
 
 # pip install -r requirements.txt

@@ -6,15 +6,25 @@ Backend desarrollado en Node-RED para el sistema de gestión de refugiados Shelt
 
 ```bash
 cd backend/api-service
+
+# Primero construir la imagen del AI service
+cd ../ai-service
+docker compose build --no-cache
+
+# Volver y levantar todos los servicios
+cd ../api-service
 docker compose up -d
 ```
 
-El backend estará disponible en: **http://localhost:1880**
+**Servicios disponibles:**
+- **Node-RED:** http://localhost:1880
+- **AI Service:** http://localhost:8000
+- **PostgreSQL:** localhost:5432
 
 ## 📚 Documentación
 
 - **[API.md](../../docs/API.md)** - Documentación completa de todos los endpoints
-- **[INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md)** - Guía para integrar IA y Simulación
+- **[INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md)** - Guía de integración con el servicio de IA actualizado
 
 ## 🏗️ Arquitectura
 
@@ -30,8 +40,11 @@ El backend estará disponible en: **http://localhost:1880**
 │   (API Layer)   │      │  (Database)  │
 └────────┬────────┘      └──────────────┘
          │
-         ├──► AI Service (puerto 5000)
-         └──► Simulator (eventos)
+         ▼
+┌─────────────────┐
+│   AI Service    │  ← HDBSCAN Clustering + Multi-criteria Matching
+│   (FastAPI)     │
+└─────────────────┘
 ```
 
 ## 📦 Servicios
@@ -39,8 +52,14 @@ El backend estará disponible en: **http://localhost:1880**
 ### Node-RED (Puerto 1880)
 - API REST completa (CRUD)
 - Validación de datos con JSON Schemas
-- Integración con servicios de IA
-- Recepción de datos del simulador
+- Integración con servicio de IA (FastAPI)
+- Gateway entre frontend y servicios backend
+
+### AI Service (Puerto 8000)
+- Clustering HDBSCAN para clasificación de vulnerabilidad
+- Sistema de matching multi-criterio
+- Consulta directa a PostgreSQL para refugios disponibles
+- Retorna top 3 recomendaciones con scores de compatibilidad
 
 ### PostgreSQL (Puerto 5432)
 - Base de datos principal
@@ -75,15 +94,18 @@ El backend estará disponible en: **http://localhost:1880**
 - `PUT /api/assignments/:id` - Actualizar
 - `DELETE /api/assignments/:id` - Eliminar
 
-### Integración IA
-- `POST /api/ai/predict/vulnerability` - Predecir vulnerabilidad
-- `POST /api/ai/predict/assignment` - Recomendar albergue
+### Integración IA (Actualizado)
+- `POST /api/ai/assign-shelter` - Obtener recomendación de refugio para un refugiado
+- `POST /api/refugees-with-assignment` - Crear refugiado Y asignarle refugio automáticamente
 
-### Simulación
-- `POST /api/simulation/data` - Recibir eventos
-- `GET /api/simulation/status` - Estado del sistema
+**Cambios importantes en la IA:**
+- Usa HDBSCAN clustering (54 clusters de vulnerabilidad)
+- Scoring multi-criterio: disponibilidad, necesidades médicas, cuidado infantil, accesibilidad, idiomas, tipo de refugio
+- Retorna top 3 recomendaciones con scores de compatibilidad (0-100)
+- Consulta refugios directamente desde PostgreSQL (ya no se envían desde Node-RED)
+- Explicaciones en lenguaje natural en inglés
 
-Ver **[API.md](../../docs/API.md)** para detalles completos.
+Ver **[INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md)** para detalles de integración.
 
 ## ✅ Validación de Datos
 

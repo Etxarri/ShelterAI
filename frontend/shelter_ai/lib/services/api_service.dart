@@ -198,4 +198,25 @@ class ApiService {
       rethrow;
     }
   }
-}
+
+    // GET /api/ai/recommend/:refugeeId - Get AI recommendation for a refugee (without creating assignment)
+    static Future<Map<String, dynamic>> getAIRecommendation(
+      String refugeeId,
+    ) async {
+      try {
+        final response = await client.get(
+          Uri.parse('$baseUrl/ai/recommend/$refugeeId'),
+        );
+  
+        if (response.statusCode == 200) {
+          return json.decode(response.body) as Map<String, dynamic>;
+        } else {
+          throw Exception('Failed to get AI recommendation: ${response.statusCode}');
+        }
+      } catch (e) {
+        // ignore: avoid_print
+        print('Error getting AI recommendation: $e');
+        rethrow;
+      }
+    }
+  }

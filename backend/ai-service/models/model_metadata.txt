@@ -1,0 +1,69 @@
+SHELTER AI - MODELO DE CLUSTERING
+==================================================
+
+n_clusters: 54
+n_features: 555
+n_samples: 8957
+n_noise_points: 1303
+training_date: 20260107_084405
+model_version: 1.0
+random_state: 42
+
+
+Distribución de clusters:
+--------------------------------------------------
+Ruido: 1303 personas (14.5%)
+Cluster 1: 91 personas (1.0%)
+Cluster 2: 103 personas (1.1%)
+Cluster 3: 176 personas (2.0%)
+Cluster 4: 111 personas (1.2%)
+Cluster 5: 98 personas (1.1%)
+Cluster 6: 348 personas (3.9%)
+Cluster 7: 88 personas (1.0%)
+Cluster 8: 166 personas (1.9%)
+Cluster 9: 128 personas (1.4%)
+Cluster 10: 146 personas (1.6%)
+Cluster 11: 123 personas (1.4%)
+Cluster 12: 88 personas (1.0%)
+Cluster 13: 114 personas (1.3%)
+Cluster 14: 64 personas (0.7%)
+Cluster 15: 97 personas (1.1%)
+Cluster 16: 214 personas (2.4%)
+Cluster 17: 188 personas (2.1%)
+Cluster 18: 93 personas (1.0%)
+Cluster 19: 96 personas (1.1%)
+Cluster 20: 64 personas (0.7%)
+Cluster 21: 123 personas (1.4%)
+Cluster 22: 89 personas (1.0%)
+Cluster 23: 86 personas (1.0%)
+Cluster 24: 106 personas (1.2%)
+Cluster 25: 96 personas (1.1%)
+Cluster 26: 117 personas (1.3%)
+Cluster 27: 223 personas (2.5%)
+Cluster 28: 138 personas (1.5%)
+Cluster 29: 111 personas (1.2%)
+Cluster 30: 169 personas (1.9%)
+Cluster 31: 134 personas (1.5%)
+Cluster 32: 214 personas (2.4%)
+Cluster 33: 172 personas (1.9%)
+Cluster 34: 99 personas (1.1%)
+Cluster 35: 60 personas (0.7%)
+Cluster 36: 137 personas (1.5%)
+Cluster 37: 220 personas (2.5%)
+Cluster 38: 363 personas (4.1%)
+Cluster 39: 63 personas (0.7%)
+Cluster 40: 79 personas (0.9%)
+Cluster 41: 66 personas (0.7%)
+Cluster 42: 63 personas (0.7%)
+Cluster 43: 288 personas (3.2%)
+Cluster 44: 274 personas (3.1%)
+Cluster 45: 93 personas (1.0%)
+Cluster 46: 173 personas (1.9%)
+Cluster 47: 63 personas (0.7%)
+Cluster 48: 370 personas (4.1%)
+Cluster 49: 232 personas (2.6%)
+Cluster 50: 125 personas (1.4%)
+Cluster 51: 113 personas (1.3%)
+Cluster 52: 116 personas (1.3%)
+Cluster 53: 141 personas (1.6%)
+Cluster 54: 142 personas (1.6%)

@@ -3,10 +3,12 @@ import 'package:shelter_ai/models/refugee_assignment_response.dart';
 
 class AssignmentDetailScreen extends StatelessWidget {
   final RefugeeAssignmentResponse response;
+  final bool isRecommendation;
 
   const AssignmentDetailScreen({
     super.key,
     required this.response,
+    this.isRecommendation = false,
   });
 
   @override
@@ -22,6 +24,28 @@ class AssignmentDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Recommendation banner
+            if (isRecommendation)
+              Container(
+                color: Colors.amber.shade100,
+                padding: EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.amber.shade900),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'This is an AI recommendation. No assignment has been created yet.',
+                        style: TextStyle(
+                          color: Colors.amber.shade900,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
             // Header with refugee information
             Container(
               color: Colors.blue.shade50,
@@ -148,7 +172,7 @@ class AssignmentDetailScreen extends StatelessWidget {
               ),
             ),
 
-            // Detailed explanation
+            // Detailed explanation with match details
             Padding(
               padding: EdgeInsets.all(16),
               child: Card(
@@ -180,12 +204,134 @@ class AssignmentDetailScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(color: Colors.orange.shade200),
                         ),
-                        child: Text(
-                          assignment.explanation,
-                          style: TextStyle(
-                            fontSize: 14,
-                            height: 1.5,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              assignment.explanation,
+                              style: TextStyle(
+                                fontSize: 14,
+                                height: 1.5,
+                              ),
+                            ),
+                            if (assignment.matchingReasons.isNotEmpty) ...[
+                              SizedBox(height: 16),
+                              Divider(color: Colors.orange.shade300),
+                              SizedBox(height: 12),
+                              Text(
+                                'Why this shelter?',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.orange.shade900,
+                                ),
+                              ),
+                              SizedBox(height: 12),
+                              ...assignment.matchingReasons.map((reason) {
+                                return Padding(
+                                  padding: EdgeInsets.only(bottom: 8),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Icon(
+                                        Icons.check_circle,
+                                        color: Colors.green.shade700,
+                                        size: 20,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          reason.replaceFirst('✓ ', ''),
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            height: 1.4,
+                                            color: Colors.grey.shade800,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                            ],
+                            if (assignment.matchDetails != null && assignment.matchDetails!.isNotEmpty) ...[
+                              SizedBox(height: 16),
+                              Divider(color: Colors.orange.shade300),
+                              SizedBox(height: 12),
+                              Text(
+                                'Match Criteria Analysis:',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.orange.shade900,
+                                ),
+                              ),
+                              SizedBox(height: 12),
+                              ...assignment.matchDetails!.entries.map((entry) {
+                                String criteriaName = _formatCriteriaName(entry.key);
+                                double score = 0.0;
+                                if (entry.value is num) {
+                                  score = (entry.value as num).toDouble();
+                                }
+                                
+                                return Padding(
+                                  padding: EdgeInsets.only(bottom: 10),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            criteriaName,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.grey.shade800,
+                                            ),
+                                          ),
+                                          Container(
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 2,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: _getScoreColor(score).withOpacity(0.2),
+                                              borderRadius: BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: _getScoreColor(score),
+                                                width: 1,
+                                              ),
+                                            ),
+                                            child: Text(
+                                              '${score.toStringAsFixed(0)} pts',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color: _getScoreColor(score),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(height: 6),
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(4),
+                                        child: LinearProgressIndicator(
+                                          value: score / 100,
+                                          minHeight: 8,
+                                          backgroundColor: Colors.grey.shade200,
+                                          valueColor: AlwaysStoppedAnimation<Color>(
+                                            _getScoreColor(score),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                            ],
+                          ],
                         ),
                       ),
                     ],
@@ -193,6 +339,8 @@ class AssignmentDetailScreen extends StatelessWidget {
                 ),
               ),
             ),
+
+            SizedBox(height: 16),
 
             // Available alternatives
             if (assignment.alternativeShelters.isNotEmpty)
@@ -425,4 +573,30 @@ class AssignmentDetailScreen extends StatelessWidget {
       ),
     );
   }
-}
+
+  String _formatCriteriaName(String key) {
+    // Mapeo de nombres técnicos a nombres amigables en español
+    const Map<String, String> criteriaNames = {
+      'availability': 'Disponibilidad',
+      'medical_facilities': 'Instalaciones Médicas',
+      'childcare': 'Cuidado Infantil',
+      'disability_access': 'Acceso para Discapacitados',
+      'languages': 'Idiomas',
+      'shelter_type': 'Tipo de Refugio',
+    };
+    
+    return criteriaNames[key] ?? key
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map((word) => word[0].toUpperCase() + word.substring(1))
+        .join(' ');
+  }
+
+    Color _getScoreColor(double score) {
+      if (score >= 80) return Colors.green.shade700;
+      if (score >= 60) return Colors.lightGreen.shade700;
+      if (score >= 40) return Colors.orange.shade700;
+      if (score >= 20) return Colors.deepOrange.shade700;
+      return Colors.red.shade700;
+    }
+  }

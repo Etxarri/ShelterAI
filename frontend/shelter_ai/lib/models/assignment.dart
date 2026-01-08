@@ -10,6 +10,8 @@ class Assignment {
   final String status;
   final DateTime assignedAt;
   final List<AlternativeShelter> alternativeShelters;
+  final Map<String, dynamic>? matchDetails;
+  final List<String> matchingReasons;
 
   Assignment({
     required this.id,
@@ -21,6 +23,8 @@ class Assignment {
     required this.status,
     required this.assignedAt,
     this.alternativeShelters = const [],
+    this.matchDetails,
+    this.matchingReasons = const [],
   });
 
   factory Assignment.fromJson(Map<String, dynamic> json) {
@@ -28,6 +32,13 @@ class Assignment {
     if (json['alternative_shelters'] != null) {
       alternatives = (json['alternative_shelters'] as List)
           .map((alt) => AlternativeShelter.fromJson(alt))
+          .toList();
+    }
+
+    var reasons = <String>[];
+    if (json['matching_reasons'] != null) {
+      reasons = (json['matching_reasons'] as List)
+          .map((r) => r.toString())
           .toList();
     }
 
@@ -43,6 +54,8 @@ class Assignment {
           ? DateTime.parse(json['assigned_at'].toString())
           : DateTime.now(),
       alternativeShelters: alternatives,
+      matchDetails: json['match_details'] as Map<String, dynamic>?,
+      matchingReasons: reasons,
     );
   }
 
