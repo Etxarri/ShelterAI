@@ -124,7 +124,9 @@ artifacts = {
     'categorical_cols': categorical_cols,
     'n_clusters': n_clusters,
     'training_date': timestamp,
-    'model_version': '1.0'
+    'model_version': '1.0',
+    'X_train_reduced': X_reduced,  # Datos reducidos para KNN
+    'y_train_clusters': cluster_labels  # Labels de clusters para KNN
 }
 
 model_path = os.path.join(MODEL_DIR, 'shelter_model.pkl')

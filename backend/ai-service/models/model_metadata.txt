@@ -5,7 +5,7 @@ n_clusters: 54
 n_features: 555
 n_samples: 8957
 n_noise_points: 1303
-training_date: 20260107_084405
+training_date: 20260108_111754
 model_version: 1.0
 random_state: 42
 
