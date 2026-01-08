@@ -32,7 +32,7 @@ public class ShelterManager {
     // Método simple: Solo añade a la cola global (ya no decide destino)
     public void addRefugeeToGlobalQueue(Refugee refugee) {
         globalQueue.add(refugee);
-        System.out.println("[SALA ESPERA] " + refugee.getId() + " entró a la cola global. (Total esperando: " + globalQueue.size() + ")");
+        System.out.println("[WAITING ROOM] " + refugee.getId() + " entered in the global queue. (Total waiting: " + globalQueue.size() + ")");
     }
 
     public void updateCapacity(String shelterId, int capacity) {

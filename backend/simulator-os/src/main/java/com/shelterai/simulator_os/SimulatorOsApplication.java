@@ -14,7 +14,7 @@ public class SimulatorOsApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		System.out.println("--- INICIANDO SISTEMA DE REFUGIOS (OS PROJECT) ---");
+		System.out.println("--- INITIALIZING SHELTERS ---");
         // Iniciamos el servidor de sockets en puerto 9999
 		ServerListener server = new ServerListener(9999);
 		server.start();

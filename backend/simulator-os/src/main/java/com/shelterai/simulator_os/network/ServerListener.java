@@ -21,7 +21,7 @@ public class ServerListener {
         
         new Thread(() -> {
             try (ServerSocket serverSocket = new ServerSocket(port)) {
-                System.out.println("[NET] Servidor Multi-Refugio escuchando en puerto " + port);
+                System.out.println("[NET] Multi-Shelter Server listening in port " + port);
                 while (true) {
                     Socket clientSocket = serverSocket.accept();
                     new Thread(new ClientHandler(clientSocket, shelterManager)).start();
