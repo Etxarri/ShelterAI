@@ -1958,7 +1958,8 @@
         "y": 340,
         "wires": [
             [
-                "format_final_response"
+                "format_final_response",
+                "f8d2af34315caed4"
             ]
         ]
     },
@@ -1991,6 +1992,43 @@
         "headers": {},
         "x": 1010,
         "y": 340,
+        "wires": []
+    },
+    {
+        "id": "f8d2af34315caed4",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Preparar Correo",
+        "func": "// Recuperamos datos del mensaje anterior\n// Ajusta estas rutas según cómo venga tu msg.payload final\nvar refugiado = msg.payload.refugee || {}; // Ojo: asegurate de tener el email aquí\nvar asignacion = msg.payload.assignment || {};\nvar refugio = msg.payload.assignment.shelter_name || \"un centro seguro\";\n\n// Si no hay email, cortamos para no dar error\nif (!refugiado.email) {\n    return null;\n}\n\n// 1. Destinatario\nmsg.to = refugiado.email;\n\n// 2. Asunto\nmsg.topic = \"Asignación de Refugio Confirmada - ShelterAI\";\n\n// 3. Cuerpo del mensaje (HTML para que quede bonito)\nmsg.payload = `\n    <h3>Hola, ${refugiado.first_name} ${refugiado.last_name}</h3>\n    <p>Te informamos de que se te ha asignado plaza en el siguiente refugio:</p>\n    \n    <div style=\"background-color: #f0f0f0; padding: 15px; border-radius: 5px;\">\n        <h2>📍 ${refugio}</h2>\n        <p><strong>Estado:</strong> Confirmado</p>\n        <p><strong>Fecha:</strong> ${new Date().toLocaleDateString()}</p>\n    </div>\n\n    <p>Por favor, acude lo antes posible. Presenta este correo a tu llegada.</p>\n    <br>\n    <p>Atentamente,<br>El equipo de ShelterAI</p>\n`;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 800,
+        "y": 440,
+        "wires": [
+            [
+                "fea17ba555215174"
+            ]
+        ]
+    },
+    {
+        "id": "fea17ba555215174",
+        "type": "e-mail",
+        "z": "tab_ai_integration",
+        "server": "smtp.gmail.com",
+        "port": "465",
+        "authtype": "BASIC",
+        "saslformat": true,
+        "token": "oauth2Response.access_token",
+        "secure": true,
+        "tls": true,
+        "name": "",
+        "dname": "",
+        "x": 1050,
+        "y": 440,
         "wires": []
     },
     {
@@ -2053,7 +2091,7 @@
         "type": "function",
         "z": "tab_login",
         "name": "Verificar y Responder",
-        "func": "try {\n  const result = msg.payload;\n  const passwordFromRequest = msg.passwordToVerify;\n  \n  // Verificar si el usuario existe\n  if (!Array.isArray(result) || result.length === 0) {\n    msg.statusCode = 401;\n    msg.payload = {\n      success: false,\n      message: 'Email o contraseña incorrectos'\n    };\n    return msg;\n  }\n  \n  const user = result[0];\n  \n  // Comparar contraseña (en prototipo es comparación directa)\n  // En producción: usar bcrypt.compare()\n  if (user.password !== passwordFromRequest) {\n    msg.statusCode = 401;\n    msg.payload = {\n      success: false,\n      message: 'Email o contraseña incorrectos'\n    };\n    return msg;\n  }\n  \n  // ÉXITO: Credentials válidas, devolver role\n  msg.statusCode = 200;\n  msg.payload = {\n    success: true,\n    user_id: user.id,\n    name: user.full_name,\n    role: user.role, // 'worker' o 'refugee'\n    token: 'simulated_token_' + Date.now() // Token simulado\n  };\n  \n  // Limpiar datos sensibles\n  delete msg.passwordToVerify;\n  \n  return msg;\n  \n} catch (err) {\n  msg.statusCode = 500;\n  msg.payload = {\n    success: false,\n    message: 'Error procesando login'\n  };\n  return msg;\n}",
+        "func": "try {\n  const result = msg.payload;\n  const passwordFromRequest = msg.passwordToVerify;\n  \n  // Verificar si el usuario existe\n  if (!Array.isArray(result) || result.length === 0) {\n    msg.statusCode = 401;\n    msg.payload = {\n      success: false,\n      message: 'Email o contraseña incorrectos'\n    };\n    return msg;\n  }\n  \n  const user = result[0];\n  \n  // Comparar contraseña (en prototipo es comparación directa)\n  // En producción: usar bcrypt.compare()\n  if (user.password !== passwordFromRequest) {\n    msg.statusCode = 401;\n    msg.payload = {\n      success: false,\n      message: 'Email o contraseña incorrectos'\n    };\n    return msg;\n  }\n  \n  // ÉXITO: Credentials válidas, devolver role\n  msg.statusCode = 200;\n  msg.payload = {\n    success: true,\n    user_id: user.id,\n    name: user.full_name,\n    email: user.email, // Necesario para notificación de login\n    role: user.role, // 'worker' o 'refugee'\n    token: 'simulated_token_' + Date.now() // Token simulado\n  };\n  \n  // Limpiar datos sensibles\n  delete msg.passwordToVerify;\n  \n  return msg;\n  \n} catch (err) {\n  msg.statusCode = 500;\n  msg.payload = {\n    success: false,\n    message: 'Error procesando login'\n  };\n  return msg;\n}",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -2064,7 +2102,8 @@
         "y": 100,
         "wires": [
             [
-                "login_http_response"
+                "login_http_response",
+                "63d32f953f6537d2"
             ]
         ]
     },
@@ -2089,8 +2128,8 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 170,
-        "y": 160,
+        "x": 160,
+        "y": 300,
         "wires": [
             [
                 "e2216cfe7183366c"
@@ -2109,8 +2148,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 410,
-        "y": 160,
+        "x": 400,
+        "y": 300,
         "wires": [
             [
                 "78899a30e92aecbe"
@@ -2127,8 +2166,8 @@
         "split": false,
         "rowsPerMsg": "",
         "outputs": 1,
-        "x": 650,
-        "y": 160,
+        "x": 640,
+        "y": 300,
         "wires": [
             [
                 "5e41704bfdb79d59"
@@ -2147,8 +2186,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 880,
-        "y": 160,
+        "x": 870,
+        "y": 300,
         "wires": [
             [
                 "cb383e10764124f8"
@@ -2162,8 +2201,45 @@
         "name": "HTTP Response",
         "statusCode": "",
         "headers": {},
-        "x": 1110,
-        "y": 160,
+        "x": 1100,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "63d32f953f6537d2",
+        "type": "function",
+        "z": "tab_login",
+        "name": "Preparar Correo",
+        "func": "// Function: Preparar Alerta de Login\n\n// En el flujo de login, el payload suele traer el usuario tras la verificación\nconst user = msg.payload;\nconst email = user.email;\n\n// Validación de seguridad\nif (!email) {\n    node.warn('Login Email: No hay email en el payload');\n    return null; // Detenemos el flujo para no romper el nodo Gmail\n}\n\nconst fullName = user.name || 'Usuario';\nconst time = new Date().toLocaleTimeString();\nconst date = new Date().toLocaleDateString();\n\n// Configuración para node-red-node-email\nmsg.to = email;\nmsg.topic = 'Alerta de Seguridad: Nuevo inicio de sesión - ShelterAI';\n\n// Cuerpo Texto (Fallback)\nmsg.payload = `Hola ${fullName},\nSe ha detectado un nuevo inicio de sesión en tu cuenta de ShelterAI.\nFecha: ${date}\nHora: ${time}\n\nSi no has sido tú, contacta con un administrador inmediatamente.`;\n\n// Cuerpo HTML (Bonito)\nmsg.html = `\n<h3>Hola, ${fullName}</h3>\n<p>Se ha detectado un nuevo acceso a tu cuenta.</p>\n<div style=\"background-color: #fff3cd; color: #856404; padding: 15px; border-radius: 5px; border: 1px solid #ffeeba;\">\n  <strong>Nuevo Inicio de Sesión</strong><br>\n  <ul>\n    <li><strong>Fecha:</strong> ${date}</li>\n    <li><strong>Hora:</strong> ${time}</li>\n  </ul>\n</div>\n<p>Si has sido tú, puedes ignorar este mensaje.</p>\n<p style=\"font-size: 12px; color: #666;\">Equipo de Seguridad ShelterAI</p>\n`;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1040,
+        "y": 200,
+        "wires": [
+            [
+                "dc46be29a6f0c76e"
+            ]
+        ]
+    },
+    {
+        "id": "dc46be29a6f0c76e",
+        "type": "e-mail",
+        "z": "tab_login",
+        "server": "smtp.gmail.com",
+        "port": "587",
+        "authtype": "BASIC",
+        "saslformat": true,
+        "token": "oauth2Response.access_token",
+        "secure": false,
+        "tls": true,
+        "name": "",
+        "dname": "",
+        "x": 1290,
+        "y": 200,
         "wires": []
     }
 ]

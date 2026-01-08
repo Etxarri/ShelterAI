@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -68,7 +69,7 @@ class _RefugeeSelfFormQrScreenState extends State<RefugeeSelfFormQrScreen> {
 
     pdf.addPage(
       pw.Page(
-        pageFormat: pw.PdfPageFormat.a4,
+        pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(40),
         build: (context) => pw.Column(
           mainAxisAlignment: pw.MainAxisAlignment.center,
@@ -80,7 +81,7 @@ class _RefugeeSelfFormQrScreenState extends State<RefugeeSelfFormQrScreen> {
             ),
             pw.SizedBox(height: 24),
             pw.Container(
-              color: pw.PdfColors.white,
+              color: PdfColors.white,
               padding: const pw.EdgeInsets.all(24),
               child: pw.BarcodeWidget(
                 barcode: pw.Barcode.qrCode(),
