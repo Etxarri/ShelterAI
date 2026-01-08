@@ -1703,7 +1703,7 @@
         "type": "function",
         "z": "tab_ai_integration",
         "name": "Preparar datos para IA",
-        "func": "// Guardar datos originales del refugiado\nconst refugeeData = msg.payload;\n\n// Preparar payload para el servicio de IA\nmsg.payload = {\n    first_name: refugeeData.first_name,\n    last_name: refugeeData.last_name,\n    age: refugeeData.age,\n    gender: refugeeData.gender,\n    nationality: refugeeData.nationality,\n    languages_spoken: refugeeData.languages_spoken,\n    medical_conditions: refugeeData.medical_conditions,\n    has_disability: refugeeData.has_disability || false,\n    vulnerability_score: refugeeData.vulnerability_score || 0.0,\n    special_needs: refugeeData.special_needs,\n    family_id: refugeeData.family_id\n};\n\n// Guardar en contexto para usar después\nmsg.refugeeData = refugeeData;\n\nreturn msg;",
+        "func": "// Guardar datos originales del refugiado\nconst refugeeData = msg.payload;\n\n// Calcular family_size, has_children, children_count\nlet family_size = 1;\nlet has_children = false;\nlet children_count = 0;\n\nif (refugeeData.family_id) {\n    // TODO: Obtener datos reales de familia si es necesario\n    // Por ahora asumimos familia de 1 (solo el refugiado)\n    family_size = 1;\n}\n\n// Preparar payload para el servicio de IA\nmsg.payload = {\n    first_name: refugeeData.first_name,\n    last_name: refugeeData.last_name,\n    age: refugeeData.age,\n    gender: refugeeData.gender,\n    nationality: refugeeData.nationality,\n    languages_spoken: refugeeData.languages_spoken,\n    medical_conditions: refugeeData.medical_conditions,\n    has_disability: refugeeData.has_disability || false,\n    vulnerability_score: refugeeData.vulnerability_score || 0.0,\n    special_needs: refugeeData.special_needs,\n    family_id: refugeeData.family_id,\n    family_size: family_size,\n    has_children: has_children,\n    children_count: children_count\n};\n\n// Guardar en contexto para usar después\nmsg.refugeeData = refugeeData;\n\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -1726,7 +1726,7 @@
         "method": "POST",
         "ret": "obj",
         "paytoqs": "ignore",
-        "url": "http://ai-service:8000/api/assign-shelter",
+        "url": "http://shelterai-ai-service:8000/api/recommend",
         "tls": "",
         "persist": false,
         "proxy": "",
@@ -1754,7 +1754,7 @@
         "type": "function",
         "z": "tab_ai_integration",
         "name": "Procesar respuesta IA",
-        "func": "// La respuesta del servicio IA contiene:\n// - shelter_id: ID del refugio asignado\n// - shelter_name: Nombre del refugio\n// - confidence_score: Confianza de la asignación\n// - priority_score: Prioridad calculada\n// - explanation: Explicación de la asignación\n\nconst aiResponse = msg.payload;\n\n// Formatear respuesta completa\nmsg.payload = {\n    shelter_id: aiResponse.shelter_id,\n    shelter_name: aiResponse.shelter_name,\n    confidence_score: aiResponse.confidence_score,\n    priority_score: aiResponse.priority_score,\n    explanation: aiResponse.explanation,\n    alternative_shelters: aiResponse.alternative_shelters || []\n};\n\nmsg.statusCode = 200;\n\nreturn msg;",
+        "func": "// La nueva respuesta del servicio IA contiene array de recommendations\nconst aiResponse = msg.payload;\n\nif (!aiResponse.recommendations || aiResponse.recommendations.length === 0) {\n    msg.statusCode = 404;\n    msg.payload = { error: \"No se encontraron recomendaciones de refugios\" };\n    return msg;\n}\n\n// Tomar la primera recomendación (mejor match)\nconst topRecommendation = aiResponse.recommendations[0];\n\n// Normalizar confidence_score de 0-100 a 0-1 para Flutter\nconst confidenceNormalized = topRecommendation.confidence_score / 100;\n\n// Formatear alternativas\nconst alternatives = aiResponse.recommendations.slice(1, 4).map(rec => ({\n    shelter_id: rec.shelter_id,\n    shelter_name: rec.shelter_name,\n    confidence_score: rec.confidence_score / 100,  // Normalizar\n    total_score: rec.total_score\n}));\n\n// Formatear respuesta completa\nmsg.payload = {\n    shelter_id: topRecommendation.shelter_id,\n    shelter_name: topRecommendation.shelter_name,\n    confidence_score: confidenceNormalized,\n    priority_score: topRecommendation.total_score,\n    explanation: topRecommendation.explanation,\n    match_details: topRecommendation.match_details,\n    alternative_shelters: alternatives\n};\n\nmsg.statusCode = 200;\n\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -1878,7 +1878,7 @@
         "type": "function",
         "z": "tab_ai_integration",
         "name": "Preparar request para IA",
-        "func": "const savedRefugee = flow.get('savedRefugee');\nconst availableShelters = msg.payload;\n\n// Verificar que hay refugios disponibles\nif (!availableShelters || availableShelters.length === 0) {\n    msg.statusCode = 400;\n    msg.payload = { error: \"No hay refugios disponibles en este momento\" };\n    return msg;\n}\n\n// Preparar payload para el servicio de IA\nmsg.payload = {\n    refugee: {\n        first_name: savedRefugee.first_name,\n        last_name: savedRefugee.last_name,\n        age: savedRefugee.age,\n        gender: savedRefugee.gender,\n        nationality: savedRefugee.nationality,\n        languages_spoken: savedRefugee.languages_spoken,\n        medical_conditions: savedRefugee.medical_conditions,\n        has_disability: savedRefugee.has_disability,\n        vulnerability_score: savedRefugee.vulnerability_score,\n        special_needs: savedRefugee.special_needs,\n        family_id: savedRefugee.family_id\n    },\n    available_shelters: availableShelters\n};\n\nreturn msg;",
+        "func": "const savedRefugee = flow.get('savedRefugee');\n\n// Calcular family_size, has_children, children_count\nlet family_size = 1;\nlet has_children = false;\nlet children_count = 0;\n\nif (savedRefugee.family_id) {\n    // TODO: Obtener datos reales de familia si es necesario\n    family_size = 1;\n}\n\n// Preparar payload para el servicio de IA (ya no enviamos lista de shelters)\nmsg.payload = {\n    first_name: savedRefugee.first_name,\n    last_name: savedRefugee.last_name,\n    age: savedRefugee.age,\n    gender: savedRefugee.gender,\n    nationality: savedRefugee.nationality,\n    languages_spoken: savedRefugee.languages_spoken,\n    medical_conditions: savedRefugee.medical_conditions,\n    has_disability: savedRefugee.has_disability,\n    vulnerability_score: savedRefugee.vulnerability_score,\n    special_needs: savedRefugee.special_needs,\n    family_id: savedRefugee.family_id,\n    family_size: family_size,\n    has_children: has_children,\n    children_count: children_count\n};\n\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -1901,7 +1901,7 @@
         "method": "POST",
         "ret": "obj",
         "paytoqs": "ignore",
-        "url": "http://ai-service:8000/api/assign-shelter",
+        "url": "http://shelterai-ai-service:8000/api/recommend",
         "tls": "",
         "persist": false,
         "proxy": "",
@@ -1929,8 +1929,8 @@
         "type": "function",
         "z": "tab_ai_integration",
         "name": "Crear asignación en BD",
-        "func": "const aiResponse = msg.payload;\nconst savedRefugee = flow.get('savedRefugee');\n\n// Preparar INSERT de la asignación\nmsg.topic = `INSERT INTO assignments (refugee_id, shelter_id, assigned_at, status, priority_score, explanation, assigned_by, created_at, updated_at) VALUES ($1, $2, CURRENT_TIMESTAMP, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    savedRefugee.id,\n    aiResponse.shelter_id,\n    'pending',\n    aiResponse.priority_score,\n    aiResponse.explanation,\n    'AI-System'\n];\n\n// Guardar respuesta IA para después\nflow.set('aiResponse', aiResponse);\n\nreturn msg;",
-        "outputs": 1,
+        "func": "const aiResponse = msg.payload;\nconst savedRefugee = flow.get('savedRefugee');\n\n// Validar que la respuesta tiene el formato correcto\nif (!aiResponse.recommendations || aiResponse.recommendations.length === 0) {\n    msg.statusCode = 404;\n    msg.payload = { error: \"No se encontraron recomendaciones de refugios\" };\n    return [null, msg];  // Enviar por output de error\n}\n\n// Tomar la mejor recomendación\nconst topRec = aiResponse.recommendations[0];\n\n// Verificar que tiene shelter_id\nif (!topRec.shelter_id) {\n    msg.statusCode = 500;\n    msg.payload = { error: \"Respuesta de IA inválida: falta shelter_id\" };\n    return [null, msg];  // Enviar por output de error\n}\n\n// Preparar INSERT de la asignación\nmsg.topic = `INSERT INTO assignments (refugee_id, shelter_id, assigned_at, status, priority_score, explanation, assigned_by, created_at, updated_at) VALUES ($1, $2, CURRENT_TIMESTAMP, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    savedRefugee.id,\n    topRec.shelter_id,\n    'pending',\n    topRec.total_score,\n    topRec.explanation,\n    'AI-System'\n];\n\n// Guardar respuesta IA completa para después\nflow.set('aiResponse', aiResponse);\n\nreturn [msg, null];  // Enviar por output normal",
+        "outputs": 2,
         "timeout": "",
         "noerr": 0,
         "initialize": "",
@@ -1941,6 +1941,9 @@
         "wires": [
             [
                 "insert_assignment_db"
+            ],
+            [
+                "final_http_response"
             ]
         ]
     },
@@ -1968,7 +1971,7 @@
         "type": "function",
         "z": "tab_ai_integration",
         "name": "Formatear respuesta final",
-        "func": "const savedRefugee = flow.get('savedRefugee');\nconst aiResponse = flow.get('aiResponse');\nconst assignment = msg.payload[0];\n\n// Respuesta completa\nmsg.payload = {\n    refugee: savedRefugee,\n    assignment: {\n        id: assignment.id,\n        shelter_id: aiResponse.shelter_id,\n        shelter_name: aiResponse.shelter_name,\n        priority_score: aiResponse.priority_score,\n        confidence_score: aiResponse.confidence_score,\n        explanation: aiResponse.explanation,\n        status: assignment.status,\n        assigned_at: assignment.assigned_at\n    },\n    alternative_shelters: aiResponse.alternative_shelters || []\n};\n\nmsg.statusCode = 201;\n\n// Limpiar variables de flujo\nflow.set('tempRefugeeData', null);\nflow.set('savedRefugee', null);\nflow.set('aiResponse', null);\n\nreturn msg;",
+        "func": "const savedRefugee = flow.get('savedRefugee');\nconst aiResponse = flow.get('aiResponse');\nconst assignment = msg.payload[0];\n\n// Obtener la mejor recomendación\nconst topRec = aiResponse.recommendations[0];\n\n// Normalizar confidence_score de 0-100 a 0-1 para Flutter\nconst confidenceNormalized = topRec.confidence_score / 100;\n\n// Formatear alternativas\nconst alternatives = aiResponse.recommendations.slice(1, 4).map(rec => ({\n    shelter_id: rec.shelter_id,\n    shelter_name: rec.shelter_name,\n    confidence_score: rec.confidence_score / 100,  // Normalizar\n    total_score: rec.total_score,\n    explanation: rec.explanation\n}));\n\n// Respuesta completa\nmsg.payload = {\n    refugee: savedRefugee,\n    assignment: {\n        id: assignment.id,\n        shelter_id: topRec.shelter_id,\n        shelter_name: topRec.shelter_name,\n        priority_score: topRec.total_score,\n        confidence_score: confidenceNormalized,\n        explanation: topRec.explanation,\n        match_details: topRec.match_details,\n        status: assignment.status,\n        assigned_at: assignment.assigned_at,\n        alternative_shelters: alternatives\n    }\n};\n\nmsg.statusCode = 201;\n\n// Limpiar variables de flujo\nflow.set('tempRefugeeData', null);\nflow.set('savedRefugee', null);\nflow.set('aiResponse', null);\n\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -1995,56 +1998,111 @@
         "wires": []
     },
     {
-        "id": "f8d2af34315caed4",
+        "id": "get_ai_recommendation",
+        "type": "http in",
+        "z": "tab_ai_integration",
+        "name": "GET /api/ai/recommend/:refugeeId",
+        "url": "/api/ai/recommend/:refugeeId",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 170,
+        "y": 420,
+        "wires": [
+            [
+                "prepare_refugee_query"
+            ]
+        ]
+    },
+    {
+        "id": "prepare_refugee_query",
         "type": "function",
         "z": "tab_ai_integration",
-        "name": "Preparar Correo",
-        "func": "// Recuperamos datos del mensaje anterior\n// Ajusta estas rutas según cómo venga tu msg.payload final\nvar refugiado = msg.payload.refugee || {}; // Ojo: asegurate de tener el email aquí\nvar asignacion = msg.payload.assignment || {};\nvar refugio = msg.payload.assignment.shelter_name || \"un centro seguro\";\n\n// Si no hay email, cortamos para no dar error\nif (!refugiado.email) {\n    return null;\n}\n\n// 1. Destinatario\nmsg.to = refugiado.email;\n\n// 2. Asunto\nmsg.topic = \"Asignación de Refugio Confirmada - ShelterAI\";\n\n// 3. Cuerpo del mensaje (HTML para que quede bonito)\nmsg.payload = `\n    <h3>Hola, ${refugiado.first_name} ${refugiado.last_name}</h3>\n    <p>Te informamos de que se te ha asignado plaza en el siguiente refugio:</p>\n    \n    <div style=\"background-color: #f0f0f0; padding: 15px; border-radius: 5px;\">\n        <h2>📍 ${refugio}</h2>\n        <p><strong>Estado:</strong> Confirmado</p>\n        <p><strong>Fecha:</strong> ${new Date().toLocaleDateString()}</p>\n    </div>\n\n    <p>Por favor, acude lo antes posible. Presenta este correo a tu llegada.</p>\n    <br>\n    <p>Atentamente,<br>El equipo de ShelterAI</p>\n`;\n\nreturn msg;",
+        "name": "Preparar query",
+        "func": "const refugeeId = msg.req.params.refugeeId;\nmsg.params = [refugeeId];\nreturn msg;",
         "outputs": 1,
-        "timeout": 0,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 380,
+        "y": 420,
+        "wires": [
+            [
+                "fetch_refugee_for_recommendation"
+            ]
+        ]
+    },
+    {
+        "id": "fetch_refugee_for_recommendation",
+        "type": "postgresql",
+        "z": "tab_ai_integration",
+        "name": "Obtener refugiado",
+        "query": "SELECT * FROM refugees WHERE id = $1",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": "",
+        "outputs": 1,
+        "x": 590,
+        "y": 420,
+        "wires": [
+            [
+                "check_refugee_exists"
+            ]
+        ]
+    },
+    {
+        "id": "check_refugee_exists",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Verificar refugiado",
+        "func": "if (!msg.payload || msg.payload.length === 0) {\n    msg.statusCode = 404;\n    msg.payload = { error: 'Refugiado no encontrado' };\n    return [null, msg];\n}\n\nconst refugee = msg.payload[0];\n\n// Calcular family_size, has_children, children_count\nlet family_size = 1;\nlet has_children = false;\nlet children_count = 0;\n\nif (refugee.family_id) {\n    family_size = 1;\n}\n\n// Preparar payload para el servicio de IA\nmsg.payload = {\n    first_name: refugee.first_name,\n    last_name: refugee.last_name,\n    age: refugee.age,\n    gender: refugee.gender,\n    nationality: refugee.nationality,\n    languages_spoken: refugee.languages_spoken,\n    medical_conditions: refugee.medical_conditions,\n    has_disability: refugee.has_disability,\n    vulnerability_score: refugee.vulnerability_score,\n    special_needs: refugee.special_needs,\n    family_id: refugee.family_id,\n    family_size: family_size,\n    has_children: has_children,\n    children_count: children_count\n};\n\n// Guardar refugee original para la respuesta\nflow.set('originalRefugee', refugee);\n\nreturn [msg, null];",
+        "outputs": 2,
+        "timeout": "",
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
         "x": 800,
-        "y": 440,
+        "y": 420,
         "wires": [
             [
-                "fea17ba555215174"
+                "call_ai_for_recommendation"
+            ],
+            [
+                "recommendation_response"
             ]
         ]
     },
     {
-        "id": "fea17ba555215174",
-        "type": "e-mail",
+        "id": "call_ai_for_recommendation",
+        "type": "http request",
         "z": "tab_ai_integration",
-        "server": "smtp.gmail.com",
-        "port": "465",
-        "authtype": "BASIC",
-        "saslformat": true,
-        "token": "oauth2Response.access_token",
-        "secure": true,
-        "tls": true,
-        "name": "",
-        "dname": "",
+        "name": "Obtener recomendación IA",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://shelterai-ai-service:8000/api/recommend",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [
+            {
+                "keyType": "Content-Type",
+                "keyValue": "",
+                "valueType": "application/json",
+                "valueValue": ""
+            }
+        ],
         "x": 1050,
-        "y": 440,
-        "wires": []
-    },
-    {
-        "id": "login_post",
-        "type": "http in",
-        "z": "tab_login",
-        "name": "POST /api/login",
-        "url": "/api/login",
-        "method": "post",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 160,
-        "y": 100,
+        "y": 420,
         "wires": [
             [
-                "login_validation"
+                "format_recommendation_response"
             ]
         ]
     },
@@ -2210,7 +2268,7 @@
         "type": "function",
         "z": "tab_login",
         "name": "Preparar Correo",
-        "func": "// Function: Preparar Alerta de Login (SOLO REFUGIADOS)\n\nconst user = msg.payload;\nconst email = user.email;\nconst role = user.role;\n\n// FILTRO: Solo enviar email si es refugiado\nif (role !== 'refugee') {\n    return null; // No enviar email a trabajadores\n}\n\n// Validación de seguridad\nif (!email) {\n    node.warn('Login Email: No hay email en el payload');\n    return null; // Detenemos el flujo para no romper el nodo Gmail\n}\n\nconst fullName = user.name || 'Usuario';\nconst time = new Date().toLocaleTimeString();\nconst date = new Date().toLocaleDateString();\n\n// Configuración para node-red-node-email\nmsg.to = email;\nmsg.topic = 'Alerta de Seguridad: Nuevo inicio de sesión - ShelterAI';\n\n// Cuerpo Texto (Fallback)\nmsg.payload = `Hola ${fullName},\nSe ha detectado un nuevo inicio de sesión en tu cuenta de ShelterAI.\nFecha: ${date}\nHora: ${time}\n\nSi no has sido tú, contacta con un administrador inmediatamente.`;\n\n// Cuerpo HTML (Bonito)\nmsg.html = `\n<h3>Hola, ${fullName}</h3>\n<p>Se ha detectado un nuevo acceso a tu cuenta.</p>\n<div style=\"background-color: #fff3cd; color: #856404; padding: 15px; border-radius: 5px; border: 1px solid #ffeeba;\">\n  <strong>🔐 Nuevo Inicio de Sesión</strong><br>\n  <ul>\n    <li><strong>Fecha:</strong> ${date}</li>\n    <li><strong>Hora:</strong> ${time}</li>\n  </ul>\n</div>\n<p>Si has sido tú, puedes ignorar este mensaje.</p>\n<p>Si <strong>NO</strong> has sido tú, contacta con un trabajador inmediatamente.</p>\n<p style=\"font-size: 12px; color: #666;\">Equipo de Seguridad ShelterAI</p>\n`;\n\nreturn msg;",
+        "func": "// Function: Preparar Alerta de Login\n\n// En el flujo de login, el payload suele traer el usuario tras la verificación\nconst user = msg.payload;\nconst email = user.email;\n\n// Validación de seguridad\nif (!email) {\n    node.warn('Login Email: No hay email en el payload');\n    return null; // Detenemos el flujo para no romper el nodo Gmail\n}\n\nconst fullName = user.name || 'Usuario';\nconst time = new Date().toLocaleTimeString();\nconst date = new Date().toLocaleDateString();\n\n// Configuración para node-red-node-email\nmsg.to = email;\nmsg.topic = 'Alerta de Seguridad: Nuevo inicio de sesión - ShelterAI';\n\n// Cuerpo Texto (Fallback)\nmsg.payload = `Hola ${fullName},\nSe ha detectado un nuevo inicio de sesión en tu cuenta de ShelterAI.\nFecha: ${date}\nHora: ${time}\n\nSi no has sido tú, contacta con un administrador inmediatamente.`;\n\n// Cuerpo HTML (Bonito)\nmsg.html = `\n<h3>Hola, ${fullName}</h3>\n<p>Se ha detectado un nuevo acceso a tu cuenta.</p>\n<div style=\"background-color: #fff3cd; color: #856404; padding: 15px; border-radius: 5px; border: 1px solid #ffeeba;\">\n  <strong>Nuevo Inicio de Sesión</strong><br>\n  <ul>\n    <li><strong>Fecha:</strong> ${date}</li>\n    <li><strong>Hora:</strong> ${time}</li>\n  </ul>\n</div>\n<p>Si has sido tú, puedes ignorar este mensaje.</p>\n<p style=\"font-size: 12px; color: #666;\">Equipo de Seguridad ShelterAI</p>\n`;\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,

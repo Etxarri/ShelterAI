@@ -1961,8 +1961,7 @@
         "y": 340,
         "wires": [
             [
-                "format_final_response",
-                "f8d2af34315caed4"
+                "format_final_response"
             ]
         ]
     },
@@ -2070,9 +2069,7 @@
             [
                 "call_ai_for_recommendation"
             ],
-            [
-                "recommendation_response"
-            ]
+            []
         ]
     },
     {
@@ -2101,9 +2098,7 @@
         "x": 1050,
         "y": 420,
         "wires": [
-            [
-                "format_recommendation_response"
-            ]
+            []
         ]
     },
     {
@@ -2299,5 +2294,23 @@
         "x": 1290,
         "y": 200,
         "wires": []
+    },
+    {
+        "id": "91b170f70235ff3c",
+        "type": "http in",
+        "z": "tab_login",
+        "name": "POST /api/login",
+        "url": "/api/login",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 160,
+        "y": 100,
+        "wires": [
+            [
+                "login_validation"
+            ]
+        ]
     }
 ]
