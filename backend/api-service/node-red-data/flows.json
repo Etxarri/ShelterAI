@@ -1981,7 +1981,8 @@
         "y": 340,
         "wires": [
             [
-                "final_http_response"
+                "final_http_response",
+                "41aa3f26b3b03799"
             ]
         ]
     },
@@ -2100,6 +2101,43 @@
         "wires": [
             []
         ]
+    },
+    {
+        "id": "41aa3f26b3b03799",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Preparar Correo",
+        "func": "// 1. Extraemos los datos que generó el nodo anterior\n// Usamos \"|| {}\" para evitar errores si algo viene vacío\nconst data = msg.payload || {};\nconst refugee = data.refugee || {};\nconst assignment = data.assignment || {};\n\n// 2. Extraemos el email del refugiado\nconst emailDestino = refugee.email;\n\n// SEGURIDAD: Si el refugiado no tiene email, cortamos aquí.\n// Usamos 'return null' para que el flujo NO siga hacia el nodo de Gmail y no dé error.\nif (!emailDestino) {\n  node.warn(\"Asignación completada, pero no se envió email (Falta correo del refugiado)\");\n  return null;\n}\n\n// 3. Preparamos variables para que el texto quede bonito\n// Usamos .trim() para quitar espacios sobrantes en el nombre\nconst nombreCompleto = `${refugee.first_name || ''} ${refugee.last_name || ''}`.trim() || 'Refugiado';\nconst nombreRefugio = assignment.shelter_name || 'Centro asignado';\nconst explicacion = assignment.explanation || 'Asignación basada en disponibilidad y necesidades.';\nconst fecha = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });\n\n// 4. Configuración para el nodo de Email (node-red-node-email)\nmsg.to = emailDestino;\nmsg.topic = `✅ Asignación Confirmada: ${nombreRefugio} - ShelterAI`;\n\n// 5. Cuerpo en Texto Plano (Por si el móvil del usuario no lee HTML)\nmsg.payload = `Hola ${nombreCompleto},\n\nTe confirmamos que el sistema ShelterAI te ha asignado plaza en: ${nombreRefugio}.\n\nMotivo de la selección: ${explicacion}\n\nPor favor, acude lo antes posible.\nFecha: ${fecha}\n\nAtentamente,\nEquipo ShelterAI`;\n\n// 6. Cuerpo en HTML (Diseño profesional con colores y tarjetas)\nmsg.html = `\n<div style=\"font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1);\">\n    \n    <div style=\"background-color: #2E7D32; padding: 20px; text-align: center;\">\n        <h2 style=\"color: white; margin: 0; font-size: 24px;\">¡Asignación Confirmada!</h2>\n    </div>\n\n    <div style=\"padding: 30px; background-color: #ffffff;\">\n        <p style=\"font-size: 16px; color: #333;\">Hola <strong>${nombreCompleto}</strong>,</p>\n        \n        <p style=\"font-size: 16px; color: #555;\">Hemos encontrado el refugio que mejor se adapta a tus necesidades actuales.</p>\n\n        <div style=\"background-color: #f1f8e9; border-left: 5px solid #2E7D32; padding: 20px; margin: 25px 0; border-radius: 4px;\">\n            <h3 style=\"margin-top: 0; color: #1B5E20; font-size: 20px;\">📍 ${nombreRefugio}</h3>\n            \n            <p style=\"margin-bottom: 5px;\"><strong>¿Por qué este refugio?</strong></p>\n            <p style=\"margin-top: 0; color: #444; font-style: italic;\">\"${explicacion}\"</p>\n            \n            <hr style=\"border: 0; border-top: 1px solid #dcedc8; margin: 15px 0;\">\n            \n            <p style=\"margin: 0; font-size: 14px; color: #555;\"><strong>Fecha de asignación:</strong> ${fecha}</p>\n        </div>\n\n        <p style=\"font-size: 14px; color: #777;\">Por favor, presenta este correo al llegar al centro para agilizar tu entrada.</p>\n    </div>\n\n    <div style=\"background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #999;\">\n        © 2026 ShelterAI Project - Ayuda Humanitaria Inteligente\n    </div>\n</div>\n`;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 980,
+        "y": 280,
+        "wires": [
+            [
+                "ad8e96e2588a39af"
+            ]
+        ]
+    },
+    {
+        "id": "ad8e96e2588a39af",
+        "type": "e-mail",
+        "z": "tab_ai_integration",
+        "server": "smtp.gmail.com",
+        "port": "587",
+        "authtype": "BASIC",
+        "saslformat": true,
+        "token": "oauth2Response.access_token",
+        "secure": false,
+        "tls": true,
+        "name": "",
+        "dname": "",
+        "x": 1190,
+        "y": 280,
+        "wires": []
     },
     {
         "id": "login_validation",

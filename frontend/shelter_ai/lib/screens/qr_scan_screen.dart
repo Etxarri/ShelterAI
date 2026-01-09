@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 class QrScanScreen extends StatefulWidget {
@@ -10,6 +11,13 @@ class QrScanScreen extends StatefulWidget {
 
 class _QrScanScreenState extends State<QrScanScreen> {
   bool _handled = false;
+
+  bool get _isScannerSupported {
+    // Soportado en Android/iOS y Web. Evitamos invocar el plugin en desktop.
+    if (kIsWeb) return true;
+    final platform = defaultTargetPlatform;
+    return platform == TargetPlatform.android || platform == TargetPlatform.iOS;
+  }
 
   void _onDetect(BarcodeCapture capture) {
     if (_handled) return;
@@ -25,22 +33,50 @@ class _QrScanScreenState extends State<QrScanScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Escanear QR')),
-      body: Stack(
-        children: [
-          MobileScanner(onDetect: _onDetect),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              color: Colors.black54,
-              child: const Text(
-                'Apunta al código QR del refugiado',
-                style: TextStyle(color: Colors.white),
+      body: _isScannerSupported
+          ? Stack(
+              children: [
+                MobileScanner(onDetect: _onDetect),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    color: Colors.black54,
+                    child: const Text(
+                      'Apunta al código QR del refugiado',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.desktop_windows, size: 56),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'El escaneo con cámara no está disponible en este dispositivo.',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Puedes usar la app Web o un dispositivo Android/iOS para escanear el QR.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.black54),
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Volver'),
+                    )
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
-      ),
     );
   }
 }

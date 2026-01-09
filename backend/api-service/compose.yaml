@@ -21,6 +21,9 @@ services:
       - shelterai-network
 
   ai-service:
+    build:
+      context: ../ai-service
+      dockerfile: Dockerfile
     image: shelterai-ai-service:latest
     container_name: shelterai-ai-service
     environment:
@@ -47,7 +50,6 @@ services:
     environment:
       - TZ=Europe/Madrid
       - FLOWS=flows.json
-      # HE BORRADO LAS VARIABLES SMTP PORQUE SE CONFIGURAN DENTRO DE LA APP
     depends_on:
       postgres:
         condition: service_healthy
@@ -59,6 +61,7 @@ services:
 volumes:
   postgres-data:
 
+# --- CONFIGURACIÓN DE RED ---
 networks:
   shelterai-network:
     name: shelterai-network
