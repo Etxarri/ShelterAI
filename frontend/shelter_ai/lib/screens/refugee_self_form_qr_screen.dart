@@ -216,9 +216,10 @@ class _RefugeeSelfFormQrScreenState extends State<RefugeeSelfFormQrScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Registro del Refugiado'),
+        title: const Text('Registro rápido'),
         actions: [
           IconButton(onPressed: _logout, icon: const Icon(Icons.logout)),
         ],
@@ -230,20 +231,34 @@ class _RefugeeSelfFormQrScreenState extends State<RefugeeSelfFormQrScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: color.primaryContainer.withOpacity(0.35),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'Solo pedimos lo necesario para ubicarte con seguridad. Puedes regresar más tarde; tu QR seguirá funcionando.',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+              const SizedBox(height: 18),
+              const _SectionHeader(title: 'Tus datos básicos'),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: _firstNameCtrl,
                 decoration: const InputDecoration(labelText: 'Nombre'),
                 validator:
                     (v) => (v == null || v.trim().isEmpty) ? 'Requerido' : null,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: _lastNameCtrl,
                 decoration: const InputDecoration(labelText: 'Apellido'),
                 validator:
                     (v) => (v == null || v.trim().isEmpty) ? 'Requerido' : null,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: _ageCtrl,
                 decoration: const InputDecoration(labelText: 'Edad'),
@@ -255,7 +270,7 @@ class _RefugeeSelfFormQrScreenState extends State<RefugeeSelfFormQrScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               DropdownButtonFormField<String>(
                 value: _gender,
                 items: const [
@@ -269,60 +284,89 @@ class _RefugeeSelfFormQrScreenState extends State<RefugeeSelfFormQrScreen> {
                 onChanged: (v) => setState(() => _gender = v ?? 'Masculino'),
                 decoration: const InputDecoration(labelText: 'Género'),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 18),
+              const _SectionHeader(title: 'Idioma y nacionalidad'),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: _nationalityCtrl,
                 decoration: const InputDecoration(
                   labelText: 'Nacionalidad (opcional)',
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: _languagesCtrl,
                 decoration: const InputDecoration(
                   labelText: 'Idiomas (separados por comas)',
+                  helperText: 'Ej: español, inglés',
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 18),
+              const _SectionHeader(title: 'Cuidados y acompañantes'),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: _medicalCtrl,
                 decoration: const InputDecoration(
                   labelText: 'Condiciones médicas (opcional)',
+                  hintText: 'Medicamentos, alergias, embarazo, etc.',
                 ),
                 maxLines: 2,
               ),
-              const SizedBox(height: 8),
               SwitchListTile(
-                title: const Text('Tiene discapacidad'),
+                title: const Text('Tengo discapacidad o movilidad reducida'),
                 value: _hasDisability,
                 onChanged: (v) => setState(() => _hasDisability = v),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: _specialNeedsCtrl,
                 decoration: const InputDecoration(
                   labelText: 'Necesidades especiales (opcional)',
+                  hintText: 'Apoyo psicológico, espacio familiar, privacidad',
                 ),
                 maxLines: 2,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: _familyIdCtrl,
                 decoration: const InputDecoration(
-                  labelText: 'ID de familia (opcional)',
+                  labelText: 'ID de familia (si lo tienes)',
                 ),
                 keyboardType: TextInputType.number,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: _generateQr,
                 icon: const Icon(Icons.qr_code),
-                label: const Text('Generar QR'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  textStyle: const TextStyle(fontSize: 16),
+                ),
+                label: const Text('Generar y guardar mi QR'),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Muéstralo al llegar. Si necesitas ayuda urgente, avisa en recepción.',
+                textAlign: TextAlign.center,
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+
+  const _SectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title,
+      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
     );
   }
 }
