@@ -23,7 +23,7 @@ public class Shelter implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("[SYSTEM] Refugio '" + shelterId + "' activo y conectado a Cola Global.");
+        System.out.println("[SYSTEM] Shelter '" + shelterId + "' active and conected to the global Queue.");
 
         while (running) {
             try {
@@ -47,11 +47,11 @@ public class Shelter implements Runnable {
 
     private void processStay(Refugee refugee) {
         try {
-            System.out.println("[IN] (" + shelterId + ") ha acogido a " + refugee.getId() + " [Prio: " + refugee.getPriority() + "].");
+            System.out.println("[IN] (" + shelterId + ") has taken to " + refugee.getId() + " [Prio: " + refugee.getPriority() + "].");
             
             Thread.sleep(refugee.getProcessingTimeMs());
 
-            System.out.println("[OUT] (" + shelterId + ") " + refugee.getId() + " se marcha.");
+            System.out.println("[OUT] (" + shelterId + ") " + refugee.getId() + " goes.");
             
             // Liberar cama. Inmediatamente el bucle 'run' (arriba) despertará y cogerá al siguiente de la global.
             beds.release();
@@ -66,7 +66,7 @@ public class Shelter implements Runnable {
         if (diff > 0) beds.release(diff);
         else if (diff < 0) beds.acquireUninterruptibly(-diff);
         totalCapacity.set(newCapacity);
-        System.out.println("[ADMIN] (" + shelterId + ") Capacidad: " + newCapacity);
+        System.out.println("[ADMIN] (" + shelterId + ") Capacity: " + newCapacity);
     }
 
     public String getStatusJson() {

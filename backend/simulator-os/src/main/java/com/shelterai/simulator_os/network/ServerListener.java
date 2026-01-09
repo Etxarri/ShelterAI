@@ -1,7 +1,6 @@
 package com.shelterai.simulator_os.network;
 
 import com.shelterai.simulator_os.core.ShelterManager;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -10,11 +9,12 @@ public class ServerListener {
 
     private final int port;
     private final ShelterManager shelterManager;
-
-    // Control de estado para los tests
+    
     private volatile boolean running = false;
     private Thread listenerThread;
-    private ServerSocket serverSocket;
+    
+    // IMPORTANTE: Variable de clase, no local
+    private ServerSocket serverSocket; 
 
     public ServerListener(int port) {
         this.port = port;
@@ -22,27 +22,25 @@ public class ServerListener {
     }
 
     public void start() {
-        // Si ya está arrancado, no hacemos nada (rama para coverage)
-        if (running) {
-            return;
-        }
+        if (running) return;
 
         running = true;
-
         listenerThread = new Thread(() -> {
-            try (ServerSocket ss = new ServerSocket(port)) {
-                serverSocket = ss;
-                System.out.println("[NET] Servidor Multi-Refugio escuchando en puerto " + port);
+            try {
+                // ✅ CORRECCIÓN: Asignamos a this.serverSocket
+                this.serverSocket = new ServerSocket(port);
+                System.out.println("[NET] Server listening in port " + port);
 
-                // Bucle principal del servidor
-                while (running) {
-                    Socket clientSocket = ss.accept();
-                    new Thread(new ClientHandler(clientSocket, shelterManager)).start();
+                while (running && !serverSocket.isClosed()) {
+                    try {
+                        Socket clientSocket = serverSocket.accept();
+                        new Thread(new ClientHandler(clientSocket, shelterManager)).start();
+                    } catch (IOException e) {
+                        if (running) e.printStackTrace();
+                    }
                 }
-
             } catch (IOException e) {
-                // Camino de error (puerto ocupado, etc.)
-                e.printStackTrace();
+                System.err.println("No se pudo iniciar el servidor en puerto " + port);
             } finally {
                 running = false;
             }
@@ -51,24 +49,20 @@ public class ServerListener {
         listenerThread.start();
     }
 
-    // Método para que los tests puedan parar el servidor
-    void stop() {
+    public void stop() {
         running = false;
-        // Esto hace que el accept() falle y el hilo salga del bucle
-        if (serverSocket != null && !serverSocket.isClosed()) {
-            try {
+        try {
+            if (serverSocket != null && !serverSocket.isClosed()) {
                 serverSocket.close();
-            } catch (IOException ignored) {
             }
-        }
+        } catch (IOException ignored) {}
+        
         if (listenerThread != null) {
             listenerThread.interrupt();
         }
     }
 
-    // MUY IMPORTANTE: quitar el if(listenerThread != null)
-    // para no tener ramas sin cubrir
-    boolean isRunning() {
+    public boolean isRunning() {
         return running;
     }
 }

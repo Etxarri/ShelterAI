@@ -8,24 +8,21 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 @SpringBootTest
 class SimulatorOsApplicationTests {
 
-    // TEST 1: Carga del contexto
-    // Este test cubre la clase y el método 'run' (porque es un CommandLineRunner)
+    // Testea que el contexto de Spring carga correctamente
+    // Cubre implícitamente el método 'run' del CommandLineRunner
     @Test
     void contextLoads() {
-        // Al usar @SpringBootTest, Spring arranca, ejecuta el método run(),
-        // inicia tu servidor en el hilo aparte y marca esas líneas en verde.
     }
 
-    // TEST 2: Ejecución explícita del main
-    // Este test cubre la línea 'public static void main' que suele quedarse roja
+    // Testea explícitamente el método main estático
     @Test
     void testMain() {
-        // Forzamos la llamada al método estático main.
-        // Esto intentará arrancar la app de nuevo. Si el puerto 9999 está ocupado
-        // por el test anterior, tu ServerListener capturará el error y no pasará nada grave.
+        // Al llamar a main, intentará levantar el servidor en el puerto 9999.
+        // Si 'contextLoads' ya corrió, el puerto estará ocupado y ServerListener
+        // (con mi corrección anterior) capturará la IOException y imprimirá el error,
+        // PERO NO lanzará excepción que rompa el test.
         assertDoesNotThrow(() -> {
-            SimulatorOsApplication.main(new String[] {});
+            SimulatorOsApplication.main(new String[]{});
         });
     }
-
 }

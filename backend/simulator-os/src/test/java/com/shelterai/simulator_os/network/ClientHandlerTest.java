@@ -2,6 +2,7 @@ package com.shelterai.simulator_os.network;
 
 import com.shelterai.simulator_os.core.ShelterManager;
 import com.shelterai.simulator_os.model.Refugee;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -25,63 +26,113 @@ class ClientHandlerTest {
     @Mock
     private ShelterManager shelterManager;
 
+    private ByteArrayOutputStream outContent;
+
+    @BeforeEach
+    void init() throws IOException {
+        outContent = new ByteArrayOutputStream();
+        
+        // ✅ CORRECCIÓN AQUÍ: Usamos lenient()
+        // Esto le dice a Mockito: "Prepara esto, pero si un test (como el de excepción)
+        // no llega a usarlo, no lances error".
+        lenient().when(socket.getOutputStream()).thenReturn(outContent);
+    }
+
+    // TEST 1: ADD Correcto
     @Test
     void testHandleAddCommandSuccess() throws IOException {
-        // Happy Path: ADD correcto
         String input = "ADD:Juan:ANCIANO\n";
-        setupSocket(input);
+        setupInput(input);
 
         ClientHandler handler = new ClientHandler(socket, shelterManager);
         handler.run();
 
         verify(shelterManager, times(1)).addRefugeeToGlobalQueue(any(Refugee.class));
+        
+        String output = outContent.toString();
+        assertTrue(output.contains("\"status\":\"OK\""));
+        assertTrue(output.contains("\"event\":\"REGISTERED\""));
     }
 
+    // TEST 2: Formato incorrecto
     @Test
     void testHandleAddCommandInvalidFormat() throws IOException {
-        // 🔴 CUBRE LA RAMA ELSE DEL ADD
-        String input = "ADD:SoloNombre\n"; // Faltan argumentos
-        ByteArrayOutputStream outContent = setupSocket(input);
+        String input = "ADD:SoloNombre\n"; 
+        setupInput(input);
 
         ClientHandler handler = new ClientHandler(socket, shelterManager);
         handler.run();
 
-        // Verificamos que no llama al manager y devuelve error
         verify(shelterManager, never()).addRefugeeToGlobalQueue(any());
-        assertTrue(outContent.toString().contains("[ERROR] Use: ADD"));
+        assertTrue(outContent.toString().contains("\"message\":\"Formato incorrecto\""));
     }
 
+    // TEST 3: STATUS
+    @Test
+    void testHandleStatusCommand() throws IOException {
+        String input = "STATUS\n";
+        setupInput(input);
+        
+        when(shelterManager.getAllStatuses()).thenReturn("{\"mock\":\"json\"}");
+
+        ClientHandler handler = new ClientHandler(socket, shelterManager);
+        handler.run();
+
+        verify(shelterManager, times(1)).getAllStatuses();
+        assertTrue(outContent.toString().contains("{\"mock\":\"json\"}"));
+    }
+
+    // TEST 4: SET_CAPACITY
     @Test
     void testHandleSetCapacityCommand() throws IOException {
-        // 🔴 CUBRE EL COMANDO SET_CAPACITY
         String input = "SET_CAPACITY:Norte:50\n";
-        ByteArrayOutputStream outContent = setupSocket(input);
+        setupInput(input);
 
         ClientHandler handler = new ClientHandler(socket, shelterManager);
         handler.run();
 
         verify(shelterManager, times(1)).updateCapacity("Norte", 50);
-        assertTrue(outContent.toString().contains("[OK] Capacidad actualizada"));
+        assertTrue(outContent.toString().contains("\"event\":\"CAPACITY_CHANGED\""));
     }
 
+    // TEST 5: Comando desconocido
     @Test
-    void testHandleException() throws IOException {
-        // 🔴 CUBRE EL CATCH (Exception e)
-        // Hacemos que el socket lance error al intentar leer
-        when(socket.getInputStream()).thenThrow(new IOException("Error de red simulado"));
+    void testUnknownCommand() throws IOException {
+        String input = "EXPLOTAR:AHORA\n";
+        setupInput(input);
 
         ClientHandler handler = new ClientHandler(socket, shelterManager);
-        handler.run(); // No debería lanzar excepción, sino capturarla y terminar
+        handler.run();
 
-        // Si llegamos aquí sin crash, el catch funcionó.
+        assertTrue(outContent.toString().contains("\"message\":\"Comando desconocido\""));
     }
 
-    // Helper para configurar mocks rápido
-    private ByteArrayOutputStream setupSocket(String inputData) throws IOException {
-        ByteArrayInputStream in = new ByteArrayInputStream(inputData.getBytes());
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
+    // TEST 6: Línea vacía
+    @Test
+    void testEmptyLine() throws IOException {
+        setupInput(":\n"); // Simula línea vacía o split fallido
+
+        ClientHandler handler = new ClientHandler(socket, shelterManager);
+        handler.run();
+        
+        verifyNoInteractions(shelterManager);
+    }
+
+    // TEST 7: Excepción (EL QUE DABA PROBLEMAS)
+    @Test
+    void testHandleException() throws IOException {
+        // Hacemos que falle al intentar obtener el input
+        when(socket.getInputStream()).thenThrow(new IOException("Error simulado"));
+
+        ClientHandler handler = new ClientHandler(socket, shelterManager);
+        handler.run(); 
+        
+        // Gracias a lenient(), ya no importa que getOutputStream no se llame.
+        verify(socket, times(1)).close();
+    }
+
+    private void setupInput(String data) throws IOException {
+        ByteArrayInputStream in = new ByteArrayInputStream(data.getBytes());
         when(socket.getInputStream()).thenReturn(in);
-        when(socket.getOutputStream()).thenReturn(out);
-        return out;
     }
 }

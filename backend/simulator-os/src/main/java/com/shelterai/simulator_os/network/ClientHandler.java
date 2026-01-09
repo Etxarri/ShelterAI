@@ -34,8 +34,7 @@ public class ClientHandler implements Runnable {
 
                 switch (command) {
                     case "ADD": 
-                        // PROTOCOLO SIMPLIFICADO: ADD:NOMBRE:PRIORIDAD
-                        // (Ya no necesitamos decir el destino, es automático)
+                        // Formato esperado: ADD:NOMBRE:PRIORIDAD
                         if (parts.length >= 3) {
                             String name = parts[1];
                             String prioStr = parts[2];
@@ -43,29 +42,39 @@ public class ClientHandler implements Runnable {
                             int randomTime = ThreadLocalRandom.current().nextInt(5000, 10000);
                             Refugee r = new Refugee(name, PriorityLevel.fromString(prioStr), randomTime);
                             
+                            // Añadimos a la cola global
                             manager.addRefugeeToGlobalQueue(r);
-                            out.println("[OK] " + name + " en Sala de Espera Global");
+
+                            // --- CAMBIO CLAVE: RESPUESTA EN JSON PARA NODE-RED ---
+                            // Esto permite que Node-RED lea los datos y mande el Telegram/Email
+                            String jsonResponse = String.format(
+                                "{\"status\":\"OK\", \"event\":\"REGISTERED\", \"refugee\":\"%s\", \"priority\":\"%s\", \"message\":\"Ingresado en cola global correctamente\"}", 
+                                name, prioStr
+                            );
+                            out.println(jsonResponse);
+
                         } else {
-                            out.println("[ERROR] Use: ADD:NOMBRE:PRIORIDAD");
+                            out.println("{\"status\":\"ERROR\", \"message\":\"Formato incorrecto\"}");
                         }
                         break;
 
                     case "STATUS":
+                        // El manager ya devuelve JSON, así que lo enviamos tal cual
                         out.println(manager.getAllStatuses());
                         break;
 
                     case "SET_CAPACITY":
-                        // Formato: SET_CAPACITY:REFUGIO_ID:CANTIDAD
                         if (parts.length == 3) {
                             manager.updateCapacity(parts[1], Integer.parseInt(parts[2]));
-                            out.println("[OK] Capacidad actualizada");
+                            out.println("{\"status\":\"OK\", \"event\":\"CAPACITY_CHANGED\", \"target\":\"" + parts[1] + "\"}");
                         }
                         break;
                     default:
-                        out.println("[ERROR] Comando desconocido");
+                        out.println("{\"status\":\"ERROR\", \"message\":\"Comando desconocido\"}");
                 }
             }
         } catch (Exception e) {
+            // Error de conexión
         } finally {
             try { clientSocket.close(); } catch (Exception e) {}
         }

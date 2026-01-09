@@ -1,5 +1,6 @@
 package com.shelterai.simulator_os.network;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -7,76 +8,77 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ServerListenerTest {
 
-    // TEST 1: Camino feliz, el servidor acepta al menos una conexión
-    @Test
-    void testServerStartsAndAcceptsConnection() {
-        int port = 9990;
+    private ServerListener server;
 
-        ServerListener server = new ServerListener(port);
-        server.start();
-
-        // Esperamos a que arranque
-        try { Thread.sleep(300); } catch (InterruptedException ignored) {}
-
-        // Conectamos un cliente real
-        assertDoesNotThrow(() -> {
-            try (Socket client = new Socket("localhost", port);
-                 PrintWriter out = new PrintWriter(client.getOutputStream(), true)) {
-                out.println("STATUS");
-                Thread.sleep(100);
-            }
-        });
-
-        // Paramos el servidor para que salga del while(running)
-        server.stop();
-        try { Thread.sleep(200); } catch (InterruptedException ignored) {}
-    }
-
-    // TEST 2: Camino de error -> puerto ocupado, se entra en el catch(IOException)
-    @Test
-    void testServerFailsOnBusyPort() throws IOException {
-        int port = 9991;
-
-        try (ServerSocket blocker = new ServerSocket(port)) {
-
-            ServerListener server = new ServerListener(port);
-            server.start();
-
-            // Esperamos a que el hilo intente abrir el mismo puerto y falle
-            try { Thread.sleep(300); } catch (InterruptedException ignored) {}
-
-            // El hilo interno terminará en el catch, no hace falta más
+    @AfterEach
+    void tearDown() {
+        if (server != null) {
             server.stop();
         }
     }
 
-    // TEST 3: Comprobamos isRunning() y el if(running) de start()
     @Test
-    void testIsRunningAndSecondStartDoesNothing() {
-        int port = 9992;
-        ServerListener server = new ServerListener(port);
-
-        // Antes de start(): running = false
-        assertFalse(server.isRunning());
-
-        // Primera vez: arranca el servidor
+    void testServerStartsAndAcceptsConnection() {
+        int port = 9001; // Puerto único para este test
+        server = new ServerListener(port);
         server.start();
-        try { Thread.sleep(200); } catch (InterruptedException ignored) {}
+
+        // Esperar a que levante
+        assertTimeout(java.time.Duration.ofSeconds(2), () -> {
+            while (!server.isRunning()) {
+                Thread.sleep(50);
+            }
+        });
+
         assertTrue(server.isRunning());
 
-        // Segunda vez: entra en el if(running) { return; }
-        server.start();
-        try { Thread.sleep(100); } catch (InterruptedException ignored) {}
+        // Conectar cliente
+        assertDoesNotThrow(() -> {
+            try (Socket client = new Socket("localhost", port);
+                 PrintWriter out = new PrintWriter(client.getOutputStream(), true)) {
+                out.println("STATUS");
+            }
+        });
+    }
 
-        // Ahora lo paramos para que salga del while
+    @Test
+    void testServerFailsOnBusyPort() throws IOException {
+        int port = 9002;
+        // Ocupamos el puerto intencionadamente
+        try (ServerSocket blocker = new ServerSocket(port)) {
+            
+            server = new ServerListener(port);
+            server.start();
+
+            // Damos tiempo a que falle
+            try { Thread.sleep(500); } catch (InterruptedException ignored) {}
+
+            // No debería estar corriendo porque el puerto estaba ocupado
+            assertFalse(server.isRunning());
+        }
+    }
+
+    @Test
+    void testDoubleStartAndStop() throws InterruptedException {
+        int port = 9003;
+        server = new ServerListener(port);
+        
+        server.start();
+        // Esperar a que arranque
+        Thread.sleep(200);
+        assertTrue(server.isRunning());
+
+        // Segundo start no debe hacer nada (ni romper nada)
+        server.start();
+        assertTrue(server.isRunning());
+
+        // Stop
         server.stop();
-        try { Thread.sleep(200); } catch (InterruptedException ignored) {}
+        Thread.sleep(200);
         assertFalse(server.isRunning());
     }
 }
