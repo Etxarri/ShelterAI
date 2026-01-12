@@ -2099,8 +2099,41 @@
         "x": 1050,
         "y": 420,
         "wires": [
-            []
+            [
+                "format_recommendation_response"
+            ]
         ]
+    },
+    {
+        "id": "format_recommendation_response",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Formatear respuesta",
+        "func": "// Obtener los datos del refugiado original\nconst originalRefugee = flow.get('originalRefugee');\nconst aiResponse = msg.payload;\n\nif (!aiResponse || !aiResponse.recommendations || aiResponse.recommendations.length === 0) {\n    msg.statusCode = 404;\n    msg.payload = { error: 'No se encontraron recomendaciones de refugios' };\n    return msg;\n}\n\n// Tomar la mejor recomendación\nconst topRecommendation = aiResponse.recommendations[0];\n\n// Formatear respuesta en el formato que espera Flutter (RefugeeAssignmentResponse)\nmsg.payload = {\n    refugee: {\n        id: originalRefugee.id,\n        first_name: originalRefugee.first_name,\n        last_name: originalRefugee.last_name,\n        age: originalRefugee.age,\n        gender: originalRefugee.gender,\n        nationality: originalRefugee.nationality,\n        languages_spoken: originalRefugee.languages_spoken,\n        medical_conditions: originalRefugee.medical_conditions,\n        has_disability: originalRefugee.has_disability,\n        vulnerability_score: originalRefugee.vulnerability_score,\n        special_needs: originalRefugee.special_needs\n    },\n    assignment: {\n        shelter_id: topRecommendation.shelter_id,\n        shelter_name: topRecommendation.shelter_name,\n        confidence_score: topRecommendation.compatibility_score / 100,\n        compatibility_score: topRecommendation.compatibility_score,\n        available_space: topRecommendation.available_space,\n        explanation: topRecommendation.explanation,\n        matching_reasons: topRecommendation.matching_reasons,\n        vulnerability_level: aiResponse.vulnerability_level,\n        cluster_id: aiResponse.cluster_id,\n        alternative_shelters: aiResponse.recommendations.slice(1).map(rec => ({\n            shelter_id: rec.shelter_id,\n            shelter_name: rec.shelter_name,\n            compatibility_score: rec.compatibility_score,\n            available_space: rec.available_space\n        }))\n    }\n};\n\nmsg.statusCode = 200;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1300,
+        "y": 420,
+        "wires": [
+            [
+                "send_recommendation_response"
+            ]
+        ]
+    },
+    {
+        "id": "send_recommendation_response",
+        "type": "http response",
+        "z": "tab_ai_integration",
+        "name": "Enviar respuesta",
+        "statusCode": "",
+        "headers": {},
+        "x": 1540,
+        "y": 420,
+        "wires": []
     },
     {
         "id": "41aa3f26b3b03799",
