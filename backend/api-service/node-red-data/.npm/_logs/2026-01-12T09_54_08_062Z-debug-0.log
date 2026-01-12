@@ -1,0 +1,138 @@
+0 verbose cli /usr/local/bin/node /usr/local/bin/npm
+1 info using npm@10.8.2
+2 info using node@v20.19.6
+3 silly config load:file:/usr/local/lib/node_modules/npm/npmrc
+4 silly config load:file:/data/.npmrc
+5 silly config load:file:/usr/src/node-red/.npmrc
+6 silly config load:file:/usr/local/etc/npmrc
+7 verbose title npm install node-red-node-email@5.0.4
+8 verbose argv "install" "--no-audit" "--no-update-notifier" "--no-fund" "--save" "--save-prefix" "~" "--omit" "dev" "--engine-strict" "node-red-node-email@5.0.4"
+9 verbose logfile logs-max:10 dir:/data/.npm/_logs/2026-01-12T09_54_08_062Z-
+10 verbose logfile /data/.npm/_logs/2026-01-12T09_54_08_062Z-debug-0.log
+11 silly packumentCache heap:2050228224 maxSize:512557056 maxEntrySize:256278528
+12 silly logfile done cleaning log files
+13 silly idealTree buildDeps
+14 silly fetch manifest node-red-node-email@5.0.4
+15 silly packumentCache full:https://registry.npmjs.org/node-red-node-email cache-miss
+16 http fetch GET 200 https://registry.npmjs.org/node-red-node-email 854ms (cache revalidated)
+17 silly packumentCache full:https://registry.npmjs.org/node-red-node-email set size:216016 disposed:false
+18 silly placeDep ROOT node-red-node-email@5.0.4 REPLACE for: node-red-project@0.0.1 want: 5.0.4
+19 silly reify mark retired [ '/data/node_modules/fast-deep-equal' ]
+20 silly reify mark retired [ '/data/node_modules/fast-uri' ]
+21 silly reify mark retired [ '/data/node_modules/ajv' ]
+22 silly reify mark retired [ '/data/node_modules/json-schema-traverse' ]
+23 silly reify mark retired [ '/data/node_modules/node-red-contrib-postgresql' ]
+24 silly reify mark retired [ '/data/node_modules/mustache' ]
+25 silly reify mark retired [ '/data/node_modules/node-red-node-email' ]
+26 silly reify mark retired [ '/data/node_modules/pg' ]
+27 silly reify mark retired [ '/data/node_modules/pg-connection-string' ]
+28 silly reify mark retired [ '/data/node_modules/pg-cloudflare' ]
+29 silly reify mark retired [ '/data/node_modules/pg-cursor' ]
+30 silly reify mark retired [ '/data/node_modules/pg-int8' ]
+31 silly reify mark retired [ '/data/node_modules/pg-pool' ]
+32 silly reify mark retired [ '/data/node_modules/pg-protocol' ]
+33 silly reify mark retired [ '/data/node_modules/pgpass' ]
+34 silly reify mark retired [ '/data/node_modules/pg-types' ]
+35 silly reify mark retired [ '/data/node_modules/postgres-bytea' ]
+36 silly reify mark retired [ '/data/node_modules/postgres-date' ]
+37 silly reify mark retired [ '/data/node_modules/postgres-array' ]
+38 silly reify mark retired [ '/data/node_modules/split2' ]
+39 silly reify mark retired [ '/data/node_modules/xtend' ]
+40 silly reify mark retired [ '/data/node_modules/postgres-interval' ]
+41 silly reify mark retired [ '/data/node_modules/require-from-string' ]
+42 silly reify moves {
+42 silly reify   '/data/node_modules/fast-deep-equal': '/data/node_modules/.fast-deep-equal-zliBd0dy',
+42 silly reify   '/data/node_modules/fast-uri': '/data/node_modules/.fast-uri-NDzzCjcb',
+42 silly reify   '/data/node_modules/ajv': '/data/node_modules/.ajv-jzyQZzDM',
+42 silly reify   '/data/node_modules/json-schema-traverse': '/data/node_modules/.json-schema-traverse-zMJEzWC6',
+42 silly reify   '/data/node_modules/node-red-contrib-postgresql': '/data/node_modules/.node-red-contrib-postgresql-IYEB5yK7',
+42 silly reify   '/data/node_modules/mustache': '/data/node_modules/.mustache-ROQ2oY93',
+42 silly reify   '/data/node_modules/node-red-node-email': '/data/node_modules/.node-red-node-email-ZF9YCqdF',
+42 silly reify   '/data/node_modules/pg': '/data/node_modules/.pg-UAyuT6GF',
+42 silly reify   '/data/node_modules/pg-connection-string': '/data/node_modules/.pg-connection-string-cJ1nl38n',
+42 silly reify   '/data/node_modules/pg-cloudflare': '/data/node_modules/.pg-cloudflare-9SlD6y6H',
+42 silly reify   '/data/node_modules/pg-cursor': '/data/node_modules/.pg-cursor-Q7WoAoA4',
+42 silly reify   '/data/node_modules/pg-int8': '/data/node_modules/.pg-int8-gBUoX8CQ',
+42 silly reify   '/data/node_modules/pg-pool': '/data/node_modules/.pg-pool-qzBxIC0y',
+42 silly reify   '/data/node_modules/pg-protocol': '/data/node_modules/.pg-protocol-lUoQErD8',
+42 silly reify   '/data/node_modules/pgpass': '/data/node_modules/.pgpass-vCRx4PLW',
+42 silly reify   '/data/node_modules/pg-types': '/data/node_modules/.pg-types-wZxxzuUP',
+42 silly reify   '/data/node_modules/postgres-bytea': '/data/node_modules/.postgres-bytea-7ONO4ad6',
+42 silly reify   '/data/node_modules/postgres-date': '/data/node_modules/.postgres-date-0N9kjo1a',
+42 silly reify   '/data/node_modules/postgres-array': '/data/node_modules/.postgres-array-9j3wHI49',
+42 silly reify   '/data/node_modules/split2': '/data/node_modules/.split2-YyIajAst',
+42 silly reify   '/data/node_modules/xtend': '/data/node_modules/.xtend-RyJXfljO',
+42 silly reify   '/data/node_modules/postgres-interval': '/data/node_modules/.postgres-interval-bCQFrdgU',
+42 silly reify   '/data/node_modules/require-from-string': '/data/node_modules/.require-from-string-zPskbU6J'
+42 silly reify }
+43 silly CHANGE node_modules/require-from-string
+44 silly CHANGE node_modules/postgres-interval
+45 silly CHANGE node_modules/xtend
+46 silly CHANGE node_modules/split2
+47 silly CHANGE node_modules/postgres-array
+48 silly CHANGE node_modules/postgres-date
+49 silly CHANGE node_modules/postgres-bytea
+50 silly CHANGE node_modules/pg-types
+51 silly CHANGE node_modules/pgpass
+52 silly CHANGE node_modules/pg-protocol
+53 silly CHANGE node_modules/pg-pool
+54 silly CHANGE node_modules/pg-int8
+55 silly CHANGE node_modules/pg-cursor
+56 silly CHANGE node_modules/pg-cloudflare
+57 silly CHANGE node_modules/pg-connection-string
+58 silly CHANGE node_modules/pg
+59 silly CHANGE node_modules/node-red-node-email
+60 silly CHANGE node_modules/node-red-node-email/node_modules/@selderee/plugin-htmlparser2
+61 silly CHANGE node_modules/node-red-node-email/node_modules/@zone-eu/mailsplit
+62 silly CHANGE node_modules/node-red-node-email/node_modules/utf7
+63 silly CHANGE node_modules/node-red-node-email/node_modules/utf7/node_modules/semver
+64 silly CHANGE node_modules/node-red-node-email/node_modules/uc.micro
+65 silly CHANGE node_modules/node-red-node-email/node_modules/tlds
+66 silly CHANGE node_modules/node-red-node-email/node_modules/smtp-server
+67 silly CHANGE node_modules/node-red-node-email/node_modules/smtp-server/node_modules/nodemailer
+68 silly CHANGE node_modules/node-red-node-email/node_modules/selderee
+69 silly CHANGE node_modules/node-red-node-email/node_modules/string_decoder
+70 silly CHANGE node_modules/node-red-node-email/node_modules/readable-stream
+71 silly CHANGE node_modules/node-red-node-email/node_modules/peberminta
+72 silly CHANGE node_modules/node-red-node-email/node_modules/safer-buffer
+73 silly CHANGE node_modules/node-red-node-email/node_modules/punycode.js
+74 silly CHANGE node_modules/node-red-node-email/node_modules/parseley
+75 silly CHANGE node_modules/node-red-node-email/node_modules/nodemailer
+76 silly CHANGE node_modules/node-red-node-email/node_modules/node-pop3
+77 silly CHANGE node_modules/node-red-node-email/node_modules/libqp
+78 silly CHANGE node_modules/node-red-node-email/node_modules/mailparser
+79 silly CHANGE node_modules/node-red-node-email/node_modules/mailparser/node_modules/nodemailer
+80 silly CHANGE node_modules/node-red-node-email/node_modules/libmime
+81 silly CHANGE node_modules/node-red-node-email/node_modules/libmime/node_modules/iconv-lite
+82 silly CHANGE node_modules/node-red-node-email/node_modules/linkify-it
+83 silly CHANGE node_modules/node-red-node-email/node_modules/libbase64
+84 silly CHANGE node_modules/node-red-node-email/node_modules/inherits
+85 silly CHANGE node_modules/node-red-node-email/node_modules/leac
+86 silly CHANGE node_modules/node-red-node-email/node_modules/ipv6-normalize
+87 silly CHANGE node_modules/node-red-node-email/node_modules/isarray
+88 silly CHANGE node_modules/node-red-node-email/node_modules/imap
+89 silly CHANGE node_modules/node-red-node-email/node_modules/htmlparser2
+90 silly CHANGE node_modules/node-red-node-email/node_modules/iconv-lite
+91 silly CHANGE node_modules/node-red-node-email/node_modules/he
+92 silly CHANGE node_modules/node-red-node-email/node_modules/html-to-text
+93 silly CHANGE node_modules/node-red-node-email/node_modules/encoding-japanese
+94 silly CHANGE node_modules/node-red-node-email/node_modules/domutils
+95 silly CHANGE node_modules/node-red-node-email/node_modules/entities
+96 silly CHANGE node_modules/node-red-node-email/node_modules/domhandler
+97 silly CHANGE node_modules/node-red-node-email/node_modules/dom-serializer
+98 silly CHANGE node_modules/node-red-node-email/node_modules/core-util-is
+99 silly CHANGE node_modules/node-red-node-email/node_modules/domelementtype
+100 silly CHANGE node_modules/node-red-node-email/node_modules/deepmerge
+101 silly CHANGE node_modules/node-red-node-email/node_modules/base32.js
+102 silly CHANGE node_modules/mustache
+103 silly CHANGE node_modules/node-red-contrib-postgresql
+104 silly CHANGE node_modules/json-schema-traverse
+105 silly CHANGE node_modules/ajv
+106 silly CHANGE node_modules/fast-uri
+107 silly CHANGE node_modules/fast-deep-equal
+108 verbose cwd /data
+109 verbose os Linux 6.6.87.2-microsoft-standard-WSL2
+110 verbose node v20.19.6
+111 verbose npm  v10.8.2
+112 verbose exit 0
+113 info ok

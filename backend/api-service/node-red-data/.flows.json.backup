@@ -14,13 +14,6 @@
         "info": "API REST para gestión de refugiados"
     },
     {
-        "id": "tab_families",
-        "type": "tab",
-        "label": "Families API",
-        "disabled": false,
-        "info": "API REST para gestión de familias"
-    },
-    {
         "id": "tab_assignments",
         "type": "tab",
         "label": "Assignments API",
@@ -829,362 +822,6 @@
         "wires": []
     },
     {
-        "id": "family_get_all",
-        "type": "http in",
-        "z": "tab_families",
-        "name": "GET /api/families",
-        "url": "/api/families",
-        "method": "get",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 140,
-        "y": 80,
-        "wires": [
-            [
-                "family_get_all_query"
-            ]
-        ]
-    },
-    {
-        "id": "family_get_all_query",
-        "type": "postgresql",
-        "z": "tab_families",
-        "name": "Query All Families",
-        "query": "SELECT * FROM families ORDER BY id",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 360,
-        "y": 80,
-        "wires": [
-            [
-                "family_response"
-            ]
-        ]
-    },
-    {
-        "id": "family_get_by_id",
-        "type": "http in",
-        "z": "tab_families",
-        "name": "GET /api/families/:id",
-        "url": "/api/families/:id",
-        "method": "get",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 150,
-        "y": 140,
-        "wires": [
-            [
-                "family_get_by_id_prepare"
-            ]
-        ]
-    },
-    {
-        "id": "family_get_by_id_prepare",
-        "type": "function",
-        "z": "tab_families",
-        "name": "Prepare Query",
-        "func": "msg.queryParameters = [parseInt(msg.req.params.id)];\nmsg.payload = \"SELECT * FROM families WHERE id = $1\";\nreturn msg;",
-        "outputs": 1,
-        "x": 370,
-        "y": 140,
-        "wires": [
-            [
-                "family_get_by_id_query"
-            ]
-        ]
-    },
-    {
-        "id": "family_get_by_id_query",
-        "type": "postgresql",
-        "z": "tab_families",
-        "name": "Query Family",
-        "query": "",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 570,
-        "y": 140,
-        "wires": [
-            [
-                "family_single_response"
-            ]
-        ]
-    },
-    {
-        "id": "family_get_by_size",
-        "type": "http in",
-        "z": "tab_families",
-        "name": "GET /api/families/size/:size",
-        "url": "/api/families/size/:size",
-        "method": "get",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 170,
-        "y": 200,
-        "wires": [
-            [
-                "family_get_by_size_prepare"
-            ]
-        ]
-    },
-    {
-        "id": "family_get_by_size_prepare",
-        "type": "function",
-        "z": "tab_families",
-        "name": "Prepare Query",
-        "func": "msg.queryParameters = [parseInt(msg.req.params.size)];\nmsg.payload = \"SELECT * FROM families WHERE family_size = $1 ORDER BY id\";\nreturn msg;",
-        "outputs": 1,
-        "x": 410,
-        "y": 200,
-        "wires": [
-            [
-                "family_get_by_size_query"
-            ]
-        ]
-    },
-    {
-        "id": "family_get_by_size_query",
-        "type": "postgresql",
-        "z": "tab_families",
-        "name": "Query",
-        "query": "",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 610,
-        "y": 200,
-        "wires": [
-            [
-                "family_response"
-            ]
-        ]
-    },
-    {
-        "id": "family_post",
-        "type": "http in",
-        "z": "tab_families",
-        "name": "POST /api/families",
-        "url": "/api/families",
-        "method": "post",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 140,
-        "y": 260,
-        "wires": [
-            [
-                "family_post_prepare"
-            ]
-        ]
-    },
-    {
-        "id": "family_post_prepare",
-        "type": "function",
-        "z": "tab_families",
-        "name": "Prepare Insert",
-        "func": "const data = msg.payload;\nmsg.queryParameters = [\n    data.family_name, data.family_size, data.head_of_family_id, data.notes\n];\nmsg.payload = `INSERT INTO families (family_name, family_size, head_of_family_id, notes, created_at, updated_at) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\nreturn msg;",
-        "outputs": 1,
-        "x": 370,
-        "y": 260,
-        "wires": [
-            [
-                "family_post_query"
-            ]
-        ]
-    },
-    {
-        "id": "family_post_query",
-        "type": "postgresql",
-        "z": "tab_families",
-        "name": "Insert Family",
-        "query": "",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 560,
-        "y": 260,
-        "wires": [
-            [
-                "family_created_response"
-            ]
-        ]
-    },
-    {
-        "id": "family_put",
-        "type": "http in",
-        "z": "tab_families",
-        "name": "PUT /api/families/:id",
-        "url": "/api/families/:id",
-        "method": "put",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 150,
-        "y": 320,
-        "wires": [
-            [
-                "family_put_prepare"
-            ]
-        ]
-    },
-    {
-        "id": "family_put_prepare",
-        "type": "function",
-        "z": "tab_families",
-        "name": "Prepare Update",
-        "func": "const data = msg.payload;\nconst id = parseInt(msg.req.params.id);\nmsg.queryParameters = [\n    data.family_name, data.family_size, data.head_of_family_id, data.notes, id\n];\nmsg.payload = `UPDATE families SET family_name=$1, family_size=$2, head_of_family_id=$3, notes=$4, updated_at=CURRENT_TIMESTAMP WHERE id=$5 RETURNING *`;\nreturn msg;",
-        "outputs": 1,
-        "x": 370,
-        "y": 320,
-        "wires": [
-            [
-                "family_put_query"
-            ]
-        ]
-    },
-    {
-        "id": "family_put_query",
-        "type": "postgresql",
-        "z": "tab_families",
-        "name": "Update Family",
-        "query": "",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 570,
-        "y": 320,
-        "wires": [
-            [
-                "family_single_response"
-            ]
-        ]
-    },
-    {
-        "id": "family_delete",
-        "type": "http in",
-        "z": "tab_families",
-        "name": "DELETE /api/families/:id",
-        "url": "/api/families/:id",
-        "method": "delete",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 160,
-        "y": 380,
-        "wires": [
-            [
-                "family_delete_prepare"
-            ]
-        ]
-    },
-    {
-        "id": "family_delete_prepare",
-        "type": "function",
-        "z": "tab_families",
-        "name": "Prepare Delete",
-        "func": "msg.queryParameters = [parseInt(msg.req.params.id)];\nmsg.payload = \"DELETE FROM families WHERE id = $1\";\nreturn msg;",
-        "outputs": 1,
-        "x": 380,
-        "y": 380,
-        "wires": [
-            [
-                "family_delete_query"
-            ]
-        ]
-    },
-    {
-        "id": "family_delete_query",
-        "type": "postgresql",
-        "z": "tab_families",
-        "name": "Delete Family",
-        "query": "",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 570,
-        "y": 380,
-        "wires": [
-            [
-                "family_delete_response"
-            ]
-        ]
-    },
-    {
-        "id": "family_response",
-        "type": "function",
-        "z": "tab_families",
-        "name": "Format Response",
-        "func": "msg.statusCode = 200;\nmsg.payload = msg.payload || [];\nreturn msg;",
-        "outputs": 1,
-        "x": 780,
-        "y": 80,
-        "wires": [
-            [
-                "family_http_response"
-            ]
-        ]
-    },
-    {
-        "id": "family_single_response",
-        "type": "function",
-        "z": "tab_families",
-        "name": "Format Single",
-        "func": "if (msg.payload && msg.payload.length > 0) {\n    msg.statusCode = 200;\n    msg.payload = msg.payload[0];\n} else {\n    msg.statusCode = 404;\n    msg.payload = { error: \"Family not found\" };\n}\nreturn msg;",
-        "outputs": 1,
-        "x": 770,
-        "y": 140,
-        "wires": [
-            [
-                "family_http_response"
-            ]
-        ]
-    },
-    {
-        "id": "family_created_response",
-        "type": "function",
-        "z": "tab_families",
-        "name": "Format Created",
-        "func": "msg.statusCode = 201;\nmsg.payload = msg.payload[0];\nreturn msg;",
-        "outputs": 1,
-        "x": 780,
-        "y": 260,
-        "wires": [
-            [
-                "family_http_response"
-            ]
-        ]
-    },
-    {
-        "id": "family_delete_response",
-        "type": "function",
-        "z": "tab_families",
-        "name": "Format Delete",
-        "func": "msg.statusCode = 204;\nmsg.payload = \"\";\nreturn msg;",
-        "outputs": 1,
-        "x": 770,
-        "y": 380,
-        "wires": [
-            [
-                "family_http_response"
-            ]
-        ]
-    },
-    {
-        "id": "family_http_response",
-        "type": "http response",
-        "z": "tab_families",
-        "name": "HTTP Response",
-        "statusCode": "",
-        "headers": {},
-        "x": 990,
-        "y": 220,
-        "wires": []
-    },
-    {
         "id": "assignment_get_all",
         "type": "http in",
         "z": "tab_assignments",
@@ -1300,6 +937,11 @@
         "name": "Prepare Query",
         "func": "msg.params = [parseInt(msg.req.params.refugeeId)];\nmsg.topic = \"SELECT a.*, s.name as shelter_name FROM assignments a LEFT JOIN shelters s ON a.shelter_id = s.id WHERE a.refugee_id = $1 ORDER BY a.id DESC\";\nreturn msg;",
         "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
         "x": 470,
         "y": 200,
         "wires": [
@@ -2099,8 +1741,41 @@
         "x": 1050,
         "y": 420,
         "wires": [
-            []
+            [
+                "format_recommendation_response"
+            ]
         ]
+    },
+    {
+        "id": "format_recommendation_response",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Formatear respuesta",
+        "func": "// Obtener los datos del refugiado original\nconst originalRefugee = flow.get('originalRefugee');\nconst aiResponse = msg.payload;\n\nif (!aiResponse || !aiResponse.recommendations || aiResponse.recommendations.length === 0) {\n    msg.statusCode = 404;\n    msg.payload = { error: 'No se encontraron recomendaciones de refugios' };\n    return msg;\n}\n\n// Tomar la mejor recomendación\nconst topRecommendation = aiResponse.recommendations[0];\n\n// Formatear respuesta en el formato que espera Flutter (RefugeeAssignmentResponse)\nmsg.payload = {\n    refugee: {\n        id: originalRefugee.id,\n        first_name: originalRefugee.first_name,\n        last_name: originalRefugee.last_name,\n        age: originalRefugee.age,\n        gender: originalRefugee.gender,\n        nationality: originalRefugee.nationality,\n        languages_spoken: originalRefugee.languages_spoken,\n        medical_conditions: originalRefugee.medical_conditions,\n        has_disability: originalRefugee.has_disability,\n        vulnerability_score: originalRefugee.vulnerability_score,\n        special_needs: originalRefugee.special_needs\n    },\n    assignment: {\n        shelter_id: topRecommendation.shelter_id,\n        shelter_name: topRecommendation.shelter_name,\n        confidence_score: topRecommendation.compatibility_score / 100,\n        compatibility_score: topRecommendation.compatibility_score,\n        available_space: topRecommendation.available_space,\n        explanation: topRecommendation.explanation,\n        matching_reasons: topRecommendation.matching_reasons,\n        vulnerability_level: aiResponse.vulnerability_level,\n        cluster_id: aiResponse.cluster_id,\n        alternative_shelters: aiResponse.recommendations.slice(1).map(rec => ({\n            shelter_id: rec.shelter_id,\n            shelter_name: rec.shelter_name,\n            compatibility_score: rec.compatibility_score,\n            available_space: rec.available_space\n        }))\n    }\n};\n\nmsg.statusCode = 200;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1300,
+        "y": 420,
+        "wires": [
+            [
+                "send_recommendation_response"
+            ]
+        ]
+    },
+    {
+        "id": "send_recommendation_response",
+        "type": "http response",
+        "z": "tab_ai_integration",
+        "name": "Enviar respuesta",
+        "statusCode": "",
+        "headers": {},
+        "x": 1540,
+        "y": 420,
+        "wires": []
     },
     {
         "id": "41aa3f26b3b03799",
@@ -2317,23 +1992,6 @@
         ]
     },
     {
-        "id": "dc46be29a6f0c76e",
-        "type": "e-mail",
-        "z": "tab_login",
-        "server": "smtp.gmail.com",
-        "port": "587",
-        "authtype": "BASIC",
-        "saslformat": true,
-        "token": "oauth2Response.access_token",
-        "secure": false,
-        "tls": true,
-        "name": "",
-        "dname": "",
-        "x": 1290,
-        "y": 200,
-        "wires": []
-    },
-    {
         "id": "91b170f70235ff3c",
         "type": "http in",
         "z": "tab_login",
@@ -2350,5 +2008,22 @@
                 "login_validation"
             ]
         ]
+    },
+    {
+        "id": "dc46be29a6f0c76e",
+        "type": "e-mail",
+        "z": "tab_login",
+        "server": "smtp.gmail.com",
+        "port": "587",
+        "authtype": "BASIC",
+        "saslformat": true,
+        "token": "oauth2Response.access_token",
+        "secure": false,
+        "tls": true,
+        "name": "",
+        "dname": "",
+        "x": 1290,
+        "y": 200,
+        "wires": []
     }
 ]

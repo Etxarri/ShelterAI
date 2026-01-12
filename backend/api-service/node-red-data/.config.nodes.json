@@ -1,7 +1,7 @@
 {
     "node-red": {
         "name": "node-red",
-        "version": "4.1.1",
+        "version": "4.1.2",
         "local": false,
         "user": false,
         "nodes": {
@@ -430,8 +430,8 @@
     "node-red-contrib-postgresql": {
         "name": "node-red-contrib-postgresql",
         "version": "0.15.4",
-        "local": true,
-        "user": true,
+        "local": false,
+        "user": false,
         "nodes": {
             "postgresql": {
                 "name": "postgresql",
@@ -440,10 +440,10 @@
                     "postgresql"
                 ],
                 "enabled": true,
-                "local": true,
+                "local": false,
                 "user": false,
                 "module": "node-red-contrib-postgresql",
-                "file": "/data/node_modules/node-red-contrib-postgresql/postgresql.js"
+                "file": "/usr/src/node-red/node_modules/node-red-contrib-postgresql/postgresql.js"
             }
         }
     },
