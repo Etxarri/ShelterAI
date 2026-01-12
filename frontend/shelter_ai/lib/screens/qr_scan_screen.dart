@@ -32,7 +32,7 @@ class _QrScanScreenState extends State<QrScanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Escanear QR')),
+      appBar: AppBar(title: const Text('Scan QR')),
       body: _isScannerSupported
           ? Stack(
               children: [
@@ -43,7 +43,7 @@ class _QrScanScreenState extends State<QrScanScreen> {
                     padding: const EdgeInsets.all(12),
                     color: Colors.black54,
                     child: const Text(
-                      'Apunta al código QR del refugiado',
+                      'Point to the refugee\'s QR code',
                       style: TextStyle(color: Colors.white),
                     ),
                   ),
@@ -59,19 +59,19 @@ class _QrScanScreenState extends State<QrScanScreen> {
                     const Icon(Icons.desktop_windows, size: 56),
                     const SizedBox(height: 16),
                     const Text(
-                      'El escaneo con cámara no está disponible en este dispositivo.',
+                      'Camera scanning is not available on this device.',
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Puedes usar la app Web o un dispositivo Android/iOS para escanear el QR.',
+                      'You can use the Web app or an Android/iOS device to scan the QR.',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.black54),
                     ),
                     const SizedBox(height: 24),
                     FilledButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('Volver'),
+                      child: const Text('Back'),
                     )
                   ],
                 ),

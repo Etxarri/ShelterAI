@@ -23,7 +23,7 @@ class _RefugeeSelfFormQrScreenState extends State<RefugeeSelfFormQrScreen> {
   final TextEditingController _firstNameCtrl = TextEditingController();
   final TextEditingController _lastNameCtrl = TextEditingController();
   final TextEditingController _ageCtrl = TextEditingController();
-  String _gender = 'Masculino';
+  String _gender = 'Male';
   final TextEditingController _nationalityCtrl = TextEditingController();
   final TextEditingController _languagesCtrl = TextEditingController();
   final TextEditingController _medicalCtrl = TextEditingController();
@@ -76,7 +76,7 @@ class _RefugeeSelfFormQrScreenState extends State<RefugeeSelfFormQrScreen> {
           crossAxisAlignment: pw.CrossAxisAlignment.center,
           children: [
             pw.Text(
-              'ShelterAI - Código QR',
+              'ShelterAI - QR Code',
               style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 24),
@@ -93,7 +93,7 @@ class _RefugeeSelfFormQrScreenState extends State<RefugeeSelfFormQrScreen> {
             ),
             pw.SizedBox(height: 16),
             pw.Text(
-              'Guárdalo en tu móvil y muéstralo al llegar al centro.',
+              'Save it on your phone and show it upon arrival at the center.',
               textAlign: pw.TextAlign.center,
             ),
           ],
@@ -148,7 +148,7 @@ class _RefugeeSelfFormQrScreenState extends State<RefugeeSelfFormQrScreen> {
         bool isSaving = false;
         return StatefulBuilder(
           builder: (context, setDialogState) => AlertDialog(
-            title: const Text('Tu código QR'),
+            title: const Text('Your QR Code'),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -164,7 +164,7 @@ class _RefugeeSelfFormQrScreenState extends State<RefugeeSelfFormQrScreen> {
                   ),
                   const SizedBox(height: 12),
                   const Text(
-                    'Guárdalo y muéstralo al trabajador para evitar colas.',
+                    'Save it and show it to the worker to avoid queues.',
                   ),
                 ],
               ),
@@ -181,7 +181,7 @@ class _RefugeeSelfFormQrScreenState extends State<RefugeeSelfFormQrScreen> {
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('No se pudo descargar el PDF: $e'),
+                                content: Text('Could not download PDF: $e'),
                               ),
                             );
                           }
@@ -196,11 +196,11 @@ class _RefugeeSelfFormQrScreenState extends State<RefugeeSelfFormQrScreen> {
                           height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                        : const Text('Descargar PDF'),
+                        : const Text('Download PDF'),
               ),
               TextButton(
                 onPressed: isSaving ? null : () => Navigator.pop(dialogContext),
-                child: const Text('Cerrar'),
+                child: const Text('Close'),
               ),
             ],
           ),
@@ -219,7 +219,7 @@ class _RefugeeSelfFormQrScreenState extends State<RefugeeSelfFormQrScreen> {
     final color = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Registro rápido'),
+        title: const Text('Quick registration'),
         actions: [
           IconButton(onPressed: _logout, icon: const Icon(Icons.logout)),
         ],
@@ -238,35 +238,35 @@ class _RefugeeSelfFormQrScreenState extends State<RefugeeSelfFormQrScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Text(
-                  'Solo pedimos lo necesario para ubicarte con seguridad. Puedes regresar más tarde; tu QR seguirá funcionando.',
+                  'We only ask for what is necessary to locate you safely. You can come back later; your QR will keep working.',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
               const SizedBox(height: 18),
-              const _SectionHeader(title: 'Tus datos básicos'),
+              const _SectionHeader(title: 'Your basic data'),
               const SizedBox(height: 10),
               TextFormField(
                 controller: _firstNameCtrl,
-                decoration: const InputDecoration(labelText: 'Nombre'),
+                decoration: const InputDecoration(labelText: 'First Name'),
                 validator:
-                    (v) => (v == null || v.trim().isEmpty) ? 'Requerido' : null,
+                    (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
               const SizedBox(height: 10),
               TextFormField(
                 controller: _lastNameCtrl,
-                decoration: const InputDecoration(labelText: 'Apellido'),
+                decoration: const InputDecoration(labelText: 'Last Name'),
                 validator:
-                    (v) => (v == null || v.trim().isEmpty) ? 'Requerido' : null,
+                    (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
               const SizedBox(height: 10),
               TextFormField(
                 controller: _ageCtrl,
-                decoration: const InputDecoration(labelText: 'Edad'),
+                decoration: const InputDecoration(labelText: 'Age'),
                 keyboardType: TextInputType.number,
                 validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Requerido';
+                  if (v == null || v.trim().isEmpty) return 'Required';
                   final n = int.tryParse(v);
-                  if (n == null || n < 0) return 'Edad inválida';
+                  if (n == null || n < 0) return 'Invalid age';
                   return null;
                 },
               ),
@@ -275,45 +275,45 @@ class _RefugeeSelfFormQrScreenState extends State<RefugeeSelfFormQrScreen> {
                 value: _gender,
                 items: const [
                   DropdownMenuItem(
-                    value: 'Masculino',
-                    child: Text('Masculino'),
+                    value: 'Male',
+                    child: Text('Male'),
                   ),
-                  DropdownMenuItem(value: 'Femenino', child: Text('Femenino')),
-                  DropdownMenuItem(value: 'Otro', child: Text('Otro')),
+                  DropdownMenuItem(value: 'Female', child: Text('Female')),
+                  DropdownMenuItem(value: 'Other', child: Text('Other')),
                 ],
-                onChanged: (v) => setState(() => _gender = v ?? 'Masculino'),
-                decoration: const InputDecoration(labelText: 'Género'),
+                onChanged: (v) => setState(() => _gender = v ?? 'Male'),
+                decoration: const InputDecoration(labelText: 'Gender'),
               ),
               const SizedBox(height: 18),
-              const _SectionHeader(title: 'Idioma y nacionalidad'),
+              const _SectionHeader(title: 'Language and nationality'),
               const SizedBox(height: 10),
               TextFormField(
                 controller: _nationalityCtrl,
                 decoration: const InputDecoration(
-                  labelText: 'Nacionalidad (opcional)',
+                  labelText: 'Nationality (optional)',
                 ),
               ),
               const SizedBox(height: 10),
               TextFormField(
                 controller: _languagesCtrl,
                 decoration: const InputDecoration(
-                  labelText: 'Idiomas (separados por comas)',
-                  helperText: 'Ej: español, inglés',
+                  labelText: 'Languages (comma separated)',
+                  helperText: 'E.g: Spanish, English',
                 ),
               ),
               const SizedBox(height: 18),
-              const _SectionHeader(title: 'Cuidados y acompañantes'),
+              const _SectionHeader(title: 'Care and companions'),
               const SizedBox(height: 10),
               TextFormField(
                 controller: _medicalCtrl,
                 decoration: const InputDecoration(
-                  labelText: 'Condiciones médicas (opcional)',
-                  hintText: 'Medicamentos, alergias, embarazo, etc.',
+                  labelText: 'Medical conditions (optional)',
+                  hintText: 'Medications, allergies, pregnancy, etc.',
                 ),
                 maxLines: 2,
               ),
               SwitchListTile(
-                title: const Text('Tengo discapacidad o movilidad reducida'),
+                title: const Text('I have a disability or reduced mobility'),
                 value: _hasDisability,
                 onChanged: (v) => setState(() => _hasDisability = v),
               ),
@@ -321,8 +321,8 @@ class _RefugeeSelfFormQrScreenState extends State<RefugeeSelfFormQrScreen> {
               TextFormField(
                 controller: _specialNeedsCtrl,
                 decoration: const InputDecoration(
-                  labelText: 'Necesidades especiales (opcional)',
-                  hintText: 'Apoyo psicológico, espacio familiar, privacidad',
+                  labelText: 'Special needs (optional)',
+                  hintText: 'Psychological support, family space, privacy',
                 ),
                 maxLines: 2,
               ),
@@ -330,7 +330,7 @@ class _RefugeeSelfFormQrScreenState extends State<RefugeeSelfFormQrScreen> {
               TextFormField(
                 controller: _familyIdCtrl,
                 decoration: const InputDecoration(
-                  labelText: 'ID de familia (si lo tienes)',
+                  labelText: 'Family ID (if you have one)',
                 ),
                 keyboardType: TextInputType.number,
               ),
@@ -342,11 +342,11 @@ class _RefugeeSelfFormQrScreenState extends State<RefugeeSelfFormQrScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   textStyle: const TextStyle(fontSize: 16),
                 ),
-                label: const Text('Generar y guardar mi QR'),
+                label: const Text('Generate and save my QR'),
               ),
               const SizedBox(height: 10),
               const Text(
-                'Muéstralo al llegar. Si necesitas ayuda urgente, avisa en recepción.',
+                'Show it upon arrival. If you need urgent help, notify reception.',
                 textAlign: TextAlign.center,
               ),
             ],

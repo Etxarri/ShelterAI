@@ -575,14 +575,14 @@ class AssignmentDetailScreen extends StatelessWidget {
   }
 
   String _formatCriteriaName(String key) {
-    // Mapeo de nombres técnicos a nombres amigables en español
+    // Mapping of technical names to friendly names in English
     const Map<String, String> criteriaNames = {
-      'availability': 'Disponibilidad',
-      'medical_facilities': 'Instalaciones Médicas',
-      'childcare': 'Cuidado Infantil',
-      'disability_access': 'Acceso para Discapacitados',
-      'languages': 'Idiomas',
-      'shelter_type': 'Tipo de Refugio',
+      'availability': 'Availability',
+      'medical_facilities': 'Medical Facilities',
+      'childcare': 'Childcare',
+      'disability_access': 'Disability Access',
+      'languages': 'Languages',
+      'shelter_type': 'Shelter Type',
     };
     
     return criteriaNames[key] ?? key

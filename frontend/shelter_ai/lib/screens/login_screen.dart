@@ -27,7 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email y contraseña requeridos')),
+        const SnackBar(content: Text('Email and password required')),
       );
       return;
     }
@@ -95,13 +95,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Text(
-                    'Entrada para trabajadores',
+                    'Worker Entry',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Recibe, asigna y prioriza con seguridad.',
+                    'Receive, assign and prioritize securely.',
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
@@ -121,7 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextField(
                     controller: _passwordCtrl,
                     decoration: InputDecoration(
-                      labelText: 'Contraseña',
+                      labelText: 'Password',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -144,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                             : const Icon(Icons.login),
-                    label: Text(_isLoading ? 'Ingresando...' : 'Entrar'),
+                    label: Text(_isLoading ? 'Logging in...' : 'Login'),
                   ),
                   TextButton(
                     onPressed: _isLoading
@@ -154,7 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               '/register',
                             ),
                     child: Text(
-                      '¿Primera vez? Crear cuenta',
+                      'First time? Create account',
                       style: TextStyle(color: color.primary),
                     ),
                   ),
@@ -165,7 +165,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               context,
                               '/welcome',
                             ),
-                    child: const Text('Volver a inicio'),
+                    child: const Text('Back to home'),
                   ),
                 ],
               ),

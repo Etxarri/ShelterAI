@@ -21,11 +21,11 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
     final color = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tu espacio seguro'),
+        title: const Text('Your safe space'),
         centerTitle: true,
         actions: [
           IconButton(
-            tooltip: 'Cerrar sesión',
+            tooltip: 'Logout',
             onPressed: _logout,
             icon: const Icon(Icons.logout),
           ),
@@ -47,7 +47,7 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Hola, te acompañamos',
+                    'Hello, we are with you',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
@@ -55,7 +55,7 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
                     children: [
                       const Icon(Icons.person, size: 20),
                       const SizedBox(width: 8),
-                      Text(auth.userName.isEmpty ? 'Refugiado registrado' : auth.userName),
+                      Text(auth.userName.isEmpty ? 'Registered refugee' : auth.userName),
                     ],
                   ),
                   const SizedBox(height: 6),
@@ -71,7 +71,7 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
                     children: const [
                       Icon(Icons.verified_user, size: 20),
                       SizedBox(width: 8),
-                      Text('Sesión activa'),
+                      Text('Active session'),
                     ],
                   ),
                 ],
@@ -79,47 +79,47 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
             ),
             const SizedBox(height: 24),
             const Text(
-              'Tus acciones rápidas',
+              'Your quick actions',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             ElevatedButton.icon(
               icon: const Icon(Icons.qr_code),
-              label: const Text('Ver o generar mi QR'),
+              label: const Text('View or generate my QR'),
               onPressed: () => Navigator.pushNamed(context, '/refugee_self'),
             ),
             const SizedBox(height: 10),
             OutlinedButton.icon(
               icon: const Icon(Icons.map_outlined),
-              label: const Text('Qué pasará al llegar'),
+              label: const Text('What will happen upon arrival'),
               onPressed: () => _showSteps(context),
             ),
             const SizedBox(height: 10),
             OutlinedButton.icon(
               icon: const Icon(Icons.health_and_safety),
-              label: const Text('Pedir ayuda ahora'),
+              label: const Text('Request help now'),
               onPressed: () => _showHelp(context),
             ),
             const SizedBox(height: 24),
             const Text(
-              'Consejos rápidos',
+              'Quick tips',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             const _TipTile(
               icon: Icons.family_restroom,
-              title: 'Si estás en familia',
-              subtitle: 'Mantén a los menores contigo y muestra un solo QR por familia cuando sea posible.',
+              title: 'If you are with family',
+              subtitle: 'Keep minors with you and show one QR per family when possible.',
             ),
             const _TipTile(
               icon: Icons.medical_information,
-              title: 'Salud primero',
-              subtitle: 'Dolor, embarazo, alergias o movilidad reducida: avisa para priorizar tu atención.',
+              title: 'Health first',
+              subtitle: 'Pain, pregnancy, allergies or reduced mobility: let us know to prioritize your care.',
             ),
             const _TipTile(
               icon: Icons.lock_outline,
-              title: 'Tus datos están protegidos',
-              subtitle: 'Solo se usan para ubicarte y cuidarte. Puedes cerrar sesión cuando quieras.',
+              title: 'Your data is protected',
+              subtitle: 'We only use them to locate and care for you. You can log out whenever you want.',
             ),
           ],
         ),
@@ -140,13 +140,13 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: const [
             Text(
-              'Al llegar al centro',
+              'Upon arriving at the center',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 12),
-            _StepItem(text: 'Muestra tu QR o tu nombre.'),
-            _StepItem(text: 'Te asignaremos un lugar seguro.'),
-            _StepItem(text: 'Si necesitas atención médica, dilo de inmediato.'),
+            _StepItem(text: 'Show your QR or your name.'),
+            _StepItem(text: 'We will assign you a safe place.'),
+            _StepItem(text: 'If you need medical attention, say so immediately.'),
           ],
         ),
       ),
@@ -157,14 +157,14 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Ayuda urgente'),
+        title: const Text('Urgent help'),
         content: const Text(
-          'Podemos priorizarte si hay dolor, embarazo, movilidad reducida, menores no acompañados o riesgo de seguridad.',
+          'We can prioritize you if there is pain, pregnancy, reduced mobility, unaccompanied minors or security risk.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Entendido'),
+            child: const Text('Understood'),
           ),
         ],
       ),

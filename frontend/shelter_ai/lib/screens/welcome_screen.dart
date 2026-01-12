@@ -65,40 +65,40 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   ),
                   const SizedBox(height: 24),
                   const Text(
-                    'Te ayudamos a encontrar un lugar seguro.',
+                    'We help you find a safe place.',
                     style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
                   const Text(
-                    'Elige cómo quieres entrar. Si eres refugiado, puedes registrarte sin hacer fila. Si eres trabajador, entra a tu panel.',
+                    'Choose how you want to enter. If you are a refugee, you can register without queuing. If you are a worker, enter your panel.',
                   ),
                   const SizedBox(height: 24),
                   Expanded(
                     child: ListView(
                       children: [
                         _EntryCard(
-                          title: 'Soy refugiado/a',
+                          title: 'I am a refugee',
                           description:
-                              'Regístrate rápido, genera tu QR y recibe apoyo sin esperas largas.',
+                              'Register quickly, generate your QR and receive support without long waits.',
                           icon: Icons.favorite,
                           color: color.primary,
                           onTap: () => Navigator.pushReplacementNamed(
                             context,
                             '/refugee-landing',
                           ),
-                          actionLabel: 'Registrarme',
+                          actionLabel: 'Register',
                         ),
                         _EntryCard(
-                          title: 'Soy trabajador/a',
+                          title: 'I am a worker',
                           description:
-                              'Accede al panel para recibir, asignar y priorizar casos.',
+                              'Access the panel to receive, assign and prioritize cases.',
                           icon: Icons.badge,
                           color: color.secondary,
                           onTap: () => Navigator.pushReplacementNamed(
                             context,
                             '/login',
                           ),
-                          actionLabel: 'Ir al panel',
+                          actionLabel: 'Go to panel',
                         ),
                       ],
                     ),

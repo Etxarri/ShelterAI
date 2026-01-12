@@ -33,11 +33,11 @@ class _WorkerDashboardScreenState extends State<WorkerDashboardScreen> {
     final color = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Panel de recepción'),
+        title: const Text('Reception Panel'),
         centerTitle: true,
         actions: [
           IconButton(
-            tooltip: 'Cerrar sesión',
+            tooltip: 'Logout',
             onPressed: _logout,
             icon: const Icon(Icons.logout),
           ),
@@ -58,7 +58,7 @@ class _WorkerDashboardScreenState extends State<WorkerDashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Hola, ${auth.userName.isEmpty ? 'equipo' : auth.userName}',
+                    'Hello, ${auth.userName.isEmpty ? 'team' : auth.userName}',
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
@@ -66,7 +66,7 @@ class _WorkerDashboardScreenState extends State<WorkerDashboardScreen> {
                   ),
                   const SizedBox(height: 6),
                   const Text(
-                    'Recibe, asigna y prioriza sin perder tiempo. Escanea o registra manualmente.',
+                    'Receive, assign and prioritize without wasting time. Scan or register manually.',
                   ),
                 ],
               ),
@@ -77,7 +77,7 @@ class _WorkerDashboardScreenState extends State<WorkerDashboardScreen> {
               runSpacing: 12,
               children: [
                 _ActionCard(
-                  label: 'Escanear QR',
+                  label: 'Scan QR',
                   icon: Icons.qr_code_scanner,
                   color: color.primary,
                   onTap: () async {
@@ -90,7 +90,7 @@ class _WorkerDashboardScreenState extends State<WorkerDashboardScreen> {
                   },
                 ),
                 _ActionCard(
-                  label: 'Registrar manual',
+                  label: 'Manual registration',
                   icon: Icons.person_add_alt,
                   color: color.secondary,
                   onTap: () async {
@@ -102,13 +102,13 @@ class _WorkerDashboardScreenState extends State<WorkerDashboardScreen> {
                   },
                 ),
                 _ActionCard(
-                  label: 'Lista de refugiados',
+                  label: 'Refugee list',
                   icon: Icons.people_alt,
                   color: Colors.teal.shade700,
                   onTap: () => Navigator.pushNamed(context, '/refugees'),
                 ),
                 _ActionCard(
-                  label: 'Albergues y cupos',
+                  label: 'Shelters and capacity',
                   icon: Icons.home_work,
                   color: Colors.indigo,
                   onTap: () => Navigator.pushNamed(context, '/shelters'),
@@ -117,7 +117,7 @@ class _WorkerDashboardScreenState extends State<WorkerDashboardScreen> {
             ),
             const SizedBox(height: 22),
             const Text(
-              'Situación al momento',
+              'Current situation',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
@@ -128,8 +128,8 @@ class _WorkerDashboardScreenState extends State<WorkerDashboardScreen> {
                 final count = snap.hasData ? snap.data!.length : null;
                 return _StatTile(
                   icon: Icons.people_outline,
-                  title: 'Personas registradas',
-                  value: count != null ? '$count' : 'Cargando...',
+                  title: 'Registered people',
+                  value: count != null ? '$count' : 'Loading...',
                 );
               },
             ),
@@ -139,14 +139,14 @@ class _WorkerDashboardScreenState extends State<WorkerDashboardScreen> {
                 final count = snap.hasData ? snap.data!.length : null;
                 return _StatTile(
                   icon: Icons.home_outlined,
-                  title: 'Albergues disponibles',
-                  value: count != null ? '$count' : 'Cargando...',
+                  title: 'Available shelters',
+                  value: count != null ? '$count' : 'Loading...',
                 );
               },
             ),
             const SizedBox(height: 18),
             const Text(
-              'Casos rápidos',
+              'Quick cases',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 10),
@@ -178,14 +178,14 @@ class _WorkerDashboardScreenState extends State<WorkerDashboardScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('QR recibido'),
+        title: const Text('QR received'),
         content: Text(
           data.length > 240 ? '${data.substring(0, 240)}…' : data,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cerrar'),
+            child: const Text('Close'),
           ),
         ],
       ),

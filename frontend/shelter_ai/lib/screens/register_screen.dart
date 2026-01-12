@@ -60,7 +60,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() => _isLoading = false);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error en el registro: $e')),
+        SnackBar(content: Text('Registration error: $e')),
       );
     }
   }
@@ -70,7 +70,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final color = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Crear cuenta'),
+        title: const Text('Create account'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: _isLoading
@@ -101,24 +101,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Text(
-                    'Crear cuenta de trabajador',
+                    'Create worker account',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Usa un correo de la organización para mantener la seguridad.',
+                    'Use an organization email to maintain security.',
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
                   TextFormField(
                     controller: _nameCtrl,
                     decoration: const InputDecoration(
-                      labelText: 'Nombre completo',
+                      labelText: 'Full name',
                       prefixIcon: Icon(Icons.person),
                     ),
                     validator: (v) =>
-                        (v == null || v.trim().isEmpty) ? 'Requerido' : null,
+                        (v == null || v.trim().isEmpty) ? 'Required' : null,
                     enabled: !_isLoading,
                   ),
                   const SizedBox(height: 16),
@@ -130,11 +130,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     keyboardType: TextInputType.emailAddress,
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Requerido';
+                      if (v == null || v.trim().isEmpty) return 'Required';
                       final emailRegex =
                           RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
                       if (!emailRegex.hasMatch(v.trim())) {
-                        return 'Email inválido';
+                        return 'Invalid email';
                       }
                       return null;
                     },
@@ -144,13 +144,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   TextFormField(
                     controller: _passwordCtrl,
                     decoration: const InputDecoration(
-                      labelText: 'Contraseña',
+                      labelText: 'Password',
                       prefixIcon: Icon(Icons.lock),
                     ),
                     obscureText: true,
                     validator: (v) =>
                         (v == null || v.length < 6)
-                            ? 'Mínimo 6 caracteres'
+                            ? 'Minimum 6 characters'
                             : null,
                     enabled: !_isLoading,
                   ),
@@ -158,13 +158,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   TextFormField(
                     controller: _confirmCtrl,
                     decoration: const InputDecoration(
-                      labelText: 'Confirmar contraseña',
+                      labelText: 'Confirm password',
                       prefixIcon: Icon(Icons.lock_outline),
                     ),
                     obscureText: true,
                     validator: (v) =>
                         (v == null || v != _passwordCtrl.text)
-                            ? 'Las contraseñas no coinciden'
+                            ? 'Passwords do not match'
                             : null,
                     enabled: !_isLoading,
                   ),
@@ -182,7 +182,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           )
                         : const Icon(Icons.person_add_alt_1),
                     label: Text(
-                      _isLoading ? 'Creando cuenta...' : 'Crear cuenta',
+                      _isLoading ? 'Creating account...' : 'Create account',
                     ),
                   ),
                   TextButton(
@@ -193,7 +193,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               '/login',
                             ),
                     child: Text(
-                      'Ya tengo cuenta',
+                      'I already have an account',
                       style: TextStyle(color: color.primary),
                     ),
                   ),

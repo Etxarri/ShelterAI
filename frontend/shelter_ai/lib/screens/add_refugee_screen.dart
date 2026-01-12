@@ -19,7 +19,7 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
   final TextEditingController _firstNameCtrl = TextEditingController();
   final TextEditingController _lastNameCtrl = TextEditingController();
   final TextEditingController _ageCtrl = TextEditingController();
-  String _gender = 'Masculino';
+  String _gender = 'Male';
   final TextEditingController _nationalityCtrl = TextEditingController();
   final TextEditingController _languagesCtrl = TextEditingController();
   final TextEditingController _medicalCtrl = TextEditingController();
@@ -49,7 +49,7 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
     final auth = AuthScope.of(context);
     if (auth.role != UserRole.worker) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Solo trabajadores pueden escanear QR')),
+        const SnackBar(content: Text('Only workers can scan QR')),
       );
       return;
     }
@@ -68,7 +68,7 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
       _firstNameCtrl.text = (map['first_name'] ?? '').toString();
       _lastNameCtrl.text = (map['last_name'] ?? '').toString();
       _ageCtrl.text = (map['age'] ?? '').toString();
-      _gender = (map['gender'] ?? 'Masculino').toString();
+      _gender = (map['gender'] ?? 'Male').toString();
       _nationalityCtrl.text = (map['nationality'] ?? '').toString();
       _languagesCtrl.text = (map['languages_spoken'] ?? '').toString();
       _medicalCtrl.text = (map['medical_conditions'] ?? '').toString();
@@ -80,11 +80,11 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
       setState(() {});
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Datos cargados desde QR')));
+      ).showSnackBar(const SnackBar(content: Text('Data loaded from QR')));
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('QR inválido: $e')));
+      ).showSnackBar(SnackBar(content: Text('Invalid QR: $e')));
     }
   }
 
@@ -271,7 +271,7 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
         actions: [
           if (AuthScope.of(context).role == UserRole.worker)
             IconButton(
-              tooltip: 'Escanear QR',
+              tooltip: 'Scan QR',
               onPressed: _scanQr,
               icon: const Icon(Icons.qr_code_scanner),
             ),
@@ -313,11 +313,11 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
               DropdownButtonFormField<String>(
                 value: _gender,
                 items: const [
-                  DropdownMenuItem(value: 'Masculino', child: Text('Male')),
-                  DropdownMenuItem(value: 'Femenino', child: Text('Female')),
-                  DropdownMenuItem(value: 'Otro', child: Text('Other')),
+                  DropdownMenuItem(value: 'Male', child: Text('Male')),
+                  DropdownMenuItem(value: 'Female', child: Text('Female')),
+                  DropdownMenuItem(value: 'Other', child: Text('Other')),
                 ],
-                onChanged: (v) => setState(() => _gender = v ?? 'Masculino'),
+                onChanged: (v) => setState(() => _gender = v ?? 'Male'),
                 decoration: const InputDecoration(labelText: 'Gender'),
               ),
               const SizedBox(height: 8),

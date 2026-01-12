@@ -17,12 +17,12 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Llegaste a ShelterAI'),
+        title: const Text('Welcome to ShelterAI'),
         centerTitle: true,
         actions: [
           if (auth.isAuthenticated)
             IconButton(
-              tooltip: 'Cerrar sesión',
+              tooltip: 'Logout',
               onPressed: () => _logout(context),
               icon: const Icon(Icons.logout),
             ),
@@ -50,7 +50,7 @@ class HomeScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
                   Text(
-                    'Regístrate sin hacer cola',
+                    'Register without queuing',
                     style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
@@ -58,7 +58,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    'Queremos que te sientas seguro. Comparte solo lo esencial y genera tu QR para que te reciban rápido.',
+                    'We want you to feel safe. Share only the essentials and generate your QR to be received quickly.',
                   ),
                 ],
               ),
@@ -71,7 +71,7 @@ class HomeScreen extends StatelessWidget {
               ),
               onPressed: () => Navigator.pushNamed(context, '/refugee_self'),
               icon: const Icon(Icons.qr_code_2, size: 26),
-              label: const Text('Registrarme y generar mi QR'),
+              label: const Text('Register and generate my QR'),
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
@@ -81,7 +81,7 @@ class HomeScreen extends StatelessWidget {
               ),
               onPressed: () => _showNextSteps(context),
               icon: const Icon(Icons.route),
-              label: const Text('Ya tengo mi QR, ¿qué sigue?'),
+              label: const Text('I have my QR, what\'s next?'),
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
@@ -90,30 +90,30 @@ class HomeScreen extends StatelessWidget {
               ),
               onPressed: () => _showHelp(context),
               icon: const Icon(Icons.health_and_safety),
-              label: const Text('Necesito ayuda urgente'),
+              label: const Text('I need urgent help'),
             ),
             const SizedBox(height: 28),
             Text(
-              'Lo importante ahora',
+              'What\'s important now',
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 12),
             _InfoCard(
               icon: Icons.volunteer_activism,
-              title: 'Te cuidamos desde el primer paso',
+              title: 'We care for you from the first step',
               body:
-                  'Al registrarte nos ayudas a asignarte un espacio seguro y a cuidar tus necesidades médicas.',
+                  'By registering, you help us assign you a safe space and take care of your medical needs.',
             ),
             _InfoCard(
               icon: Icons.family_restroom,
-              title: 'Si vienes en familia',
+              title: 'If you come with family',
               body:
-                  'Indica si viajas con menores o personas con movilidad reducida para mantenerlos juntos.',
+                  'Indicate if you travel with minors or people with reduced mobility to keep them together.',
             ),
             _InfoCard(
               icon: Icons.lock_outline,
-              title: 'Tus datos, en confianza',
-              body: 'Solo los usamos para tu protección y asignación. Puedes salir y volver; tu QR sigue vigente.',
+              title: 'Your data, in confidence',
+              body: 'We only use them for your protection and assignment. You can leave and return; your QR remains valid.',
             ),
           ],
         ),
@@ -134,16 +134,16 @@ class HomeScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: const [
             Text(
-              'Qué hacer al llegar',
+              'What to do upon arrival',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 12),
-            _StepRow(label: 'Muestra tu QR al trabajador'),
-            _StepRow(label: 'Confirma tu nombre y acompáñanos'),
-            _StepRow(label: 'Recibirás tu lugar y una guía breve'),
+            _StepRow(label: 'Show your QR to the worker'),
+            _StepRow(label: 'Confirm your name and come with us'),
+            _StepRow(label: 'You will receive your place and a brief guide'),
             SizedBox(height: 12),
             Text(
-              'Si tienes dolor, estás con menores o necesitas apoyo de movilidad, avísanos de inmediato.',
+              'If you are in pain, with minors, or need mobility support, let us know immediately.',
             ),
           ],
         ),
@@ -155,14 +155,14 @@ class HomeScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Ayuda inmediata'),
+        title: const Text('Immediate help'),
         content: const Text(
-          'Dinos si necesitas atención médica, apoyo psicológico o un espacio seguro. Te atenderemos primero.',
+          'Tell us if you need medical attention, psychological support, or a safe space. We will attend to you first.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Entendido'),
+            child: const Text('Understood'),
           ),
         ],
       ),
