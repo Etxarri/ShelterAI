@@ -1,0 +1,321 @@
+[
+    {
+        "id": "tab_ai_integration",
+        "type": "tab",
+        "label": "AI Integration",
+        "disabled": false,
+        "info": "Integración con el servicio de IA para asignación automática de refugios"
+    },
+    {
+        "id": "ai_assign_shelter_endpoint",
+        "type": "http in",
+        "z": "tab_ai_integration",
+        "name": "POST /api/ai/assign-shelter",
+        "url": "/api/ai/assign-shelter",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 170,
+        "y": 100,
+        "wires": [
+            [
+                "ai_prepare_request"
+            ]
+        ]
+    },
+    {
+        "id": "ai_prepare_request",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Preparar datos para IA",
+        "func": "// Guardar datos originales del refugiado\nconst refugeeData = msg.payload;\n\n// Calcular family_size y children_count\nlet familySize = 1;\nlet hasChildren = false;\nlet childrenCount = 0;\n\nif (refugeeData.family_id) {\n    // Si tiene familia, asumimos tamaño > 1 (esto debería consultarse de la BD)\n    familySize = refugeeData.family_size || 1;\n}\n\n// Determinar si tiene hijos basado en edad\nif (refugeeData.age && refugeeData.age < 18) {\n    hasChildren = false;\n    childrenCount = 0;\n} else if (refugeeData.family_id && familySize > 1) {\n    // Asumimos que familias con más de 1 persona pueden tener niños\n    hasChildren = true;\n    childrenCount = Math.max(0, familySize - 2); // Aproximación\n}\n\n// Preparar payload según el nuevo formato de la API\nmsg.payload = {\n    first_name: refugeeData.first_name,\n    last_name: refugeeData.last_name,\n    age: refugeeData.age,\n    gender: refugeeData.gender,\n    nationality: refugeeData.nationality,\n    family_size: familySize,\n    has_children: hasChildren,\n    children_count: childrenCount,\n    medical_conditions: refugeeData.medical_conditions || 'none',\n    requires_medical_facilities: refugeeData.has_disability || (refugeeData.medical_conditions && refugeeData.medical_conditions.toLowerCase() !== 'none'),\n    has_disability: refugeeData.has_disability || false,\n    languages_spoken: refugeeData.languages_spoken,\n    vulnerability_score: refugeeData.vulnerability_score || 0\n};\n\n// Guardar en contexto para usar después\nmsg.refugeeData = refugeeData;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 430,
+        "y": 100,
+        "wires": [
+            [
+                "ai_call_service"
+            ]
+        ]
+    },
+    {
+        "id": "ai_call_service",
+        "type": "http request",
+        "z": "tab_ai_integration",
+        "name": "Llamar servicio IA",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://shelterai-ai-service:8000/api/recommend",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [
+            {
+                "keyType": "Content-Type",
+                "keyValue": "",
+                "valueType": "application/json",
+                "valueValue": ""
+            }
+        ],
+        "x": 670,
+        "y": 100,
+        "wires": [
+            [
+                "ai_process_response"
+            ]
+        ]
+    },
+    {
+        "id": "ai_process_response",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Procesar respuesta IA",
+        "func": "// La nueva respuesta del servicio IA contiene:\n// - refugee_info: Información del refugiado\n// - cluster_id: ID del cluster de vulnerabilidad\n// - vulnerability_level: Nivel de vulnerabilidad (low/medium/high)\n// - recommendations: Array con top 3 refugios recomendados\n// - total_shelters_analyzed: Total de refugios analizados\n\nconst aiResponse = msg.payload;\n\nif (!aiResponse.recommendations || aiResponse.recommendations.length === 0) {\n    msg.statusCode = 404;\n    msg.payload = { error: \"No se encontraron refugios disponibles\" };\n    return msg;\n}\n\n// Tomar el mejor refugio (primera recomendación)\nconst bestShelter = aiResponse.recommendations[0];\n\n// Formatear respuesta en el formato esperado\nmsg.payload = {\n    shelter_id: bestShelter.shelter_id,\n    shelter_name: bestShelter.shelter_name,\n    confidence_score: bestShelter.compatibility_score / 100, // Convertir de 0-100 a 0-1\n    compatibility_score: bestShelter.compatibility_score,\n    available_space: bestShelter.available_space,\n    explanation: bestShelter.explanation,\n    matching_reasons: bestShelter.matching_reasons,\n    vulnerability_level: aiResponse.vulnerability_level,\n    cluster_id: aiResponse.cluster_id,\n    alternative_shelters: aiResponse.recommendations.slice(1).map(rec => ({\n        shelter_id: rec.shelter_id,\n        shelter_name: rec.shelter_name,\n        compatibility_score: rec.compatibility_score,\n        available_space: rec.available_space\n    }))\n};\n\nmsg.statusCode = 200;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 900,
+        "y": 100,
+        "wires": [
+            [
+                "ai_http_response"
+            ]
+        ]
+    },
+    {
+        "id": "ai_http_response",
+        "type": "http response",
+        "z": "tab_ai_integration",
+        "name": "Respuesta HTTP",
+        "statusCode": "",
+        "headers": {},
+        "x": 1110,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "refugee_post_with_ai",
+        "type": "http in",
+        "z": "tab_ai_integration",
+        "name": "POST /api/refugees-with-assignment",
+        "url": "/api/refugees-with-assignment",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 200,
+        "y": 240,
+        "wires": [
+            [
+                "save_refugee_first"
+            ]
+        ]
+    },
+    {
+        "id": "save_refugee_first",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Preparar INSERT refugiado",
+        "func": "const data = msg.payload;\n\n// Guardar datos completos para después\nflow.set('tempRefugeeData', data);\n\nmsg.topic = `INSERT INTO refugees (first_name, last_name, age, gender, nationality, languages_spoken, family_id, medical_conditions, has_disability, special_needs, vulnerability_score, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    data.first_name, \n    data.last_name, \n    data.age, \n    data.gender,\n    data.nationality, \n    data.languages_spoken, \n    data.family_id,\n    data.medical_conditions,\n    data.has_disability || false,\n    data.special_needs, \n    data.vulnerability_score || 0\n];\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 240,
+        "wires": [
+            [
+                "insert_refugee_db"
+            ]
+        ]
+    },
+    {
+        "id": "insert_refugee_db",
+        "type": "postgresql",
+        "z": "tab_ai_integration",
+        "name": "Guardar refugiado",
+        "query": "{{msg.topic}}",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": "",
+        "outputs": 1,
+        "x": 700,
+        "y": 240,
+        "wires": [
+            [
+                "prepare_ai_call"
+            ]
+        ]
+    },
+    {
+        "id": "prepare_ai_call",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Guardar refugiado para contexto",
+        "func": "// El refugiado ya está guardado en la BD\nconst savedRefugee = msg.payload[0];\n\n// Guardar refugiado para la respuesta final\nflow.set('savedRefugee', savedRefugee);\n\n// IMPORTANTE: Limpiar params para la siguiente consulta\ndelete msg.params;\ndelete msg.topic;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 920,
+        "y": 240,
+        "wires": [
+            [
+                "query_available_shelters"
+            ]
+        ]
+    },
+    {
+        "id": "query_available_shelters",
+        "type": "postgresql",
+        "z": "tab_ai_integration",
+        "name": "Obtener refugios disponibles",
+        "query": "SELECT id, name, max_capacity, current_occupancy, has_medical_facilities, has_childcare, has_disability_access, languages_spoken FROM shelters WHERE current_occupancy < max_capacity ORDER BY id",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": "",
+        "outputs": 1,
+        "x": 200,
+        "y": 340,
+        "wires": [
+            [
+                "prepare_ai_request"
+            ]
+        ]
+    },
+    {
+        "id": "prepare_ai_request",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Preparar request para IA",
+        "func": "const savedRefugee = flow.get('savedRefugee');\n\n// Calcular family_size y children_count\nlet familySize = 1;\nlet hasChildren = false;\nlet childrenCount = 0;\n\nif (savedRefugee.family_id) {\n    // Si tiene familia, debería consultarse la familia real\n    familySize = savedRefugee.family_size || 1;\n}\n\n// Determinar si tiene hijos basado en edad y familia\nif (savedRefugee.age && savedRefugee.age < 18) {\n    hasChildren = false;\n    childrenCount = 0;\n} else if (savedRefugee.family_id && familySize > 1) {\n    hasChildren = true;\n    childrenCount = Math.max(0, familySize - 2);\n}\n\n// Preparar payload según el nuevo formato de la API\n// Ya no enviamos la lista de refugios, la API los consulta directamente\nmsg.payload = {\n    first_name: savedRefugee.first_name,\n    last_name: savedRefugee.last_name,\n    age: savedRefugee.age,\n    gender: savedRefugee.gender,\n    nationality: savedRefugee.nationality,\n    family_size: familySize,\n    has_children: hasChildren,\n    children_count: childrenCount,\n    medical_conditions: savedRefugee.medical_conditions || 'none',\n    requires_medical_facilities: savedRefugee.has_disability || (savedRefugee.medical_conditions && savedRefugee.medical_conditions.toLowerCase() !== 'none'),\n    has_disability: savedRefugee.has_disability || false,\n    languages_spoken: savedRefugee.languages_spoken,\n    vulnerability_score: savedRefugee.vulnerability_score || 0\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 340,
+        "wires": [
+            [
+                "call_ai_for_assignment"
+            ]
+        ]
+    },
+    {
+        "id": "call_ai_for_assignment",
+        "type": "http request",
+        "z": "tab_ai_integration",
+        "name": "Obtener asignación IA",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://shelterai-ai-service:8000/api/recommend",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [
+            {
+                "keyType": "Content-Type",
+                "keyValue": "",
+                "valueType": "application/json",
+                "valueValue": ""
+            }
+        ],
+        "x": 180,
+        "y": 340,
+        "wires": [
+            [
+                "create_assignment"
+            ]
+        ]
+    },
+    {
+        "id": "create_assignment",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Crear asignación en BD",
+        "func": "const aiResponse = msg.payload;\nconst savedRefugee = flow.get('savedRefugee');\n\n// Validar que la respuesta de IA es válida\nif (!aiResponse || !aiResponse.recommendations || aiResponse.recommendations.length === 0) {\n    msg.statusCode = 500;\n    msg.payload = {\n        error: \"AI service did not return valid recommendations\",\n        refugee_id: savedRefugee.id\n    };\n    // Limpiar variables de flujo\n    flow.set('tempRefugeeData', null);\n    flow.set('savedRefugee', null);\n    flow.set('aiResponse', null);\n    return [null, msg]; // Enviar a output 2 (error)\n}\n\n// Tomar el mejor refugio de las recomendaciones\nconst bestShelter = aiResponse.recommendations[0];\n\n// Preparar INSERT de la asignación\nmsg.topic = `INSERT INTO assignments (refugee_id, shelter_id, assigned_at, status, priority_score, explanation, assigned_by, created_at, updated_at) VALUES ($1, $2, CURRENT_TIMESTAMP, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    savedRefugee.id,\n    bestShelter.shelter_id,\n    'pending',\n    bestShelter.compatibility_score / 100, // Convertir a 0-1\n    bestShelter.explanation,\n    'AI-System'\n];\n\n// Guardar respuesta IA completa para después\nflow.set('aiResponse', aiResponse);\n\nreturn [msg, null]; // Enviar a output 1 (normal)",
+        "outputs": 2,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 430,
+        "y": 340,
+        "wires": [
+            [
+                "insert_assignment_db"
+            ]
+        ]
+    },
+    {
+        "id": "insert_assignment_db",
+        "type": "postgresql",
+        "z": "tab_ai_integration",
+        "name": "Guardar asignación",
+        "query": "{{msg.topic}}",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": "",
+        "outputs": 1,
+        "x": 670,
+        "y": 340,
+        "wires": [
+            [
+                "format_final_response"
+            ]
+        ]
+    },
+    {
+        "id": "format_final_response",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Formatear respuesta final",
+        "func": "const savedRefugee = flow.get('savedRefugee');\nconst aiResponse = flow.get('aiResponse');\nconst assignment = msg.payload[0];\n\n// Tomar el mejor refugio\nconst bestShelter = aiResponse.recommendations[0];\n\n// Respuesta completa\nmsg.payload = {\n    refugee: savedRefugee,\n    assignment: {\n        id: assignment.id,\n        shelter_id: bestShelter.shelter_id,\n        shelter_name: bestShelter.shelter_name,\n        compatibility_score: bestShelter.compatibility_score,\n        available_space: bestShelter.available_space,\n        explanation: bestShelter.explanation,\n        matching_reasons: bestShelter.matching_reasons,\n        status: assignment.status,\n        assigned_at: assignment.assigned_at\n    },\n    vulnerability_info: {\n        cluster_id: aiResponse.cluster_id,\n        vulnerability_level: aiResponse.vulnerability_level\n    },\n    alternative_shelters: aiResponse.recommendations.slice(1).map(rec => ({\n        shelter_id: rec.shelter_id,\n        shelter_name: rec.shelter_name,\n        compatibility_score: rec.compatibility_score,\n        available_space: rec.available_space\n    })),\n    total_shelters_analyzed: aiResponse.total_shelters_analyzed\n};\n\nmsg.statusCode = 201;\n\n// Limpiar variables de flujo\nflow.set('tempRefugeeData', null);\nflow.set('savedRefugee', null);\nflow.set('aiResponse', null);\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 910,
+        "y": 340,
+        "wires": [
+            [
+                "final_http_response"
+            ]
+        ]
+    },
+    {
+        "id": "final_http_response",
+        "type": "http response",
+        "z": "tab_ai_integration",
+        "name": "Respuesta HTTP",
+        "statusCode": "",
+        "headers": {},
+        "x": 1140,
+        "y": 340,
+        "wires": []
+    }
+]

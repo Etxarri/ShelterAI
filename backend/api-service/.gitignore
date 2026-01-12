@@ -31,3 +31,19 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# --- Ignorar archivos de sistema y entorno ---
+.DS_Store
+node_modules/
+.env
+
+# --- Ignorar basura de Node-RED pero guardar los flujos ---
+# --- IMPORTANTE: No subir librerías
+node-red-data/node_modules/  
+# Configuración local de runtime, mejor ignorar
+node-red-data/.config.json   
+# node-red-data/flows_cred.json # (Opcional: Descomenta si queréis compartir contraseñas cifradas, para clase suele ser mejor subirlo)
+
+# --- Ignorar datos de base de datos ---
+# --- IMPORTANTE: Nunca subir la BBDD real a Git
+postgres-data/               

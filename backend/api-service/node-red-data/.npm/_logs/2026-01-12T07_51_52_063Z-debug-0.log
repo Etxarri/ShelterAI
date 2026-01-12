@@ -1,0 +1,49 @@
+0 verbose cli /usr/local/bin/node /usr/local/bin/npm
+1 info using npm@10.8.2
+2 info using node@v20.19.5
+3 silly config load:file:/usr/local/lib/node_modules/npm/npmrc
+4 silly config load:file:/data/.npmrc
+5 silly config load:file:/usr/src/node-red/.npmrc
+6 silly config load:file:/usr/local/etc/npmrc
+7 verbose title npm install node-red-node-email@5.0.4
+8 verbose argv "install" "--no-audit" "--no-update-notifier" "--no-fund" "--save" "--save-prefix" "~" "--omit" "dev" "--engine-strict" "node-red-node-email@5.0.4"
+9 verbose logfile logs-max:10 dir:/data/.npm/_logs/2026-01-12T07_51_52_063Z-
+10 verbose logfile /data/.npm/_logs/2026-01-12T07_51_52_063Z-debug-0.log
+11 silly packumentCache heap:2197815296 maxSize:549453824 maxEntrySize:274726912
+12 silly logfile done cleaning log files
+13 silly idealTree buildDeps
+14 silly fetch manifest node-red-node-email@5.0.4
+15 silly packumentCache full:https://registry.npmjs.org/node-red-node-email cache-miss
+16 http fetch GET 200 https://registry.npmjs.org/node-red-node-email 1163ms (cache revalidated)
+17 silly packumentCache full:https://registry.npmjs.org/node-red-node-email set size:216016 disposed:false
+18 silly placeDep ROOT node-red-node-email@5.0.4 REPLACE for: node-red-project@0.0.1 want: 5.0.4
+19 silly reify moves {}
+20 silly ADD node_modules/node-red-node-email
+21 silly ADD node_modules/xtend
+22 silly ADD node_modules/split2
+23 silly ADD node_modules/require-from-string
+24 silly ADD node_modules/postgres-interval
+25 silly ADD node_modules/postgres-date
+26 silly ADD node_modules/postgres-bytea
+27 silly ADD node_modules/postgres-array
+28 silly ADD node_modules/pgpass
+29 silly ADD node_modules/pg-types
+30 silly ADD node_modules/pg-protocol
+31 silly ADD node_modules/pg-pool
+32 silly ADD node_modules/pg-int8
+33 silly ADD node_modules/pg-cursor
+34 silly ADD node_modules/pg-connection-string
+35 silly ADD node_modules/pg-cloudflare
+36 silly ADD node_modules/pg
+37 silly ADD node_modules/node-red-contrib-postgresql
+38 silly ADD node_modules/mustache
+39 silly ADD node_modules/json-schema-traverse
+40 silly ADD node_modules/fast-uri
+41 silly ADD node_modules/fast-deep-equal
+42 silly ADD node_modules/ajv
+43 verbose cwd /data
+44 verbose os Linux 5.15.167.4-microsoft-standard-WSL2
+45 verbose node v20.19.5
+46 verbose npm  v10.8.2
+47 verbose exit 0
+48 info ok
