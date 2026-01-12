@@ -7,6 +7,8 @@ import numpy as np
 import pandas as pd
 import hdbscan
 from typing import List, Tuple, Dict, Optional
+from sklearn.neighbors import NearestNeighbors
+from scipy import stats
 from .schemas import RefugeeInput, ShelterRecommendation
 from .database import Shelter
 from .config import settings
@@ -41,6 +43,16 @@ class ShelterPredictor:
         self.n_clusters = self.artifacts['n_clusters']
         self.model_version = self.artifacts.get('model_version', '1.0')
         
+        # Intentar cargar datos de entrenamiento reducidos si están disponibles
+        self.X_train_reduced = self.artifacts.get('X_train_reduced', None)
+        self.y_train_clusters = self.artifacts.get('y_train_clusters', None)
+        
+        # Si no tenemos datos de entrenamiento, usaremos el exemplars del clusterer
+        if self.X_train_reduced is None and hasattr(self.clusterer, 'exemplars_'):
+            print(f"⚠️  Usando exemplars del clusterer para KNN")
+            self.X_train_reduced = self.clusterer.exemplars_
+            self.y_train_clusters = self.clusterer.labels_[self.clusterer.exemplars_indices_]
+        
         print(f"✅ Modelo cargado exitosamente (versión {self.model_version})")
         print(f"   - {self.n_clusters} clusters")
         print(f"   - {len(self.feature_names)} features")
@@ -51,11 +63,12 @@ class ShelterPredictor:
         Preprocesa los datos del refugiado para que coincidan con el formato del modelo
         
         Como el modelo fue entrenado con el dataset completo (555 features),
-        creamos un vector con todas las features esperadas, poniendo 0 o valores
+        creamos un vector con todas las features esperadas, usando valores neutros
         por defecto donde no tengamos información del refugiado actual.
         """
-        # Inicializar diccionario con TODAS las features en 0
-        features = {col: 0 for col in self.feature_names}
+        # Inicializar diccionario con TODAS las features en 0.5 (valor neutro en lugar de 0)
+        # Esto ayuda a que el punto no sea tan diferente de los datos de entrenamiento
+        features = {col: 0.5 for col in self.feature_names}
         
         # Ahora rellenar con los valores que SÍ tenemos del refugiado
         # Esto es un mapeo básico - idealmente necesitarías mapear cada campo
@@ -145,16 +158,55 @@ class ShelterPredictor:
         X_reduced = self.umap_reducer.transform(X_scaled)
         print(f"   ✓ UMAP aplicado: {X_scaled.shape[1]} → {X_reduced.shape[1]} dimensiones")
         
-        # Predecir cluster
-        print(f"🔍 [PREDICTOR] Prediciendo cluster con HDBSCAN...")
-        cluster_labels, strengths = hdbscan.approximate_predict(self.clusterer, X_reduced)
-        cluster_id = cluster_labels[0]
-        print(f"   ✓ Cluster predicho: {cluster_id} (strength: {strengths[0]:.3f})")
+        # Predecir cluster usando KNN (más confiable que approximate_predict)
+        print(f"🔍 [PREDICTOR] Prediciendo cluster con KNN...")
+        cluster_id = self._predict_cluster_knn(X_reduced)
+        print(f"   ✓ Cluster predicho: {cluster_id}")
         
         # Asignar etiqueta y nivel de vulnerabilidad
         cluster_label, vulnerability_level = self._get_cluster_info(cluster_id, refugee)
         
         return int(cluster_id), cluster_label, vulnerability_level
+    
+    
+    def _predict_cluster_knn(self, X_reduced: np.ndarray, k: int = 15) -> int:
+        """
+        Predice el cluster usando K-Nearest Neighbors en el espacio reducido
+        
+        Args:
+            X_reduced: Punto reducido por UMAP (1, n_components)
+            k: Número de vecinos a considerar
+            
+        Returns:
+            cluster_id: ID del cluster más votado por los vecinos
+        """
+        # Si no tenemos datos de entrenamiento, fallback a approximate_predict
+        if self.X_train_reduced is None or self.y_train_clusters is None:
+            print("   ⚠️  No hay datos de entrenamiento, usando approximate_predict...")
+            cluster_labels, _ = hdbscan.approximate_predict(self.clusterer, X_reduced)
+            return int(cluster_labels[0])
+        
+        # Usar KNN para encontrar vecinos más cercanos
+        knn = NearestNeighbors(n_neighbors=min(k, len(self.X_train_reduced)))
+        knn.fit(self.X_train_reduced)
+        
+        # Encontrar los k vecinos más cercanos
+        distances, indices = knn.kneighbors(X_reduced)
+        
+        # Obtener los clusters de los vecinos
+        neighbor_clusters = self.y_train_clusters[indices[0]]
+        
+        # Filtrar ruido (-1) si hay suficientes clusters válidos
+        valid_clusters = neighbor_clusters[neighbor_clusters != -1]
+        
+        if len(valid_clusters) > 0:
+            # Votar por el cluster más común (excluyendo ruido)
+            cluster_id = stats.mode(valid_clusters, keepdims=False)[0]
+        else:
+            # Si todos son ruido, usar -1
+            cluster_id = -1
+        
+        return int(cluster_id)
     
     
     def _get_cluster_info(self, cluster_id: int, refugee: RefugeeInput) -> Tuple[str, str]:
