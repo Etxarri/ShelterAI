@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:shelter_ai/services/api_service.dart';
 import 'package:shelter_ai/models/refugee_assignment_response.dart';
 import 'package:shelter_ai/screens/assignment_detail_screen.dart';
@@ -27,6 +28,8 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
   final TextEditingController _vulnerabilityCtrl = TextEditingController();
   final TextEditingController _specialNeedsCtrl = TextEditingController();
   final TextEditingController _familyIdCtrl = TextEditingController();
+
+  bool _argsApplied = false;
 
   @override
   void dispose() {
@@ -78,13 +81,19 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
       _familyIdCtrl.text = (map['family_id'] ?? '').toString();
       _vulnerabilityCtrl.text = (map['vulnerability_score'] ?? '').toString();
       setState(() {});
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Data loaded from QR')));
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Data loaded from QR')),
+        );
+      });
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Invalid QR: $e')));
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Invalid QR: $e')),
+        );
+      });
     }
   }
 
@@ -373,5 +382,20 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadArgumentsData();
+  }
+
+  void _loadArgumentsData() {
+    if (_argsApplied) return;
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is Map<String, dynamic>) {
+      _applyQrData(jsonEncode(args));
+      _argsApplied = true;
+    }
   }
 }

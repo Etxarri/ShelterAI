@@ -4,6 +4,7 @@ import 'package:shelter_ai/screens/qr_scan_screen.dart';
 import 'package:shelter_ai/services/api_service.dart';
 import 'package:shelter_ai/widgets/refugee_card.dart';
 import 'package:shelter_ai/widgets/shelter_card.dart';
+import 'dart:convert';
 
 class WorkerDashboardScreen extends StatefulWidget {
   const WorkerDashboardScreen({super.key});
@@ -175,6 +176,20 @@ class _WorkerDashboardScreenState extends State<WorkerDashboardScreen> {
   }
 
   void _showScanResult(String data) {
+    try {
+      final Map<String, dynamic> map = jsonDecode(data) as Map<String, dynamic>;
+      if (map.containsKey('first_name') || map.containsKey('firstName')) {
+        Navigator.pushNamed(
+          context,
+          '/add_refugee',
+          arguments: map,
+        );
+        return;
+      }
+    } catch (_) {
+      // Not a refugee QR; fall back to dialog
+    }
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -235,7 +250,7 @@ class _ActionCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               label,
-              style: const TextStyle(fontWeight: FontWeight.w700),
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ],
         ),

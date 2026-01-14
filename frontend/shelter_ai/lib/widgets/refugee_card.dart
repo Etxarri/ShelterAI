@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shelter_ai/services/api_service.dart';
 import 'package:shelter_ai/models/refugee_assignment_response.dart';
+import 'package:shelter_ai/models/recommendation_response.dart';
 import 'package:shelter_ai/screens/assignment_detail_screen.dart';
+import 'package:shelter_ai/screens/recommendation_selection_screen.dart';
 
 class RefugeeCard extends StatelessWidget {
   final Map<String, dynamic> data;
@@ -106,20 +108,33 @@ class RefugeeCard extends StatelessWidget {
         );
       } else {
         // No assignment, get AI recommendation
-        final recommendationResponse = await ApiService.getAIRecommendation(refugeeId.toString());
+        final recommendationJson = await ApiService.getAIRecommendation(refugeeId.toString());
         
         if (!context.mounted) return;
         Navigator.of(context).pop(); // Close loading
         
-        // Create response object from recommendation
-        final response = RefugeeAssignmentResponse.fromJson(recommendationResponse);
+        // Debug: Print the JSON response
+        print('===== RECOMMENDATION JSON =====');
+        print(recommendationJson);
+        print('Recommendations count: ${recommendationJson['recommendations']?.length ?? 0}');
+        print('===============================');
+        
+        // Create RecommendationResponse object
+        final recommendationResponse = RecommendationResponse.fromJson(recommendationJson);
 
-        // Navigate to the detail screen
+        print('===== PARSED RESPONSE =====');
+        print('Recommendations in object: ${recommendationResponse.recommendations.length}');
+        print('===========================');
+
+        // Convert refugeeId to int
+        final refugeeIdInt = int.parse(refugeeId.toString());
+
+        // Navigate to the recommendation selection screen
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => AssignmentDetailScreen(
-              response: response,
-              isRecommendation: true,  // Flag para indicar que es solo recomendación
+            builder: (context) => RecommendationSelectionScreen(
+              recommendationResponse: recommendationResponse,
+              refugeeId: refugeeIdInt,
             ),
           ),
         );

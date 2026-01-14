@@ -1863,7 +1863,7 @@
         "type": "function",
         "z": "tab_login",
         "name": "Validar y Preparar",
-        "func": "// Validar esquema JSON del request\nconst jsonSchema = {\n  type: 'object',\n  required: ['email', 'password'],\n  properties: {\n    email: {\n      type: 'string',\n      format: 'email'\n    },\n    password: {\n      type: 'string',\n      minLength: 1\n    }\n  }\n};\n\nfunction validateJsonSchema(data, schema) {\n  if (typeof data !== 'object' || data === null) {\n    return false;\n  }\n  \n  if (schema.required) {\n    for (const field of schema.required) {\n      if (!(field in data)) {\n        return false;\n      }\n    }\n  }\n  \n  const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\n  if (!emailRegex.test(data.email)) {\n    return false;\n  }\n  \n  if (typeof data.password !== 'string' || data.password.length === 0) {\n    return false;\n  }\n  \n  return true;\n}\n\n// Validar entrada\nif (!validateJsonSchema(msg.payload, jsonSchema)) {\n  msg.statusCode = 400;\n  msg.payload = {\n    success: false,\n    message: 'Validación fallida: email inválido o password vacío'\n  };\n  return msg;\n}\n\n// Preparar query SQL para consultar usuario\nconst email = msg.payload.email;\nconst password = msg.payload.password;\n\n// Guardamos password en msg para verificarlo después\nmsg.passwordToVerify = password;\n\nmsg.query = 'SELECT id, email, password, full_name, role FROM users WHERE email = $1';\nmsg.params = [email];\n\nmsg.payload = null;\n\nreturn msg;\n",
+        "func": "// Validar entrada básica\nif (!msg.payload || typeof msg.payload !== 'object') {\n  msg.statusCode = 400;\n  msg.payload = {\n    success: false,\n    message: 'Datos inválidos'\n  };\n  return msg;\n}\n\n// El identificador puede ser email, username o phone_number\nconst identifier = msg.payload.identifier || msg.payload.email || msg.payload.username || msg.payload.phone_number;\nconst password = msg.payload.password;\n\n// Validación de campos requeridos\nif (!identifier || !password || typeof password !== 'string' || password.length === 0) {\n  msg.statusCode = 400;\n  msg.payload = {\n    success: false,\n    message: 'Email/usuario/teléfono y contraseña son requeridos'\n  };\n  return msg;\n}\n\n// Guardamos password en msg para verificarlo después\nmsg.passwordToVerify = password;\n\n// Buscar por email, username O phone_number\nmsg.query = 'SELECT id, email, username, password, full_name, role FROM users WHERE email = $1 OR username = $1 OR phone_number = $1';\nmsg.params = [identifier];\n\nmsg.payload = null;\n\nreturn msg;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -1912,8 +1912,7 @@
         "y": 100,
         "wires": [
             [
-                "login_http_response",
-                "63d32f953f6537d2"
+                "login_http_response"
             ]
         ]
     },
@@ -1996,7 +1995,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 870,
+        "x": 1020,
         "y": 300,
         "wires": [
             [
@@ -2011,7 +2010,7 @@
         "name": "HTTP Response",
         "statusCode": "",
         "headers": {},
-        "x": 1100,
+        "x": 1250,
         "y": 300,
         "wires": []
     },
@@ -2069,5 +2068,61 @@
         "x": 1290,
         "y": 200,
         "wires": []
+    },
+    {
+        "id": "a6799ab6ebc69493",
+        "type": "http in",
+        "z": "tab_login",
+        "name": "POST /api/register-refugee",
+        "url": "/api/register-refugee",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 150,
+        "y": 400,
+        "wires": [
+            [
+                "9e799a512b71a198"
+            ]
+        ]
+    },
+    {
+        "id": "9e799a512b71a198",
+        "type": "function",
+        "z": "tab_login",
+        "name": "Validar y Preparar",
+        "func": "// 1. Extraemos los datos que vienen del formulario (Frontend)\nvar nombre = msg.payload.first_name;\nvar apellido = msg.payload.last_name;\nvar username = msg.payload.username;\nvar email = msg.payload.email;\nvar password = msg.payload.password;\nvar phone = msg.payload.phone_number;\nvar address = msg.payload.address;\nvar age = msg.payload.age;\nvar gender = msg.payload.gender;\n\n// 2. Validación básica de seguridad (por si acaso falla el frontend)\nif (!username || !password || !nombre || !address || !age) {\n    msg.statusCode = 400;\n    msg.payload = { error: \"Faltan datos: nombre, email o contraseña\" };\n    return msg;\n}\n\n// 3. Preparamos la Query SQL (INSERT)\n// Fíjate que ponemos el rol 'refugee' fijo, porque es un auto-registro.\nmsg.query = \"INSERT INTO users (first_name, last_name, username, email, password, phone_number, address, age, gender, role) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, first_name, last_name, username, email, password, phone_number, address, age, gender, role\";\n// 4. Preparamos los parámetros (Array)\n// Usamos 'refugee' como cuarto parámetro para cumplir con el CHECK de la base de datos\nmsg.params = [nombre, apellido, username, email, password, phone, address, age, gender, 'refugee'];\n\n// 5. Limpiamos el payload para que no moleste al nodo de Postgres\nmsg.payload = null;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 410,
+        "y": 400,
+        "wires": [
+            [
+                "edbf42abf00626cf"
+            ]
+        ]
+    },
+    {
+        "id": "edbf42abf00626cf",
+        "type": "postgresql",
+        "z": "tab_login",
+        "name": "Consultar Usuario",
+        "query": "",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": "",
+        "outputs": 1,
+        "x": 650,
+        "y": 400,
+        "wires": [
+            [
+                "5e41704bfdb79d59"
+            ]
+        ]
     }
 ]

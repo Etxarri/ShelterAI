@@ -10,6 +10,9 @@ import 'screens/refugee_self_form_qr_screen.dart';
 import 'screens/worker_dashboard_screen.dart';
 import 'screens/refugee_profile_screen.dart';
 import 'screens/welcome_screen.dart';
+import 'screens/refugee_login_screen.dart';
+import 'screens/refugee_register_screen.dart';
+import 'screens/refugee_landing_screen.dart';
 
 final AuthState _authState = AuthState();
 
@@ -49,7 +52,9 @@ class ShelterAIApp extends StatelessWidget {
         routes: {
           '/welcome': (context) => const WelcomeScreen(),
           '/': (context) => const WelcomeScreen(),
-          '/refugee-landing': (context) => const HomeScreen(),
+          '/refugee-landing': (context) => const RefugeeLandingScreen(),
+          '/refugee-login': (context) => const RefugeeLoginScreen(),
+          '/refugee-register': (context) => const RefugeeRegisterScreen(),
           '/login': (context) => const LoginScreen(),
           '/register': (context) => const RegisterScreen(),
           '/worker-dashboard': (context) => const WorkerDashboardScreen(),
@@ -57,7 +62,7 @@ class ShelterAIApp extends StatelessWidget {
           '/refugees': (context) => const RefugeeListScreen(),
           '/add_refugee': (context) => const AddRefugeeScreen(),
           '/shelters': (context) => const ShelterListScreen(),
-          '/refugee_self': (context) => const RefugeeSelfFormQrScreen(),
+          '/refugee-self-form-qr': (context) => const RefugeeSelfFormQrScreen(),
         },
       ),
     );

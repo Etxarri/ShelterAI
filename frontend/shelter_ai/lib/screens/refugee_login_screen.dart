@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:shelter_ai/providers/auth_state.dart';
 import 'package:shelter_ai/services/auth_service.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class RefugeeLoginScreen extends StatefulWidget {
+  const RefugeeLoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RefugeeLoginScreen> createState() => _RefugeeLoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RefugeeLoginScreenState extends State<RefugeeLoginScreen> {
   final TextEditingController _identifierCtrl = TextEditingController();
   final TextEditingController _passwordCtrl = TextEditingController();
   bool _isLoading = false;
@@ -27,7 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (identifier.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email, teléfono, usuario y contraseña requeridos')),
+        const SnackBar(content: Text('Email, teléfono o usuario y contraseña requeridos')),
       );
       return;
     }
@@ -46,24 +46,11 @@ class _LoginScreenState extends State<LoginScreen> {
       final roleEnum =
           response.role == 'worker' ? UserRole.worker : UserRole.refugee;
 
-      // Extraer nombre y apellido si están en la respuesta
-      String firstName = '';
-      String lastName = '';
-      if (response.name.contains(' ')) {
-        final parts = response.name.split(' ');
-        firstName = parts.first;
-        lastName = parts.sublist(1).join(' ');
-      } else {
-        firstName = response.name;
-      }
-
       auth.login(
         roleEnum,
         userId: response.userId,
         token: response.token,
         userName: response.name,
-        firstName: firstName,
-        lastName: lastName,
       );
 
       // Navegar según rol
@@ -75,9 +62,9 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
     }
   }
 
@@ -87,6 +74,15 @@ class _LoginScreenState extends State<LoginScreen> {
     return WillPopScope(
       onWillPop: () async => false,
       child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Iniciar sesión'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: _isLoading
+                ? null
+                : () => Navigator.pushReplacementNamed(context, '/refugee-landing'),
+          ),
+        ),
         body: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
@@ -108,13 +104,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Text(
-                    'Acceso de trabajador',
+                    'Acceso de refugiado',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Recibe, asigna y prioriza de forma segura.',
+                    'Usa tu email, teléfono o usuario para acceder.',
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
@@ -149,25 +145,26 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    icon:
-                        _isLoading
-                            ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                            : const Icon(Icons.login),
-                    label: Text(_isLoading ? 'Iniciando sesión...' : 'Iniciar sesión'),
+                    icon: _isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.login),
+                    label: Text(
+                      _isLoading ? 'Iniciando sesión...' : 'Iniciar sesión',
+                    ),
                   ),
                   TextButton(
                     onPressed: _isLoading
                         ? null
                         : () => Navigator.pushReplacementNamed(
                               context,
-                              '/register',
+                              '/refugee-register',
                             ),
                     child: Text(
-                      '¿Primera vez? Crear cuenta',
+                      '¿No tienes cuenta? Regístrate',
                       style: TextStyle(color: color.primary),
                     ),
                   ),
@@ -176,9 +173,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ? null
                         : () => Navigator.pushReplacementNamed(
                               context,
-                              '/welcome',
+                              '/refugee-landing',
                             ),
-                    child: const Text('Volver al inicio'),
+                    child: const Text('Volver'),
                   ),
                 ],
               ),
