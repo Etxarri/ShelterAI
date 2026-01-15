@@ -69,7 +69,7 @@ class HomeScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 textStyle: const TextStyle(fontSize: 18),
               ),
-              onPressed: () => Navigator.pushNamed(context, '/refugee_self'),
+              onPressed: () => Navigator.pushNamed(context, '/refugee-self-form-qr'),
               icon: const Icon(Icons.qr_code_2, size: 26),
               label: const Text('Register and generate my QR'),
             ),

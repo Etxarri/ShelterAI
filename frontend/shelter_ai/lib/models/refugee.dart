@@ -11,6 +11,9 @@ class Refugee {
   final double vulnerabilityScore;
   final String? specialNeeds;
   final int? familyId;
+  final String? phoneNumber;
+  final String? email;
+  final String? address;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -27,6 +30,9 @@ class Refugee {
     this.vulnerabilityScore = 0.0,
     this.specialNeeds,
     this.familyId,
+    this.phoneNumber,
+    this.email,
+    this.address,
     this.createdAt,
     this.updatedAt,
   });
@@ -45,6 +51,9 @@ class Refugee {
       vulnerabilityScore: _parseDouble(json['vulnerability_score']) ?? 0.0,
       specialNeeds: json['special_needs']?.toString(),
       familyId: _parseInt(json['family_id']),
+      phoneNumber: json['phone_number']?.toString(),
+      email: json['email']?.toString(),
+      address: json['address']?.toString(),
       createdAt: json['created_at'] != null 
           ? DateTime.tryParse(json['created_at'].toString()) 
           : null,
@@ -83,6 +92,9 @@ class Refugee {
       'vulnerability_score': vulnerabilityScore,
       'special_needs': specialNeeds,
       'family_id': familyId,
+      'phone_number': phoneNumber,
+      'email': email,
+      'address': address,
     };
   }
 

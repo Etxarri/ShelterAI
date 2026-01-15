@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shelter_ai/providers/auth_state.dart';
+import 'package:shelter_ai/services/api_service.dart';
+import 'package:shelter_ai/models/recommendation_response.dart';
+import 'package:shelter_ai/screens/recommendation_selection_screen.dart';
 
 class RefugeeProfileScreen extends StatefulWidget {
   const RefugeeProfileScreen({super.key});
@@ -15,10 +18,65 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
     Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
   }
 
+  Future<void> _handleCheckAssignment() async {
+    final auth = AuthScope.of(context);
+    final refugeeId = auth.userId;
+
+    if (refugeeId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se encontró el ID del refugiado en la sesión.')),
+      );
+      return;
+    }
+
+    try {
+      // Primero verificar si el backend indica que hay asignación generada
+      final assignmentData = await ApiService.getRefugeeAssignment(refugeeId.toString());
+      final hasAssignment = assignmentData['has_assignment'] as bool? ?? false;
+
+      if (!hasAssignment) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Aún no has sido asignado a ningún refugio.')),
+        );
+        return;
+      }
+
+      // Si hay asignación generada, obtenemos las 3 opciones y abrimos la pantalla de selección
+      final recommendationData = await ApiService.getAIRecommendation(refugeeId.toString());
+      final recommendations = RecommendationResponse.fromJson(recommendationData);
+
+      if (!mounted) return;
+
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => RecommendationSelectionScreen(
+            refugeeId: int.parse(refugeeId.toString()),
+            recommendationResponse: recommendations,
+          ),
+        ),
+      );
+
+      // Si seleccionó, puedes mostrar confirmación
+      if (result == true && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Has confirmado tu refugio.')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al verificar asignación: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = AuthScope.of(context);
     final color = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Your safe space'),
@@ -77,6 +135,14 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
                 ],
               ),
             ),
+            const SizedBox(height: 16),
+
+            // Botón para que el refugiado verifique su asignación y, si existe, elija entre las 3 opciones
+            ElevatedButton.icon(
+              icon: const Icon(Icons.home_work_outlined),
+              label: const Text('Verificar mi asignación y elegir refugio'),
+              onPressed: _handleCheckAssignment,
+            ),
             const SizedBox(height: 24),
             const Text(
               'Your quick actions',
@@ -86,7 +152,7 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
             ElevatedButton.icon(
               icon: const Icon(Icons.qr_code),
               label: const Text('View or generate my QR'),
-              onPressed: () => Navigator.pushNamed(context, '/refugee_self'),
+              onPressed: () => Navigator.pushNamed(context, '/refugee-self-form-qr'),
             ),
             const SizedBox(height: 10),
             OutlinedButton.icon(

@@ -4,6 +4,12 @@ from datetime import datetime
 
 # ===== INPUT SCHEMAS =====
 
+class ShelterSelectionRequest(BaseModel):
+    """Request para seleccionar un refugio de las recomendaciones"""
+    refugee_id: int = Field(..., ge=1, description="ID del refugiado")
+    shelter_id: int = Field(..., ge=1, description="ID del refugio seleccionado")
+
+
 class RefugeeInput(BaseModel):
     """Datos del refugiado para recomendación de refugio"""
     

@@ -219,4 +219,52 @@ class ApiService {
         rethrow;
       }
     }
+
+    // GET /api/ai/refugee/:refugeeId/assignment - Check if refugee has assignment
+    static Future<Map<String, dynamic>> getRefugeeAssignment(
+      String refugeeId,
+    ) async {
+      try {
+        final response = await client.get(
+          Uri.parse('$baseUrl/ai/refugee/$refugeeId/assignment'),
+        );
+  
+        if (response.statusCode == 200) {
+          return json.decode(response.body) as Map<String, dynamic>;
+        } else {
+          throw Exception('Failed to get refugee assignment: ${response.statusCode}');
+        }
+      } catch (e) {
+        // ignore: avoid_print
+        print('Error getting refugee assignment: $e');
+        rethrow;
+      }
+    }
+
+    // POST /api/ai/select-shelter - Select a shelter from recommendations
+    static Future<Map<String, dynamic>> selectShelterFromRecommendation(
+      String refugeeId,
+      int shelterId,
+    ) async {
+      try {
+        final response = await client.post(
+          Uri.parse('$baseUrl/ai/select-shelter'),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({
+            'refugee_id': refugeeId,
+            'shelter_id': shelterId,
+          }),
+        );
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          return json.decode(response.body) as Map<String, dynamic>;
+        } else {
+          throw Exception('Failed to select shelter: ${response.statusCode}');
+        }
+      } catch (e) {
+        // ignore: avoid_print
+        print('Error selecting shelter: $e');
+        rethrow;
+      }
+    }
   }

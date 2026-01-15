@@ -70,7 +70,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   ),
                   const SizedBox(height: 12),
                   const Text(
-                    'Choose how you want to enter. If you are a refugee, you can register without queuing. If you are a worker, enter your panel.',
+                    'Choose how you want to enter. If you are a refugee, register to access quickly. If you are a worker, access the panel.',
                   ),
                   const SizedBox(height: 24),
                   Expanded(
@@ -86,7 +86,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             context,
                             '/refugee-landing',
                           ),
-                          actionLabel: 'Register',
+                          actionLabel: 'Get started',
                         ),
                         _EntryCard(
                           title: 'I am a worker',
