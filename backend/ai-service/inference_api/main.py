@@ -17,9 +17,10 @@ from .schemas import (
     ShelterRecommendation,
     HealthCheck
 )
-from .database import get_db, get_available_shelters, check_database_connection
+from .database import get_db, get_available_shelters, check_database_connection, get_all_shelters
 from .predictor import ShelterPredictor, get_predictor
 from . import predictor as predictor_module
+from fastapi.responses import JSONResponse
 
 # ===== INICIALIZACIÓN DE FASTAPI =====
 
@@ -239,7 +240,7 @@ async def get_statistics(
     """
     Obtiene estadísticas generales del sistema
     """
-    from database import get_all_shelters
+    # Los imports ya están arriba
     
     shelters = get_all_shelters(db)
     available = get_available_shelters(db)
@@ -271,20 +272,26 @@ async def get_statistics(
 
 @app.exception_handler(404)
 async def not_found_handler(request, exc):
-    return {
-        "error": "Not Found",
-        "detail": str(exc.detail) if hasattr(exc, 'detail') else "Resource not found",
-        "status_code": 404
-    }
+    return JSONResponse(
+        status_code=404,
+        content={
+            "error": "Not Found",
+            "detail": str(exc.detail) if hasattr(exc, 'detail') else "Resource not found",
+            "status_code": 404
+        }
+    )
 
 
 @app.exception_handler(500)
 async def internal_error_handler(request, exc):
-    return {
-        "error": "Internal Server Error",
-        "detail": "An internal error occurred. Please contact support.",
-        "status_code": 500
-    }
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "Internal Server Error",
+            "detail": "An internal error occurred. Please contact support.",
+            "status_code": 500
+        }
+    )
 
 
 # ===== PUNTO DE ENTRADA =====
