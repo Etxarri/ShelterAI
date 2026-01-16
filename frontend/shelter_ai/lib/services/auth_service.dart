@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 class LoginResponse {
   final bool success;
   final int userId;
+  final int? refugeeId;  // ← NUEVO: Agregar refugeeId
   final String name;
   final String role; // 'worker' o 'refugee'
   final String token;
@@ -13,6 +14,7 @@ class LoginResponse {
   LoginResponse({
     required this.success,
     required this.userId,
+    this.refugeeId,  // ← NUEVO: Parámetro opcional
     required this.name,
     required this.role,
     required this.token,
@@ -22,6 +24,7 @@ class LoginResponse {
     return LoginResponse(
       success: json['success'] == true,
       userId: json['user_id'] as int? ?? 0,
+      refugeeId: json['refugee_id'] as int?,  // ← NUEVO: Obtener de respuesta
       name: json['name']?.toString() ?? '',
       role: json['role']?.toString() ?? '',
       token: json['token']?.toString() ?? '',
@@ -92,7 +95,7 @@ class AuthService {
   }) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/register-refugee'),
+        Uri.parse('$baseUrl/register'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'first_name': firstName,

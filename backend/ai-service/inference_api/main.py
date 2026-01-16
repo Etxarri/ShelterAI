@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime
+import json
 
 # Imports locales
 from .config import settings
@@ -18,7 +19,17 @@ from .schemas import (
     HealthCheck,
     ShelterSelectionRequest
 )
-from .database import get_db, get_available_shelters, check_database_connection, Refugee, Shelter, Assignment
+from .database import (
+    get_db,
+    get_available_shelters,
+    check_database_connection,
+    Refugee,
+    Shelter,
+    Assignment,
+    save_recommendation,
+    get_latest_recommendation_by_refugee,
+    init_db,
+)
 from .predictor import ShelterPredictor, get_predictor
 from . import predictor as predictor_module
 
@@ -62,6 +73,9 @@ async def startup_event():
         # Verificar conexión a BD
         if check_database_connection():
             print("Conexión a base de datos establecida")
+            # Crear tablas que falten (incluye recommendation_logs)
+            if init_db():
+                print("✅ Esquema de BD verificado/creado")
         else:
             print("Advertencia: No se pudo conectar a la base de datos")
         
@@ -220,7 +234,36 @@ async def recommend_shelter(
             ml_model_version=predictor.model_version
         )
         
-        return response
+        # 5. Persistir recomendación en recommendation_logs
+        recommendation_log_id = None
+        persisted = False
+        
+        try:
+            # Convertir response a dict serializable JSON (normalizado, sin datetime)
+            response_dict = json.loads(json.dumps(response.model_dump(), default=str))
+
+            # Guardar con refugee_id si está disponible, sino guardar con NULL
+            refugee_id_val = refugee.refugee_id if refugee.refugee_id else None
+
+            saved = save_recommendation(db, refugee_id_val, response_dict)
+            if saved:
+                persisted = True
+                recommendation_log_id = saved.id
+                print(f"   ✅ Recomendación guardada en BD (log_id: {saved.id})")
+            else:
+                print(f"   ⚠️  No se pudo guardar la recomendación en BD")
+        except Exception as e:
+            # No bloquear la respuesta si la persistencia falla
+            print(f"   ⚠️  Error al persistir recomendación: {e}")
+        
+        # 6. Adjuntar metadata de persistencia a la respuesta
+        resp_dict = response.model_dump()
+        resp_dict["persisted"] = persisted
+        if recommendation_log_id:
+            resp_dict["recommendation_log_id"] = recommendation_log_id
+        
+        print(f"="*60 + "\n")
+        return resp_dict
         
     except HTTPException:
         raise
@@ -504,3 +547,23 @@ if __name__ == "__main__":
         reload=False,  # Desactivar reload para debugging
         log_level="info"
     )
+
+
+# ===== RECOMENDACIONES PERSISTIDAS =====
+
+@app.get("/api/recommendations/refugee/{refugee_id}/latest", tags=["Recommendations"])
+async def get_latest_recommendation(
+    refugee_id: int,
+    db: Session = Depends(get_db),
+):
+    """Obtiene la última recomendación persistida para un refugiado"""
+    try:
+        rec = get_latest_recommendation_by_refugee(db, refugee_id)
+        if not rec:
+            raise HTTPException(status_code=404, detail="No hay recomendaciones guardadas para este refugiado")
+        return rec
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error al obtener recomendación persistida: {e}")
+        raise HTTPException(status_code=500, detail="Error interno al obtener recomendación persistida")

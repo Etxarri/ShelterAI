@@ -20,7 +20,7 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
 
   Future<void> _handleCheckAssignment() async {
     final auth = AuthScope.of(context);
-    final refugeeId = auth.userId;
+    final refugeeId = auth.refugeeId;  // ← CAMBIO: Usar refugeeId en lugar de userId
 
     if (refugeeId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -30,21 +30,37 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
     }
 
     try {
-      // Primero verificar si el backend indica que hay asignación generada
-      final assignmentData = await ApiService.getRefugeeAssignment(refugeeId.toString());
-      final hasAssignment = assignmentData['has_assignment'] as bool? ?? false;
-
-      if (!hasAssignment) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Aún no has sido asignado a ningún refugio.')),
-        );
-        return;
+      // Opcional: comprobar asignación actual (no bloquea el flujo)
+      // Ignoramos el resultado; siempre permitimos ver recomendaciones y elegir
+      try {
+        await ApiService.getRefugeeAssignment(refugeeId.toString());
+      } catch (_) {
+        // No interrumpe el flujo si falla
       }
 
-      // Si hay asignación generada, obtenemos las 3 opciones y abrimos la pantalla de selección
-      final recommendationData = await ApiService.getAIRecommendation(refugeeId.toString());
-      final recommendations = RecommendationResponse.fromJson(recommendationData);
+      // Intentar obtener la última recomendación persistida
+      late RecommendationResponse recommendations;
+      final persistedRec = await ApiService.getLatestPersistedRecommendation(refugeeId.toString());
+      
+      if (persistedRec != null) {
+        // Usar recomendación persistida
+        recommendations = RecommendationResponse.fromJson(persistedRec);
+        if (!mounted) return;
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Mostrando tus últimas recomendaciones guardadas.')),
+        );
+      } else {
+        // Solicitar nuevas recomendaciones (se persistirán automáticamente)
+        final recommendationData = await ApiService.getAIRecommendation(refugeeId.toString());
+        recommendations = RecommendationResponse.fromJson(recommendationData);
+        
+        if (!mounted) return;
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Se han generado nuevas recomendaciones para ti.')),
+        );
+      }
 
       if (!mounted) return;
 
@@ -58,7 +74,7 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
         ),
       );
 
-      // Si seleccionó, puedes mostrar confirmación
+      // Si seleccionó, mostrar confirmación
       if (result == true && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Has confirmado tu refugio.')),

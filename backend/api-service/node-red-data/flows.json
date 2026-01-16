@@ -957,6 +957,23 @@
         ]
     },
     {
+        "id": "ai_assignment_get_by_refugee",
+        "type": "http in",
+        "z": "tab_assignments",
+        "name": "GET /api/ai/refugee/:refugeeId/assignment",
+        "url": "/api/ai/refugee/:refugeeId/assignment",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 200,
+        "y": 160,
+        "wires": [
+            [
+                "assignment_get_by_refugee_prepare"
+            ]
+        ]
+    },
+    {
         "id": "assignment_get_by_refugee_prepare",
         "type": "function",
         "z": "tab_assignments",
@@ -1564,7 +1581,7 @@
         "type": "function",
         "z": "tab_ai_integration",
         "name": "Preparar request para IA",
-        "func": "const savedRefugee = flow.get('savedRefugee');\n\n// Calcular family_size, has_children, children_count\nlet family_size = 1;\nlet has_children = false;\nlet children_count = 0;\n\nif (savedRefugee.family_id) {\n    // TODO: Obtener datos reales de familia si es necesario\n    family_size = 1;\n}\n\n// Preparar payload para el servicio de IA (ya no enviamos lista de shelters)\nmsg.payload = {\n    first_name: savedRefugee.first_name,\n    last_name: savedRefugee.last_name,\n    age: savedRefugee.age,\n    gender: savedRefugee.gender,\n    nationality: savedRefugee.nationality,\n    languages_spoken: savedRefugee.languages_spoken,\n    medical_conditions: savedRefugee.medical_conditions,\n    has_disability: savedRefugee.has_disability,\n    vulnerability_score: savedRefugee.vulnerability_score,\n    special_needs: savedRefugee.special_needs,\n    family_id: savedRefugee.family_id,\n    family_size: family_size,\n    has_children: has_children,\n    children_count: children_count\n};\n\nreturn msg;",
+        "func": "const savedRefugee = flow.get('savedRefugee');\n\n// Calcular family_size, has_children, children_count\nlet family_size = 1;\nlet has_children = false;\nlet children_count = 0;\n\nif (savedRefugee.family_id) {\n    // TODO: Obtener datos reales de familia si es necesario\n    family_size = 1;\n}\n\n// Preparar payload para el servicio de IA (incluye refugee_id para persistencia)\nmsg.payload = {\n    refugee_id: savedRefugee.id,\n    first_name: savedRefugee.first_name,\n    last_name: savedRefugee.last_name,\n    age: savedRefugee.age,\n    gender: savedRefugee.gender,\n    nationality: savedRefugee.nationality,\n    languages_spoken: savedRefugee.languages_spoken,\n    medical_conditions: savedRefugee.medical_conditions,\n    has_disability: savedRefugee.has_disability,\n    vulnerability_score: savedRefugee.vulnerability_score,\n    special_needs: savedRefugee.special_needs,\n    family_id: savedRefugee.family_id,\n    family_size: family_size,\n    has_children: has_children,\n    children_count: children_count\n};\n\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -1743,7 +1760,7 @@
         "type": "function",
         "z": "tab_ai_integration",
         "name": "Verificar refugiado",
-        "func": "if (!msg.payload || msg.payload.length === 0) {\n    msg.statusCode = 404;\n    msg.payload = { error: 'Refugiado no encontrado' };\n    return [null, msg];\n}\n\nconst refugee = msg.payload[0];\n\n// Calcular family_size, has_children, children_count\nlet family_size = 1;\nlet has_children = false;\nlet children_count = 0;\n\nif (refugee.family_id) {\n    family_size = 1;\n}\n\n// Preparar payload para el servicio de IA\nmsg.payload = {\n    first_name: refugee.first_name,\n    last_name: refugee.last_name,\n    age: refugee.age,\n    gender: refugee.gender,\n    nationality: refugee.nationality,\n    languages_spoken: refugee.languages_spoken,\n    medical_conditions: refugee.medical_conditions,\n    has_disability: refugee.has_disability,\n    vulnerability_score: refugee.vulnerability_score,\n    special_needs: refugee.special_needs,\n    family_id: refugee.family_id,\n    family_size: family_size,\n    has_children: has_children,\n    children_count: children_count\n};\n\n// Guardar refugee original para la respuesta\nflow.set('originalRefugee', refugee);\n\nreturn [msg, null];",
+        "func": "if (!msg.payload || msg.payload.length === 0) {\n    msg.statusCode = 404;\n    msg.payload = { error: 'Refugiado no encontrado' };\n    return [null, msg];\n}\n\nconst refugee = msg.payload[0];\n\n// Calcular family_size, has_children, children_count\nlet family_size = refugee.family_id ? 2 : 1;\nlet has_children = refugee.special_needs && refugee.special_needs.includes('children');\nlet children_count = has_children ? 1 : 0;\n\n// Preparar payload para el servicio de IA con valores por defecto\nmsg.payload = {\n    refugee_id: refugee.id,\n    first_name: refugee.first_name || 'Unknown',\n    last_name: refugee.last_name || 'Unknown',\n    age: refugee.age || 25,\n    gender: (refugee.gender || 'M').substring(0, 1).toUpperCase(),\n    nationality: refugee.nationality || 'Unknown',\n    family_size: family_size,\n    has_children: has_children,\n    children_count: children_count,\n    medical_conditions: refugee.medical_conditions || null,\n    requires_medical_facilities: !!refugee.medical_conditions,\n    languages_spoken: refugee.languages_spoken || 'English',\n    vulnerability_score: refugee.vulnerability_score || 5.0,\n    has_disability: refugee.has_disability || false,\n    special_needs: refugee.special_needs || null\n};\n\n// Guardar refugee original para la respuesta\nflow.set('originalRefugee', refugee);\n\nreturn [msg, null];",
         "outputs": 2,
         "timeout": "",
         "noerr": 0,
@@ -1859,6 +1876,157 @@
         "wires": []
     },
     {
+        "id": "get_latest_recommendation",
+        "type": "http in",
+        "z": "tab_ai_integration",
+        "name": "GET /api/ai/recommendations/refugee/:refugeeId/latest",
+        "url": "/api/ai/recommendations/refugee/:refugeeId/latest",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 220,
+        "y": 560,
+        "wires": [
+            [
+                "prepare_latest_rec_query"
+            ]
+        ]
+    },
+    {
+        "id": "prepare_latest_rec_query",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Preparar Query",
+        "func": "const refugeeId = parseInt(msg.req.params.refugeeId);\n\nmsg.query = 'SELECT response_json FROM recommendation_logs WHERE refugee_id = $1 ORDER BY generated_at DESC LIMIT 1';\n\nmsg.params = [refugeeId];\n\nmsg.payload = null;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 520,
+        "y": 560,
+        "wires": [
+            [
+                "fetch_latest_rec"
+            ]
+        ]
+    },
+    {
+        "id": "fetch_latest_rec",
+        "type": "postgresql",
+        "z": "tab_ai_integration",
+        "name": "Obtener última recomendación",
+        "query": "",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": "",
+        "outputs": 1,
+        "x": 780,
+        "y": 560,
+        "wires": [
+            [
+                "parse_latest_rec"
+            ]
+        ]
+    },
+    {
+        "id": "parse_latest_rec",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Parsear JSON",
+        "func": "if (!msg.payload || msg.payload.length === 0) {\n    msg.statusCode = 404;\n    msg.payload = { error: 'No hay recomendaciones guardadas para este refugiado' };\n    return msg;\n}\n\nconst row = msg.payload[0];\nconst response = JSON.parse(row.response_json);\n\nmsg.statusCode = 200;\nmsg.payload = response;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1050,
+        "y": 560,
+        "wires": [
+            [
+                "send_latest_rec_response"
+            ]
+        ]
+    },
+    {
+        "id": "send_latest_rec_response",
+        "type": "http response",
+        "z": "tab_ai_integration",
+        "name": "Enviar respuesta",
+        "statusCode": "",
+        "headers": {},
+        "x": 1280,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "assign_shelter_http_in",
+        "type": "http in",
+        "z": "tab_ai_integration",
+        "name": "POST /api/ai/assign-shelter",
+        "url": "/api/ai/assign-shelter",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 200,
+        "y": 500,
+        "wires": [
+            [
+                "assign_shelter_function"
+            ]
+        ]
+    },
+    {
+        "id": "assign_shelter_function",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Prepare Update Query",
+        "func": "const { refugee_id, shelter_id, recommendation_log_id } = msg.payload;\n\nif (!refugee_id || !shelter_id) {\n    msg.statusCode = 400;\n    msg.payload = { error: 'refugee_id y shelter_id son requeridos' };\n    return [null, msg];\n}\n\n// Query para actualizar el refugiado con el shelter asignado\nmsg.topic = `\n    UPDATE refugee \n    SET assigned_shelter_id = $1, \n        status = 'assigned',\n        updated_at = NOW()\n    WHERE id = $2\n    RETURNING id, first_name, last_name, assigned_shelter_id\n`;\n\nmsg.payload = [shelter_id, refugee_id];\n\n// Guardar para la respuesta\nflow.set('refugee_id', refugee_id);\nflow.set('shelter_id', shelter_id);\nflow.set('recommendation_log_id', recommendation_log_id);\n\nconsole.log(`[ASSIGN] Assigning shelter ${shelter_id} to refugee ${refugee_id}`);\n\nreturn [msg, null];",
+        "outputs": 2,
+        "noerr": 0,
+        "x": 450,
+        "y": 500,
+        "wires": [
+            [
+                "assign_shelter_postgres"
+            ],
+            [
+                "assign_shelter_http_response"
+            ]
+        ]
+    },
+    {
+        "id": "assign_shelter_postgres",
+        "type": "postgresql",
+        "z": "tab_ai_integration",
+        "name": "Update Refugee",
+        "query": "",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 700,
+        "y": 500,
+        "wires": [
+            [
+                "assign_shelter_http_response"
+            ]
+        ]
+    },
+    {
+        "id": "assign_shelter_http_response",
+        "type": "http response",
+        "z": "tab_ai_integration",
+        "name": "Response",
+        "statusCode": "",
+        "headers": {},
+        "x": 920,
+        "y": 500,
+        "wires": []
+    },
+    {
         "id": "login_validation",
         "type": "function",
         "z": "tab_login",
@@ -1901,7 +2069,7 @@
         "type": "function",
         "z": "tab_login",
         "name": "Verificar y Responder",
-        "func": "try {\n  const result = msg.payload;\n  const passwordFromRequest = msg.passwordToVerify;\n  \n  // Verificar si el usuario existe\n  if (!Array.isArray(result) || result.length === 0) {\n    msg.statusCode = 401;\n    msg.payload = {\n      success: false,\n      message: 'Email o contraseña incorrectos'\n    };\n    return msg;\n  }\n  \n  const user = result[0];\n  \n  // Comparar contraseña (en prototipo es comparación directa)\n  // En producción: usar bcrypt.compare()\n  if (user.password !== passwordFromRequest) {\n    msg.statusCode = 401;\n    msg.payload = {\n      success: false,\n      message: 'Email o contraseña incorrectos'\n    };\n    return msg;\n  }\n  \n  // ÉXITO: Credentials válidas, devolver role\n  msg.statusCode = 200;\n  msg.payload = {\n    success: true,\n    user_id: user.id,\n    name: user.full_name,\n    email: user.email, // Necesario para notificación de login\n    role: user.role, // 'worker' o 'refugee'\n    token: 'simulated_token_' + Date.now() // Token simulado\n  };\n  \n  // Limpiar datos sensibles\n  delete msg.passwordToVerify;\n  \n  return msg;\n  \n} catch (err) {\n  msg.statusCode = 500;\n  msg.payload = {\n    success: false,\n    message: 'Error procesando login'\n  };\n  return msg;\n}",
+        "func": "try {\n  const result = msg.payload;\n  const passwordFromRequest = msg.passwordToVerify;\n  \n  // Verificar si el usuario existe\n  if (!Array.isArray(result) || result.length === 0) {\n    msg.statusCode = 401;\n    msg.payload = {\n      success: false,\n      message: 'Email o contraseña incorrectos'\n    };\n    return msg;\n  }\n  \n  const user = result[0];\n  \n  // Comparar contraseña\n  if (user.password !== passwordFromRequest) {\n    msg.statusCode = 401;\n    msg.payload = {\n      success: false,\n      message: 'Email o contraseña incorrectos'\n    };\n    return msg;\n  }\n  \n  // ÉXITO: Guardar user_id para siguiente query\n  msg.user_id = user.id;\n  msg.user_full = user;\n  \n  console.log('[LOGIN] User authenticated:', user.id);\n  \n  delete msg.passwordToVerify;\n  \n  return msg;\n  \n} catch (err) {\n  msg.statusCode = 500;\n  msg.payload = {\n    success: false,\n    message: 'Error procesando login'\n  };\n  return msg;\n}",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -1909,10 +2077,10 @@
         "finalize": "",
         "libs": [],
         "x": 880,
-        "y": 100,
+        "y": 80,
         "wires": [
             [
-                "login_http_response"
+                "login_get_refugee_id_prepare"
             ]
         ]
     },
@@ -1923,8 +2091,8 @@
         "name": "HTTP Response",
         "statusCode": "",
         "headers": {},
-        "x": 1110,
-        "y": 100,
+        "x": 1500,
+        "y": 80,
         "wires": []
     },
     {
@@ -1950,7 +2118,7 @@
         "type": "function",
         "z": "tab_login",
         "name": "Validar y Preparar",
-        "func": "// 1. Extraemos los datos que vienen del formulario (Frontend)\nvar nombre = msg.payload.name;\nvar email = msg.payload.email;\nvar password = msg.payload.password;\n\n// 2. Validación básica de seguridad (por si acaso falla el frontend)\nif (!email || !password || !nombre) {\n    msg.statusCode = 400;\n    msg.payload = { error: \"Faltan datos: nombre, email o contraseña\" };\n    return msg;\n}\n\n// 3. Preparamos la Query SQL (INSERT)\n// Fíjate que ponemos el rol 'refugee' fijo, porque es un auto-registro.\nmsg.query = \"INSERT INTO users (full_name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, full_name, email, role\";\n\n// 4. Preparamos los parámetros (Array)\n// Usamos 'refugee' como cuarto parámetro para cumplir con el CHECK de la base de datos\nmsg.params = [nombre, email, password, 'refugee'];\n\n// 5. Limpiamos el payload para que no moleste al nodo de Postgres\nmsg.payload = null;\n\nreturn msg;",
+        "func": "// 1. Recoger datos del formulario (Frontend)\nconst payload = msg.payload || {};\n\n// Asignamos variables, usando 'null' si no vienen, para que Postgres no se queje.\n// NOTA: 'full_name' a veces viene del form, si no, lo construimos juntando nombre y apellido.\nconst firstName = payload.first_name || payload.name || \"\";\nconst lastName = payload.last_name || \"\";\nconst fullName = payload.full_name || (firstName + \" \" + lastName).trim();\n\nconst email = payload.email || null; // Puede ser null\nconst password = payload.password;   // OBLIGATORIO\nconst username = payload.username || null;\nconst phone = payload.phone_number || payload.phone || null;\nconst address = payload.address || null;\n\n// Para la edad, nos aseguramos de que sea un número (o null si viene vacío)\nconst age = (payload.age && !isNaN(payload.age)) ? parseInt(payload.age) : null;\n\nconst role = 'refugee'; // Rol fijo para auto-registro\n\n// 2. Validación de Seguridad (Solo lo que es OBLIGATORIO en BD)\n// Según me has dicho: Password y Role son los únicos NOT NULL (aparte de ID).\n// Sin embargo, por lógica de negocio, recomendamos pedir al menos un identificador (email o usuario).\n\nif (!password) {\n    msg.statusCode = 400;\n    msg.payload = { error: \"Error: La contraseña es obligatoria.\" };\n    return msg;\n}\n\n// 3. Query SQL para rellenar TODO\n// Usamos CURRENT_TIMESTAMP para el campo 'create_at' automáticamente.\nmsg.query = `\n    INSERT INTO users (\n        email, \n        password, \n        full_name, \n        role, \n        first_name, \n        last_name, \n        username, \n        phone_number, \n        address, \n        age\n    ) \n    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)\n    RETURNING id, username, email, role\n`;\n\n// 4. Parámetros (ordenados igual que la query)\nmsg.params = [\n    email,          // $1\n    password,       // $2\n    fullName,       // $3\n    role,           // $4\n    firstName,      // $5\n    lastName,       // $6\n    username,       // $7\n    phone,          // $8\n    address,        // $9\n    age             // $10\n];\n\n// 5. Limpiar payload\nmsg.payload = null;\n\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -1988,8 +2156,8 @@
         "type": "function",
         "z": "tab_login",
         "name": "Verificar y Responder",
-        "func": "// El nodo PostgreSQL devuelve un array con las filas insertadas\n// gracias al \"RETURNING\" que pusimos en la query.\nvar filas = msg.payload;\n\nif (filas && filas.length > 0) {\n    var usuarioNuevo = filas[0];\n\n    // Construimos la respuesta EXACTAMENTE igual que en el Login\n    // Así el frontend puede guardar el token y entrar directamente.\n    msg.statusCode = 201; // 201 Created (es lo correcto para registros)\n    msg.payload = {\n        \"success\": true,\n        \"user_id\": usuarioNuevo.id,\n        \"name\": usuarioNuevo.full_name,\n        \"email\": usuarioNuevo.email,\n        \"role\": usuarioNuevo.role, // Será 'refugee'\n        \"token\": \"simulated_token_\" + Date.now() // Token para que entre directo\n    };\n} else {\n    // Si por lo que sea no devuelve filas (raro si no dio error antes)\n    msg.statusCode = 500;\n    msg.payload = { \"error\": \"No se pudo recuperar el usuario creado\" };\n}\n\nreturn msg;",
-        "outputs": 1,
+        "func": "// El nodo PostgreSQL devuelve las filas insertadas en msg.payload\nvar filas = msg.payload;\n\nif (filas && filas.length > 0) {\n    var usuarioCreado = filas[0]; // Aquí solo viene el ID porque así lo pedimos en el RETURNING\n    \n    // Recuperamos los datos que guardamos en el nodo anterior\n    var datosExtra = msg.datosFormulario || {};\n\n    // Guardar el user_id en el flujo (opcional, pero útil)\n    flow.set('newUserId', usuarioCreado.id);\n    \n    // Preparar query para insertar en tabla refugee\n    // Usamos msg.query en vez de msg.topic para ser consistentes\n    msg.query = `\n        INSERT INTO refugee (\n            user_id, first_name, last_name, age, gender, nationality, created_at, updated_at\n        ) \n        VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) \n        RETURNING id, user_id\n    `;\n    \n    msg.params = [\n        usuarioCreado.id,        // ID generado por Postgres\n        datosExtra.firstName,    // Dato recuperado del formulario\n        datosExtra.lastName,     // Dato recuperado del formulario\n        datosExtra.age || 18,    // Default por seguridad (int)\n        datosExtra.gender || 'Other',\n        datosExtra.nationality || 'Unknown'\n    ];\n    \n    console.log('[REGISTER] User created ID:', usuarioCreado.id);\n    \n    // Limpiamos payload para el siguiente nodo de Postgres\n    msg.payload = null;\n    \n    return [msg, null];\n} else {\n    msg.statusCode = 500;\n    msg.payload = { \"error\": \"No se pudo crear el usuario en la tabla users\" };\n    console.error(\"Error: Postgres no devolvió ID\");\n    return [null, msg];\n}",
+        "outputs": 2,
         "timeout": "",
         "noerr": 0,
         "initialize": "",
@@ -1999,7 +2167,10 @@
         "y": 300,
         "wires": [
             [
-                "cb383e10764124f8"
+                "register_create_refugee"
+            ],
+            [
+                "register_error_response"
             ]
         ]
     },
@@ -2010,8 +2181,8 @@
         "name": "HTTP Response",
         "statusCode": "",
         "headers": {},
-        "x": 1250,
-        "y": 300,
+        "x": 1580,
+        "y": 220,
         "wires": []
     },
     {
@@ -2124,5 +2295,115 @@
                 "5e41704bfdb79d59"
             ]
         ]
+    },
+    {
+        "id": "login_get_refugee_id_prepare",
+        "type": "function",
+        "z": "tab_login",
+        "name": "Prepare Refugee Query",
+        "func": "// Buscar refugee_id usando user_id\nmsg.topic = \"SELECT id as refugee_id FROM refugee WHERE user_id = $1 LIMIT 1\";\nmsg.queryParams = [msg.user_id];\nconsole.log('[LOGIN] Searching refugee with user_id:', msg.user_id);\nreturn msg;",
+        "outputs": 1,
+        "x": 1050,
+        "y": 80,
+        "wires": [
+            [
+                "login_get_refugee_id_query"
+            ]
+        ]
+    },
+    {
+        "id": "login_get_refugee_id_query",
+        "type": "postgresql",
+        "z": "tab_login",
+        "name": "Get Refugee ID",
+        "query": "",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "outputs": 1,
+        "x": 1200,
+        "y": 80,
+        "wires": [
+            [
+                "login_build_final_response"
+            ]
+        ]
+    },
+    {
+        "id": "login_build_final_response",
+        "type": "function",
+        "z": "tab_login",
+        "name": "Build Final Response",
+        "func": "const user = msg.user_full;\nlet refugee_id = null;\n\n// Si es refugiado, obtener su refugee_id\nif (user.role === 'refugee' && msg.payload && Array.isArray(msg.payload) && msg.payload.length > 0) {\n    refugee_id = msg.payload[0].refugee_id;\n}\n\nmsg.statusCode = 200;\nmsg.payload = {\n    success: true,\n    user_id: user.id,\n    refugee_id: refugee_id,  // null para workers, id para refugees\n    name: user.full_name,\n    email: user.email,\n    role: user.role,\n    token: 'simulated_token_' + Date.now()\n};\n\nconsole.log('[LOGIN] Final response:', {\n    user_id: user.id,\n    refugee_id: refugee_id,\n    role: user.role\n});\n\nreturn msg;",
+        "outputs": 1,
+        "x": 1350,
+        "y": 80,
+        "wires": [
+            [
+                "login_http_response"
+            ]
+        ]
+    },
+    {
+        "id": "register_create_refugee",
+        "type": "postgresql",
+        "z": "tab_login",
+        "name": "Create Refugee Record",
+        "query": "",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": "",
+        "outputs": 1,
+        "x": 1150,
+        "y": 380,
+        "wires": [
+            [
+                "register_build_response"
+            ]
+        ]
+    },
+    {
+        "id": "register_build_response",
+        "type": "function",
+        "z": "tab_login",
+        "name": "Build Response",
+        "func": "// Recuperamos lo que devuelve Postgres\nvar filas = msg.payload;\n\n// 1. BLINDAJE: Verificamos si realmente hay datos antes de leer nada\nif (!filas || filas.length === 0) {\n    // Si entramos aquí, es que Postgres no devolvió el ID.\n    // Puede ser que el INSERT fallara o que falte el 'RETURNING' en la query anterior.\n    node.error(\"ERROR CRÍTICO: La base de datos devolvió una lista vacía.\");\n\n    msg.statusCode = 500;\n    msg.payload = {\n        success: false,\n        error: \"Error interno: El usuario no se guardó correctamente en la BD.\"\n    };\n    return [null, msg]; // Salimos por la vía de error (Output 2 si tienes 2 salidas)\n}\n\n// 2. Si llegamos aquí, es seguro leer la fila 0\nvar usuarioNuevo = filas[0];\n\n// Verificación extra por seguridad\nif (!usuarioNuevo || !usuarioNuevo.id) {\n    node.error(\"ERROR: Se recibió una fila, pero no tiene propiedad 'id'. Revisa el RETURNING de tu SQL.\");\n    return null;\n}\n\n// 3. Lógica de éxito\n// Guardamos el ID para usarlo luego (tabla refugee)\nflow.set('newUserId', usuarioNuevo.id);\n\n// Pasamos los datos extra que guardamos en el nodo anterior (si existen)\nvar datosExtra = msg.datosFormulario || {};\n\n// Preparamos la siguiente Query (Tabla Refugee)\nmsg.query = `\n    INSERT INTO refugee (\n        user_id, first_name, last_name, age, gender, nationality, created_at, updated_at\n    ) \n    VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) \n    RETURNING id, user_id\n`;\n\nmsg.params = [\n    usuarioNuevo.id,\n    datosExtra.firstName || usuarioNuevo.first_name || \"Unknown\",\n    datosExtra.lastName || usuarioNuevo.last_name || \"Unknown\",\n    datosExtra.age || 18,\n    datosExtra.gender || 'Other',\n    datosExtra.nationality || 'Unknown'\n];\n\n// Limpiamos payload\nmsg.payload = null;\n\nreturn [msg, null];",
+        "outputs": 2,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1360,
+        "y": 380,
+        "wires": [
+            [
+                "register_http_response"
+            ],
+            [
+                "register_error_response"
+            ]
+        ]
+    },
+    {
+        "id": "register_http_response",
+        "type": "http response",
+        "z": "tab_login",
+        "name": "HTTP Response",
+        "statusCode": "",
+        "headers": {},
+        "x": 1550,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "register_error_response",
+        "type": "http response",
+        "z": "tab_login",
+        "name": "Error Response",
+        "statusCode": "500",
+        "headers": {},
+        "x": 1550,
+        "y": 420,
+        "wires": []
     }
 ]

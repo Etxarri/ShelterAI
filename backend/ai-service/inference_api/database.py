@@ -3,6 +3,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from typing import List, Optional
 from .config import settings
+from datetime import datetime
+import json
 
 # Crear engine de SQLAlchemy
 engine = create_engine(settings.DATABASE_URL)
@@ -73,6 +75,22 @@ class Assignment(Base):
     updated_at = Column(DateTime)
 
 
+class RecommendationLog(Base):
+    """Registro de recomendaciones generadas por el servicio IA"""
+    __tablename__ = "recommendation_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    refugee_id = Column(Integer, ForeignKey("refugees.id"), nullable=True)
+    cluster_id = Column(Integer)
+    cluster_label = Column(String(100))
+    vulnerability_level = Column(String(50))
+    total_shelters_analyzed = Column(Integer)
+    ml_model_version = Column(String(50))
+    # Almacenar la respuesta completa como JSON serializado para consistencia
+    response_json = Column(Text, nullable=False)
+    generated_at = Column(DateTime, default=datetime.now)
+
+
 # ===== FUNCIONES DE BASE DE DATOS =====
 
 def get_db():
@@ -115,8 +133,63 @@ def check_database_connection() -> bool:
         return False
 
 
+def init_db():
+    """Crea las tablas que no existan (idempotente)."""
+    try:
+        Base.metadata.create_all(bind=engine)
+        return True
+    except Exception as e:
+        print(f"Error creando tablas: {e}")
+        return False
+
+
 def get_all_shelters(db) -> List[Shelter]:
     """
     Obtiene todos los refugios (incluso los llenos)
     """
     return db.query(Shelter).all()
+
+
+# ===== RECOMENDACIONES (PERSISTENCIA) =====
+
+
+def save_recommendation(db, refugee_id: Optional[int], response: dict):
+    """Persiste una recomendación completa en la tabla recommendation_logs"""
+    try:
+        # Normalizar datetime para que sea serializable
+        response_normalized = dict(response)
+        if isinstance(response_normalized.get("timestamp"), datetime):
+            response_normalized["timestamp"] = response_normalized["timestamp"].isoformat()
+
+        log = RecommendationLog(
+            refugee_id=refugee_id,
+            cluster_id=response.get("cluster_id"),
+            cluster_label=response.get("cluster_label"),
+            vulnerability_level=response.get("vulnerability_level"),
+            total_shelters_analyzed=response.get("total_shelters_analyzed"),
+            ml_model_version=response.get("ml_model_version") or response.get("model_version"),
+            response_json=json.dumps(response_normalized, ensure_ascii=False, default=str),
+            generated_at=datetime.now(),
+        )
+        db.add(log)
+        db.commit()
+        db.refresh(log)
+        return log
+    except Exception as e:
+        db.rollback()
+        print(f"Error guardando recomendación: {e}")
+        return None
+
+
+def get_latest_recommendation_by_refugee(db, refugee_id: int) -> Optional[dict]:
+    """Obtiene la última recomendación persistida para un refugiado"""
+    try:
+        log = db.query(RecommendationLog).filter(
+            RecommendationLog.refugee_id == refugee_id
+        ).order_by(RecommendationLog.generated_at.desc()).first()
+        if not log:
+            return None
+        return json.loads(log.response_json)
+    except Exception as e:
+        print(f"Error obteniendo recomendación: {e}")
+        return None

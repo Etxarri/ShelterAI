@@ -1,0 +1,37 @@
+
+============================================================
+INICIANDO SHELTER AI API
+============================================================
+📦 Cargando modelo desde: /app/models/shelter_model.pkl
+Thu Jan 15 11:30:15 2026 Building and compiling search function
+⚠️  Detectada incompatibilidad de versión: 'NNDescent' object has no attribute 'quantization'
+🔧 Aplicando workaround...
+✅ Parches de compatibilidad aplicados
+⚠️  Saltando inicialización de búsqueda de NNDescent (incompatible)
+⚠️  Usando exemplars del clusterer para KNN
+   ✓ Exemplars type: <class 'list'>, shape: N/A
+⚠️  Error al extraer exemplars: setting an array element with a sequence. The requested array has an inhomogeneous shape after 1 dimensions. The detected shape was (54,) + inhomogeneous part.
+   ℹ️  Continuando sin datos de entrenamiento para KNN
+✅ Modelo cargado exitosamente (versión 1.0)
+   - 54 clusters
+   - 555 features
+✅ Modelo de ML cargado exitosamente
+Conexión a base de datos establecida
+✅ Esquema de BD verificado/creado
+============================================================
+API disponible en: http://0.0.0.0:8000
+Documentación: http://0.0.0.0:8000/docs
+============================================================
+
+
+
+=== STDERR ===
+INFO:     Started server process [1]
+INFO:     Waiting for application startup.
+Traceback (most recent call last):
+  File "/app/inference_api/predictor.py", line 120, in __init__
+    exemplars = np.array(exemplars, dtype=np.float32)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: setting an array element with a sequence. The requested array has an inhomogeneous shape after 1 dimensions. The detected shape was (54,) + inhomogeneous part.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)

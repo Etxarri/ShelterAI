@@ -5,6 +5,7 @@ enum UserRole { refugee, worker }
 class AuthState extends ChangeNotifier {
   UserRole? _role;
   int? _userId;
+  int? _refugeeId;  // ← NUEVO: ID específico del refugiado
   String _token = '';
   String _userName = '';
   
@@ -21,6 +22,7 @@ class AuthState extends ChangeNotifier {
   UserRole? get role => _role;
   bool get isAuthenticated => _role != null;
   int? get userId => _userId;
+  int? get refugeeId => _refugeeId;  // ← NUEVO: Getter para refugeeId
   String get token => _token;
   String get userName => _userName;
   
@@ -37,6 +39,7 @@ class AuthState extends ChangeNotifier {
   void login(
     UserRole role, {
     int? userId,
+    int? refugeeId,  // ← NUEVO: Parámetro refugeeId
     String token = '',
     String userName = '',
     String firstName = '',
@@ -50,6 +53,7 @@ class AuthState extends ChangeNotifier {
   }) {
     _role = role;
     _userId = userId;
+    _refugeeId = refugeeId;  // ← NUEVO: Asignar refugeeId
     _token = token;
     _userName = userName;
     _firstName = firstName;
@@ -66,6 +70,7 @@ class AuthState extends ChangeNotifier {
   void logout() {
     _role = null;
     _userId = null;
+    _refugeeId = null;  // ← NUEVO: Limpiar refugeeId
     _token = '';
     _userName = '';
     _firstName = '';

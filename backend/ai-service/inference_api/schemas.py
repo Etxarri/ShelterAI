@@ -13,6 +13,9 @@ class ShelterSelectionRequest(BaseModel):
 class RefugeeInput(BaseModel):
     """Datos del refugiado para recomendación de refugio"""
     
+    # Identificador opcional para vincular recomendaciones a BD
+    refugee_id: Optional[int] = Field(None, ge=1, description="ID del refugiado (opcional para persistencia)")
+
     # Información básica
     first_name: str = Field(..., description="Nombre")
     last_name: str = Field(..., description="Apellido")
@@ -141,7 +144,7 @@ class RecommendationResponse(BaseModel):
     total_shelters_analyzed: int = Field(..., description="Total de refugios analizados")
     
     # Metadata
-    timestamp: datetime = Field(default_factory=datetime.now, description="Timestamp de la recomendación")
+    timestamp: str = Field(default_factory=lambda: datetime.now().isoformat(), description="Timestamp de la recomendación")
     ml_model_version: str = Field(..., description="Versión del modelo usado")
     
     class Config:

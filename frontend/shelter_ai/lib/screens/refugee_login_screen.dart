@@ -49,6 +49,7 @@ class _RefugeeLoginScreenState extends State<RefugeeLoginScreen> {
       auth.login(
         roleEnum,
         userId: response.userId,
+        refugeeId: response.refugeeId,  // ← NUEVO: Pasar refugeeId
         token: response.token,
         userName: response.name,
       );

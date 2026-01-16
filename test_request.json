@@ -1,0 +1,19 @@
+{
+  "refugee_id": 14,
+  "first_name": "Elena",
+  "last_name": "Moroz",
+  "age": 28,
+  "gender": "F",
+  "nationality": "Ukrainian",
+  "family_size": 2,
+  "has_children": false,
+  "children_count": 0,
+  "medical_conditions": "Pregnant",
+  "has_disability": false,
+  "psychological_distress": false,
+  "requires_medical_facilities": true,
+  "languages_spoken": "Ukrainian,Russian,English",
+  "status": "refugee",
+  "special_needs": "Requires prenatal care",
+  "vulnerability_score": 8.5
+}

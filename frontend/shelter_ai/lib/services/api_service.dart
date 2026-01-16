@@ -199,6 +199,30 @@ class ApiService {
     }
   }
 
+    // GET /api/ai/recommendations/refugee/:refugeeId/latest - Get last persisted recommendation
+    static Future<Map<String, dynamic>?> getLatestPersistedRecommendation(
+      String refugeeId,
+    ) async {
+      try {
+        final response = await client.get(
+          Uri.parse('$baseUrl/ai/recommendations/refugee/$refugeeId/latest'),
+        );
+  
+        if (response.statusCode == 200) {
+          return json.decode(response.body) as Map<String, dynamic>;
+        } else if (response.statusCode == 404) {
+          // No persisted recommendation exists yet
+          return null;
+        } else {
+          throw Exception('Failed to get latest recommendation: ${response.statusCode}');
+        }
+      } catch (e) {
+        // ignore: avoid_print
+        print('Error getting latest persisted recommendation: $e');
+        return null; // Return null on error to fallback to fresh recommendation
+      }
+    }
+
     // GET /api/ai/recommend/:refugeeId - Get AI recommendation for a refugee (without creating assignment)
     static Future<Map<String, dynamic>> getAIRecommendation(
       String refugeeId,
@@ -220,38 +244,19 @@ class ApiService {
       }
     }
 
-    // GET /api/ai/refugee/:refugeeId/assignment - Check if refugee has assignment
-    static Future<Map<String, dynamic>> getRefugeeAssignment(
-      String refugeeId,
-    ) async {
-      try {
-        final response = await client.get(
-          Uri.parse('$baseUrl/ai/refugee/$refugeeId/assignment'),
-        );
-  
-        if (response.statusCode == 200) {
-          return json.decode(response.body) as Map<String, dynamic>;
-        } else {
-          throw Exception('Failed to get refugee assignment: ${response.statusCode}');
-        }
-      } catch (e) {
-        // ignore: avoid_print
-        print('Error getting refugee assignment: $e');
-        rethrow;
-      }
-    }
 
-    // POST /api/ai/select-shelter - Select a shelter from recommendations
+
+    // POST /api/ai/assign-shelter - Select a shelter from recommendations
     static Future<Map<String, dynamic>> selectShelterFromRecommendation(
       String refugeeId,
       int shelterId,
     ) async {
       try {
         final response = await client.post(
-          Uri.parse('$baseUrl/ai/select-shelter'),
+          Uri.parse('$baseUrl/ai/assign-shelter'),
           headers: {'Content-Type': 'application/json'},
           body: json.encode({
-            'refugee_id': refugeeId,
+            'refugee_id': int.tryParse(refugeeId),
             'shelter_id': shelterId,
           }),
         );
@@ -264,6 +269,57 @@ class ApiService {
       } catch (e) {
         // ignore: avoid_print
         print('Error selecting shelter: $e');
+        rethrow;
+      }
+    }
+
+    // GET /api/ai/refugee/:refugeeId/assignment - Get refugee's shelter assignment
+    static Future<Map<String, dynamic>> getRefugeeAssignment(
+      String refugeeId,
+    ) async {
+      try {
+        final response = await client.get(
+          Uri.parse('$baseUrl/ai/refugee/$refugeeId/assignment'),
+          headers: {'Content-Type': 'application/json'},
+        );
+
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          
+          // Si es un array, tomar el primer elemento
+          if (data is List && data.isNotEmpty) {
+            final assignment = data[0] as Map<String, dynamic>;
+            return {
+              'refugee_id': int.tryParse(refugeeId),
+              'assignment': assignment,
+              'assigned': true,
+              'shelter_id': assignment['shelter_id'],
+              'shelter_name': assignment['shelter_name'],
+            };
+          } else if (data is List && data.isEmpty) {
+            // No assignment yet
+            return {
+              'refugee_id': int.tryParse(refugeeId),
+              'assignment': null,
+              'assigned': false,
+            };
+          }
+          
+          // Si es un objeto, devolverlo directamente
+          return data as Map<String, dynamic>;
+        } else if (response.statusCode == 404) {
+          // No assignment yet
+          return {
+            'refugee_id': int.tryParse(refugeeId),
+            'assignment': null,
+            'assigned': false,
+          };
+        } else {
+          throw Exception('Failed to get assignment: ${response.statusCode}');
+        }
+      } catch (e) {
+        // ignore: avoid_print
+        print('Error getting assignment: $e');
         rethrow;
       }
     }

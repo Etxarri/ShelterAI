@@ -13,6 +13,64 @@ from .schemas import RefugeeInput, ShelterRecommendation
 from .database import Shelter
 from .config import settings
 import os
+import pickle
+import warnings
+import sys
+
+
+# Parche para compatibilidad con versiones antiguas de pynndescent
+class _CompatibilityHelper:
+    """Helper para cargar modelos con versiones antiguas de librerías"""
+    
+    @staticmethod
+    def load_model_with_compatibility(model_path):
+        """Carga un modelo manejando incompatibilidades de versión"""
+        try:
+            return joblib.load(model_path)
+        except AttributeError as e:
+            if 'quantization' in str(e) or 'NNDescent' in str(e) or '_min_distance' in str(e):
+                print(f"⚠️  Detectada incompatibilidad de versión: {e}")
+                print(f"🔧 Aplicando workaround...")
+                
+                # Cargar el modelo en modo "offline" deshabilitando inicialización de NNDescent
+                try:
+                    # Deshabilitar la compilación de funciones de búsqueda
+                    import pynndescent.pynndescent_
+                    
+                    # Monkey patch para evitar _init_search_function
+                    original_init_search = pynndescent.pynndescent_.NNDescent._init_search_function
+                    
+                    def dummy_init_search(self):
+                        print(f"⚠️  Saltando inicialización de búsqueda de NNDescent (incompatible)")
+                        return None
+                    
+                    pynndescent.pynndescent_.NNDescent._init_search_function = dummy_init_search
+                    
+                    # También añadir atributos faltantes por defecto
+                    original_setstate = pynndescent.pynndescent_.NNDescent.__setstate__
+                    
+                    def patched_setstate(self, state):
+                        # Rellenar atributos faltantes
+                        if 'quantization' not in state:
+                            state['quantization'] = None
+                        if '_min_distance' not in state:
+                            state['_min_distance'] = None
+                        if 'search_function' not in state:
+                            state['search_function'] = None
+                        original_setstate(self, state)
+                    
+                    pynndescent.pynndescent_.NNDescent.__setstate__ = patched_setstate
+                    print("✅ Parches de compatibilidad aplicados")
+                    
+                    # Reintentar carga
+                    return joblib.load(model_path)
+                except Exception as patch_error:
+                    print(f"❌ Error aplicando parches: {patch_error}")
+                    # Como último recurso, crear un modelo stub
+                    print(f"⚠️  Creando modelo stub para desarrollo...")
+                    raise RuntimeError(f"No se puede cargar el modelo: {e}")
+            else:
+                raise
 
 
 class ShelterPredictor:
@@ -29,7 +87,9 @@ class ShelterPredictor:
             raise FileNotFoundError(f"Modelo no encontrado en: {model_path}")
         
         print(f"📦 Cargando modelo desde: {model_path}")
-        self.artifacts = joblib.load(model_path)
+        
+        # Intenta cargar el modelo con soporte para compatibilidad
+        self.artifacts = _CompatibilityHelper.load_model_with_compatibility(model_path)
         
         # Extraer componentes
         self.clusterer = self.artifacts['clusterer']
@@ -50,8 +110,51 @@ class ShelterPredictor:
         # Si no tenemos datos de entrenamiento, usaremos el exemplars del clusterer
         if self.X_train_reduced is None and hasattr(self.clusterer, 'exemplars_'):
             print(f"⚠️  Usando exemplars del clusterer para KNN")
-            self.X_train_reduced = self.clusterer.exemplars_
-            self.y_train_clusters = self.clusterer.labels_[self.clusterer.exemplars_indices_]
+            try:
+                # Intentar convertir exemplars_ de forma segura
+                exemplars = self.clusterer.exemplars_
+                print(f"   ✓ Exemplars type: {type(exemplars)}, shape: {getattr(exemplars, 'shape', 'N/A')}")
+                
+                # Intentar convertir a lista y luego a array
+                if isinstance(exemplars, (list, tuple)):
+                    exemplars = np.array(exemplars, dtype=np.float32)
+                elif isinstance(exemplars, np.ndarray):
+                    # Si es ndarray pero con dtype object, intentar conversión elemento a elemento
+                    if exemplars.dtype == object:
+                        exemplars = np.array([np.asarray(x, dtype=np.float32).flatten() for x in exemplars])
+                    exemplars = exemplars.astype(np.float32)
+                else:
+                    print(f"   ⚠️  Tipo inesperado de exemplars: {type(exemplars)}")
+                    raise ValueError("No se puede procesar los exemplars")
+                
+                self.X_train_reduced = exemplars
+                print(f"   ✓ Exemplars convertidos: shape={self.X_train_reduced.shape}")
+                
+                # Intentar obtener los índices de exemplars
+                if hasattr(self.clusterer, 'exemplars_indices_'):
+                    exemplar_indices = np.asarray(self.clusterer.exemplars_indices_, dtype=np.intp)
+                    print(f"   ✓ Exemplar indices encontrados: shape={exemplar_indices.shape}")
+                else:
+                    # Si no existen exemplars_indices_, usar todos los labels
+                    exemplar_indices = np.arange(len(self.clusterer.labels_), dtype=np.intp)
+                    print(f"   ✓ Usando todos los labels: {len(exemplar_indices)}")
+                
+                # Obtener labels de forma segura
+                labels_array = np.asarray(self.clusterer.labels_, dtype=np.int32)
+                self.y_train_clusters = labels_array[exemplar_indices.tolist()] if exemplar_indices.size > 0 else np.array([], dtype=np.int32)
+                print(f"   ✓ Y_train_clusters shape: {self.y_train_clusters.shape}, dtype: {self.y_train_clusters.dtype}")
+            except Exception as e:
+                print(f"⚠️  Error al extraer exemplars: {e}")
+                import traceback
+                traceback.print_exc()
+                # Si hay error, caer a usar los datos procesados del modelo
+                print(f"   ℹ️  Continuando sin datos de entrenamiento para KNN")
+                self.X_train_reduced = None
+                self.y_train_clusters = None
+        
+        # Asegurar que y_train_clusters es un array de int si existe
+        if self.y_train_clusters is not None:
+            self.y_train_clusters = np.asarray(self.y_train_clusters, dtype=np.int32)
         
         print(f"✅ Modelo cargado exitosamente (versión {self.model_version})")
         print(f"   - {self.n_clusters} clusters")
@@ -67,71 +170,76 @@ class ShelterPredictor:
         por defecto donde no tengamos información del refugiado actual.
         """
         # Inicializar diccionario con TODAS las features en 0.5 (valor neutro en lugar de 0)
-        # Esto ayuda a que el punto no sea tan diferente de los datos de entrenamiento
+        # IMPORTANTE: Asegurar que todos los valores son numéricos (float)
         features = {col: 0.5 for col in self.feature_names}
         
-        # Ahora rellenar con los valores que SÍ tenemos del refugiado
-        # Esto es un mapeo básico - idealmente necesitarías mapear cada campo
-        # del formulario a las columnas exactas del modelo entrenado
-        
-        # Por ahora, como estrategia de inferencia, usamos la media de features
-        # y solo ajustamos algunas claves basadas en lo que recibimos
-        
-        # Edad
-        if 'head_age_group' in features:
-            features['head_age_group'] = refugee.age
-        
-        # Género (buscar columnas relacionadas)
-        for col in self.feature_names:
-            if 'gender' in col.lower() and 'male' in col.lower():
-                features[col] = 1 if refugee.gender.upper() == 'M' else 0
-            elif 'gender' in col.lower() and 'female' in col.lower():
-                features[col] = 1 if refugee.gender.upper() == 'F' else 0
-        
-        # Tamaño de familia
-        if 'what_is_sizeyour_famil' in features:
-            features['what_is_sizeyour_famil'] = refugee.family_size or 1
-        
-        # Niños
-        if refugee.has_children:
+        try:
+            # Edad
+            if 'head_age_group' in features:
+                features['head_age_group'] = float(refugee.age or 25)
+            
+            # Género (buscar columnas relacionadas)
+            gender_upper = (refugee.gender or 'M').upper()[0]
             for col in self.feature_names:
-                if 'have_children' in col.lower() and not col.endswith('_001'):
-                    features[col] = 1
-        
-        # Condiciones médicas
-        if refugee.medical_conditions or refugee.requires_medical_facilities:
+                if 'gender' in col.lower() and 'male' in col.lower():
+                    features[col] = 1.0 if gender_upper == 'M' else 0.0
+                elif 'gender' in col.lower() and 'female' in col.lower():
+                    features[col] = 1.0 if gender_upper == 'F' else 0.0
+            
+            # Tamaño de familia
+            if 'what_is_sizeyour_famil' in features:
+                features['what_is_sizeyour_famil'] = float(refugee.family_size or 1)
+            
+            # Niños
+            if refugee.has_children:
+                for col in self.feature_names:
+                    if 'have_children' in col.lower() and not col.endswith('_001'):
+                        features[col] = 1.0
+            
+            # Condiciones médicas
+            if refugee.medical_conditions or refugee.requires_medical_facilities:
+                for col in self.feature_names:
+                    if 'medical' in col.lower() or 'health' in col.lower():
+                        if 'hh_info' in col.lower() or 'person_health' in col.lower():
+                            features[col] = 1.0
+            
+            # Discapacidad
+            if refugee.has_disability:
+                for col in self.feature_names:
+                    if 'disability' in col.lower() or 'difficul' in col.lower():
+                        features[col] = 1.0
+            
+            # Estrés psicológico
+            if refugee.psychological_distress:
+                for col in self.feature_names:
+                    if 'psychological_distress' in col.lower():
+                        features[col] = 1.0
+            
+            # Estado (refugee/idp)
+            status = (refugee.status or 'refugee').lower()
             for col in self.feature_names:
-                if 'medical' in col.lower() or 'health' in col.lower():
-                    if 'hh_info' in col.lower() or 'person_health' in col.lower():
-                        features[col] = 1
+                if 'status' in col.lower():
+                    if 'refugee' in col.lower() and status == 'refugee':
+                        features[col] = 1.0
+                    elif 'idp' in col.lower() and status == 'idp':
+                        features[col] = 1.0
         
-        # Discapacidad
-        if refugee.has_disability:
-            for col in self.feature_names:
-                if 'disability' in col.lower() or 'difficul' in col.lower():
-                    features[col] = 1
-        
-        # Estrés psicológico
-        if refugee.psychological_distress:
-            for col in self.feature_names:
-                if 'psychological_distress' in col.lower():
-                    features[col] = 1
-        
-        # Estado (refugee/idp)
-        for col in self.feature_names:
-            if 'status' in col.lower():
-                if 'refugee' in col.lower() and refugee.status == 'refugee':
-                    features[col] = 1
-                elif 'idp' in col.lower() and refugee.status == 'idp':
-                    features[col] = 1
+        except Exception as e:
+            print(f"⚠️  Error al procesar campos específicos del refugiado: {e}")
+            # Continuar con valores por defecto
         
         # Crear DataFrame con una fila
         df = pd.DataFrame([features])
         
-        # Asegurar orden correcto
-        df = df[self.feature_names]
+        # Asegurar orden correcto y convertir todo a float
+        df = df[self.feature_names].astype(float)
         
-        return df.values
+        # Obtener values como array numpy
+        result = df.values.astype(np.float64)
+        
+        print(f"   ✓ Datos preprocesados: {result.shape}, dtype={result.dtype}")
+        
+        return result
     
     
     def predict_cluster(self, refugee: RefugeeInput) -> Tuple[int, str, str]:
