@@ -82,11 +82,12 @@ class ShelterPredictor:
             features['head_age_group'] = refugee.age
         
         # Género (buscar columnas relacionadas)
+        # Importante: buscar 'female' antes que 'male' porque 'female' contiene 'male'
         for col in self.feature_names:
-            if 'gender' in col.lower() and 'male' in col.lower():
-                features[col] = 1 if refugee.gender.upper() == 'M' else 0
-            elif 'gender' in col.lower() and 'female' in col.lower():
+            if 'gender' in col.lower() and 'female' in col.lower():
                 features[col] = 1 if refugee.gender.upper() == 'F' else 0
+            elif 'gender' in col.lower() and 'male' in col.lower():
+                features[col] = 1 if refugee.gender.upper() == 'M' else 0
         
         # Tamaño de familia
         if 'what_is_sizeyour_famil' in features:

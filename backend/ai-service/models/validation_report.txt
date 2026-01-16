@@ -1,0 +1,173 @@
+SHELTER AI - REPORTE DE VALIDACIÓN DEL MODELO
+================================================================================
+
+Fecha de validación: 2026-01-14 10:21:18
+Modelo: ../models/shelter_model.pkl
+Versión del modelo: 1.0
+Fecha de entrenamiento: 20260108_111754
+
+MÉTRICAS DE CLUSTERING
+--------------------------------------------------------------------------------
+
+TRAIN SET:
+  Silhouette Score:     0.7387 [EXCELENTE]
+  Calinski-Harabasz:    9539.76
+  Davies-Bouldin:       0.5081 [EXCELENTE]
+  Muestras:             6717
+  Clusters:             48
+  Ruido:                50.8%
+
+TEST SET:
+  Silhouette Score:     0.7472
+  Calinski-Harabasz:    3442.23
+  Davies-Bouldin:       0.5312
+  Muestras:             2240
+  Clusters:             48
+  Ruido:                50.1%
+
+COMPARACIÓN TRAIN vs TEST
+--------------------------------------------------------------------------------
+
+  Diferencia Silhouette:        0.0085
+  Diferencia Calinski-Harabasz: 63.92%
+  Diferencia Davies-Bouldin:    4.54%
+  Diferencia Ruido:             0.7%
+
+EVALUACIÓN DE OVERFITTING
+--------------------------------------------------------------------------------
+
+⚠️ POSIBLE OVERFITTING DETECTADO
+
+Warnings:
+  - ⚠️ Calinski-Harabasz muy diferente (63.9%)
+
+DISTRIBUCIÓN DE CLUSTERS
+--------------------------------------------------------------------------------
+
+TRAIN:
+  Ruido          : 3414 ( 50.8%)
+  Cluster 0      :   61 (  0.9%)
+  Cluster 1      :   73 (  1.1%)
+  Cluster 2      :  117 (  1.7%)
+  Cluster 3      :   37 (  0.6%)
+  Cluster 4      :   60 (  0.9%)
+  Cluster 5      :  152 (  2.3%)
+  Cluster 6      :   64 (  1.0%)
+  Cluster 7      :   40 (  0.6%)
+  Cluster 8      :   41 (  0.6%)
+  Cluster 9      :   59 (  0.9%)
+  Cluster 10     :   57 (  0.8%)
+  Cluster 11     :   45 (  0.7%)
+  Cluster 12     :   76 (  1.1%)
+  Cluster 13     :   28 (  0.4%)
+  Cluster 14     :   71 (  1.1%)
+  Cluster 15     :  130 (  1.9%)
+  Cluster 16     :  136 (  2.0%)
+  Cluster 17     :   48 (  0.7%)
+  Cluster 18     :   10 (  0.1%)
+  Cluster 19     :   42 (  0.6%)
+  Cluster 20     :   80 (  1.2%)
+  Cluster 21     :   48 (  0.7%)
+  Cluster 22     :   57 (  0.8%)
+  Cluster 23     :   55 (  0.8%)
+  Cluster 24     :   45 (  0.7%)
+  Cluster 25     :   47 (  0.7%)
+  Cluster 26     :   40 (  0.6%)
+  Cluster 27     :   38 (  0.6%)
+  Cluster 28     :    6 (  0.1%)
+  Cluster 29     :   89 (  1.3%)
+  Cluster 30     :   82 (  1.2%)
+  Cluster 31     :    8 (  0.1%)
+  Cluster 32     :   13 (  0.2%)
+  Cluster 33     :   20 (  0.3%)
+  Cluster 34     :    5 (  0.1%)
+  Cluster 35     :   71 (  1.1%)
+  Cluster 36     :    5 (  0.1%)
+  Cluster 37     :  114 (  1.7%)
+  Cluster 38     :    1 (  0.0%)
+  Cluster 39     :    3 (  0.0%)
+  Cluster 40     :    5 (  0.1%)
+  Cluster 41     :  814 ( 12.1%)
+  Cluster 42     :   16 (  0.2%)
+  Cluster 43     :  157 (  2.3%)
+  Cluster 45     :   81 (  1.2%)
+  Cluster 47     :   11 (  0.2%)
+  Cluster 48     :    8 (  0.1%)
+  Cluster 49     :   10 (  0.1%)
+  Cluster 50     :    4 (  0.1%)
+  Cluster 51     :   22 (  0.3%)
+  Cluster 53     :    1 (  0.0%)
+
+TEST:
+  Ruido          : 1123 ( 50.1%)
+  Cluster 0      :   24 (  1.1%)
+  Cluster 1      :   21 (  0.9%)
+  Cluster 2      :   42 (  1.9%)
+  Cluster 3      :   12 (  0.5%)
+  Cluster 4      :   14 (  0.6%)
+  Cluster 5      :   52 (  2.3%)
+  Cluster 6      :   18 (  0.8%)
+  Cluster 7      :   12 (  0.5%)
+  Cluster 8      :   23 (  1.0%)
+  Cluster 9      :   22 (  1.0%)
+  Cluster 10     :   18 (  0.8%)
+  Cluster 11     :   14 (  0.6%)
+  Cluster 12     :   34 (  1.5%)
+  Cluster 13     :   19 (  0.8%)
+  Cluster 14     :   17 (  0.8%)
+  Cluster 15     :   46 (  2.1%)
+  Cluster 16     :   52 (  2.3%)
+  Cluster 17     :   12 (  0.5%)
+  Cluster 18     :    2 (  0.1%)
+  Cluster 19     :    9 (  0.4%)
+  Cluster 20     :   30 (  1.3%)
+  Cluster 21     :   12 (  0.5%)
+  Cluster 22     :   22 (  1.0%)
+  Cluster 23     :   18 (  0.8%)
+  Cluster 24     :   18 (  0.8%)
+  Cluster 25     :   17 (  0.8%)
+  Cluster 26     :   13 (  0.6%)
+  Cluster 27     :   12 (  0.5%)
+  Cluster 28     :    2 (  0.1%)
+  Cluster 29     :   27 (  1.2%)
+  Cluster 30     :   27 (  1.2%)
+  Cluster 31     :    1 (  0.0%)
+  Cluster 32     :    6 (  0.3%)
+  Cluster 33     :    6 (  0.3%)
+  Cluster 34     :    2 (  0.1%)
+  Cluster 35     :   20 (  0.9%)
+  Cluster 36     :    1 (  0.0%)
+  Cluster 37     :   52 (  2.3%)
+  Cluster 40     :    1 (  0.0%)
+  Cluster 41     :  276 ( 12.3%)
+  Cluster 42     :    7 (  0.3%)
+  Cluster 43     :   38 (  1.7%)
+  Cluster 45     :   26 (  1.2%)
+  Cluster 47     :    3 (  0.1%)
+  Cluster 48     :    4 (  0.2%)
+  Cluster 49     :    7 (  0.3%)
+  Cluster 50     :    2 (  0.1%)
+  Cluster 51     :    4 (  0.2%)
+
+================================================================================
+INTERPRETACIÓN DE MÉTRICAS
+================================================================================
+
+Silhouette Score:
+  - Rango: [-1, 1]
+  - > 0.5:  Excelente separación de clusters
+  - 0.3-0.5: Buena separación
+  - 0.2-0.3: Aceptable
+  - < 0.2:  Clusters poco definidos
+
+Calinski-Harabasz Score:
+  - Más alto = mejor
+  - Mide ratio de dispersión entre/dentro de clusters
+
+Davies-Bouldin Score:
+  - Más bajo = mejor
+  - < 1.0:  Excelente
+  - 1.0-1.5: Bueno
+  - 1.5-2.0: Aceptable
+  - > 2.0:  Mejorable
+

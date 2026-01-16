@@ -15,12 +15,12 @@ from .schemas import (
     RefugeeInput, 
     RecommendationResponse, 
     ShelterRecommendation,
-    HealthCheck,
-    ShelterSelectionRequest
+    HealthCheck
 )
-from .database import get_db, get_available_shelters, check_database_connection, Refugee, Shelter, Assignment
+from .database import get_db, get_available_shelters, check_database_connection, get_all_shelters
 from .predictor import ShelterPredictor, get_predictor
 from . import predictor as predictor_module
+from fastapi.responses import JSONResponse
 
 # ===== INICIALIZACIÓN DE FASTAPI =====
 
@@ -232,208 +232,6 @@ async def recommend_shelter(
         )
 
 
-def _build_assignment_response(db: Session, refugee_id: int):
-    """Construye la respuesta de asignación para un refugiado."""
-    try:
-        # Buscar asignación activa del refugiado
-        assignment = db.query(Assignment).filter(
-            Assignment.refugee_id == refugee_id
-        ).first()
-
-        if not assignment:
-            return {
-                "has_assignment": False,
-                "refugee_id": refugee_id,
-                "assignment": None
-            }
-
-        # Obtener información del refugio asignado
-        shelter = db.query(Shelter).filter(
-            Shelter.id == assignment.shelter_id
-        ).first()
-
-        return {
-            "has_assignment": True,
-            "refugee_id": refugee_id,
-            "assignment": {
-                "id": assignment.id,
-                "shelter_id": assignment.shelter_id,
-                "shelter_name": shelter.name if shelter else None,
-                "assigned_at": assignment.assigned_at.isoformat() if assignment.assigned_at else None,
-                "status": assignment.status if hasattr(assignment, 'status') else "assigned"
-            }
-        }
-    except Exception as e:
-        print(f"Error en _build_assignment_response: {e}")
-        import traceback
-        traceback.print_exc()
-        raise
-
-
-@app.get("/api/refugee/{refugee_id}/assignment", tags=["Assignments"])
-async def get_refugee_assignment(
-    refugee_id: int,
-    db: Session = Depends(get_db),
-):
-    """
-    Verifica si un refugiado ya tiene una asignación de refugio (ruta clásica)
-    """
-    try:
-        return _build_assignment_response(db, refugee_id)
-    except Exception as e:
-        print(f"Error al verificar asignación: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error al verificar asignación: {str(e)}"
-        )
-
-
-@app.get("/api/ai/refugee/{refugee_id}/assignment", tags=["Assignments"])
-async def get_refugee_assignment_ai(
-    refugee_id: int,
-    db: Session = Depends(get_db),
-):
-    """
-    Ruta usada por el proxy /api/ai/* para evitar 404 desde Node-RED
-    """
-    try:
-        return _build_assignment_response(db, refugee_id)
-    except Exception as e:
-        print(f"Error al verificar asignación: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error al verificar asignación: {str(e)}"
-        )
-
-
-# Ruta sin el prefijo /api por si el proxy Node-RED reescribe
-@app.get("/ai/refugee/{refugee_id}/assignment", tags=["Assignments"])
-async def get_refugee_assignment_ai_alt(
-    refugee_id: int,
-    db: Session = Depends(get_db),
-):
-    try:
-        return _build_assignment_response(db, refugee_id)
-    except Exception as e:
-        print(f"Error al verificar asignación (alt): {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error al verificar asignación: {str(e)}"
-        )
-
-
-@app.post("/api/select-shelter", tags=["Recommendations"])
-async def select_shelter_from_recommendation(
-    request: ShelterSelectionRequest,
-    db: Session = Depends(get_db),
-):
-    """
-    **Selecciona un refugio de las recomendaciones para asignar a un refugiado**
-    
-    Este endpoint:
-    1. Recibe el ID del refugiado y el ID del refugio seleccionado
-    2. Crea una asignación en la base de datos
-    3. Retorna los detalles de la asignación
-    
-    **Request Body:**
-    ```json
-    {
-      "refugee_id": 1,
-      "shelter_id": 3
-    }
-    ```
-    
-    **Response:** Objeto de asignación con detalles completos
-    """
-    try:
-        refugee_id = request.refugee_id
-        shelter_id = request.shelter_id
-        
-        print(f"\n" + "="*60)
-        print(f"SELECCIÓN DE REFUGIO DESDE RECOMENDACIONES")
-        print(f"="*60)
-        print(f"Refugiado ID: {refugee_id}")
-        print(f"Refugio seleccionado: {shelter_id}")
-        
-        # Obtener refugiado
-        refugee = db.query(Refugee).filter(Refugee.id == refugee_id).first()
-        if not refugee:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Refugiado con ID {refugee_id} no encontrado"
-            )
-        
-        # Obtener refugio
-        shelter = db.query(Shelter).filter(Shelter.id == shelter_id).first()
-        if not shelter:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Refugio con ID {shelter_id} no encontrado"
-            )
-        
-        print(f"Refugiado: {refugee.first_name} {refugee.last_name}")
-        print(f"Refugio: {shelter.name}")
-        
-        # Crear asignación
-        assignment = Assignment(
-            refugee_id=refugee_id,
-            shelter_id=shelter_id,
-            status="pending",
-            assigned_at=datetime.now(),
-            notes=f"Asignación seleccionada por el usuario desde recomendaciones"
-        )
-        db.add(assignment)
-        db.commit()
-        db.refresh(assignment)
-        
-        print(f"✅ Asignación creada con ID: {assignment.id}")
-        
-        # Construir respuesta
-        response = {
-            "refugee": {
-                "id": refugee.id,
-                "first_name": refugee.first_name,
-                "last_name": refugee.last_name,
-                "age": refugee.age,
-                "gender": refugee.gender,
-                "nationality": refugee.nationality,
-            },
-            "assignment": {
-                "id": assignment.id,
-                "shelter_id": shelter.id,
-                "shelter_name": shelter.name,
-                "address": shelter.address,
-                "status": assignment.status,
-                "assigned_at": assignment.assigned_at.isoformat(),
-                "priority_score": refugee.vulnerability_score or 5.0,
-                "confidence_score": 1.0,
-                "explanation": f"El usuario seleccionó {shelter.name} de las opciones recomendadas.",
-                "matching_reasons": [
-                    "✓ Seleccionado por el usuario de las recomendaciones",
-                    f"✓ Refugio: {shelter.name}",
-                    f"✓ Disponibilidad: {shelter.max_capacity - shelter.current_occupancy}/{shelter.max_capacity} espacios libres"
-                ],
-                "match_details": {
-                    "user_selected": True,
-                    "shelter_capacity": shelter.max_capacity,
-                    "current_occupancy": shelter.current_occupancy,
-                    "available_space": shelter.max_capacity - shelter.current_occupancy
-                }
-            }
-        }
-        
-        return response
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"Error al seleccionar refugio: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error interno al procesar la selección: {str(e)}"
-        )
-
-
 @app.get("/api/stats", tags=["Statistics"])
 async def get_statistics(
     db: Session = Depends(get_db),
@@ -442,7 +240,7 @@ async def get_statistics(
     """
     Obtiene estadísticas generales del sistema
     """
-    from database import get_all_shelters
+    # Los imports ya están arriba
     
     shelters = get_all_shelters(db)
     available = get_available_shelters(db)
@@ -474,20 +272,26 @@ async def get_statistics(
 
 @app.exception_handler(404)
 async def not_found_handler(request, exc):
-    return {
-        "error": "Not Found",
-        "detail": str(exc.detail) if hasattr(exc, 'detail') else "Resource not found",
-        "status_code": 404
-    }
+    return JSONResponse(
+        status_code=404,
+        content={
+            "error": "Not Found",
+            "detail": str(exc.detail) if hasattr(exc, 'detail') else "Resource not found",
+            "status_code": 404
+        }
+    )
 
 
 @app.exception_handler(500)
 async def internal_error_handler(request, exc):
-    return {
-        "error": "Internal Server Error",
-        "detail": "An internal error occurred. Please contact support.",
-        "status_code": 500
-    }
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "Internal Server Error",
+            "detail": "An internal error occurred. Please contact support.",
+            "status_code": 500
+        }
+    )
 
 
 # ===== PUNTO DE ENTRADA =====
