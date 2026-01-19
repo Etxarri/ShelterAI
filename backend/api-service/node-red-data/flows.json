@@ -433,13 +433,48 @@
     "type": "postgresql",
     "z": "tab_refugees",
     "name": "Query All Refugees",
-    "query": "SELECT * FROM refugees ORDER BY id",
+    "query": "SELECT * FROM refugees WHERE assigned_shelter_id IS NULL OR status != 'assigned' ORDER BY id",
     "postgreSQLConfig": "301245f94e1239d9",
     "split": false,
     "rowsPerMsg": "",
     "outputs": 1,
     "x": 370,
     "y": 80,
+    "wires": [
+      [
+        "refugee_response"
+      ]
+    ]
+  },
+  {
+    "id": "refugee_get_assigned",
+    "type": "http in",
+    "z": "tab_refugees",
+    "name": "GET /api/refugees/assigned",
+    "url": "/api/refugees/assigned",
+    "method": "get",
+    "upload": false,
+    "swaggerDoc": "",
+    "x": 160,
+    "y": 500,
+    "wires": [
+      [
+        "refugee_get_assigned_query"
+      ]
+    ]
+  },
+  {
+    "id": "refugee_get_assigned_query",
+    "type": "postgresql",
+    "z": "tab_refugees",
+    "name": "Query Assigned Refugees",
+    "query": "SELECT r.*, s.name as shelter_name, s.address as shelter_address FROM refugees r LEFT JOIN shelters s ON r.assigned_shelter_id = s.id WHERE r.assigned_shelter_id IS NOT NULL AND r.status = 'assigned' ORDER BY r.updated_at DESC",
+    "postgreSQLConfig": "301245f94e1239d9",
+    "split": false,
+    "rowsPerMsg": "",
+    "outputs": 1,
+    "x": 410,
+    "y": 500,
     "wires": [
       [
         "refugee_response"

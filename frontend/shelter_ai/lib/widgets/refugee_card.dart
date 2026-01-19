@@ -17,6 +17,12 @@ class RefugeeCard extends StatelessWidget {
     final fullName = '$firstName $lastName'.trim();
     final displayName = fullName.isEmpty ? 'No name' : fullName;
     
+    // Check if refugee is assigned
+    final isAssigned = data['assigned_shelter_id'] != null && 
+                       data['status'] == 'assigned';
+    final shelterName = data['shelter_name']?.toString() ?? '';
+    final shelterAddress = data['shelter_address']?.toString() ?? '';
+    
     // Build needs information
     final age = data['age']?.toString() ?? '-';
     final specialNeeds = data['special_needs'] ?? '';
@@ -34,7 +40,7 @@ class RefugeeCard extends StatelessWidget {
       margin: EdgeInsets.symmetric(vertical: 4),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: Colors.blue,
+          backgroundColor: isAssigned ? Colors.green : Colors.blue,
           child: Text(
             firstName.isNotEmpty ? firstName[0].toUpperCase() : '?',
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -44,14 +50,137 @@ class RefugeeCard extends StatelessWidget {
           displayName,
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: Text('Age: $age • Needs: $displayNeeds'),
+        subtitle: Text(
+          isAssigned 
+            ? '📍 $shelterName${shelterAddress.isNotEmpty ? ' • $shelterAddress' : ''}'
+            : 'Age: $age • Needs: $displayNeeds'
+        ),
         trailing: IconButton(
-          icon: Icon(Icons.analytics_outlined, color: Colors.blue),
-          tooltip: 'View AI Assignment',
-          onPressed: () => _viewAssignment(context),
+          icon: Icon(
+            isAssigned ? Icons.location_on : Icons.analytics_outlined,
+            color: isAssigned ? Colors.green : Colors.blue,
+          ),
+          tooltip: isAssigned ? 'Ver asignación' : 'Asignar refugio',
+          onPressed: () => isAssigned 
+            ? _viewAssignedShelter(context)
+            : _viewAssignment(context),
         ),
       ),
     );
+  }
+
+  Future<void> _viewAssignedShelter(BuildContext context) async {
+    final refugeeId = data['id'];
+    final shelterName = data['shelter_name']?.toString() ?? 'Refugio Asignado';
+    final shelterAddress = data['shelter_address']?.toString() ?? '';
+    
+    if (refugeeId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se puede ver la asignación')),
+      );
+      return;
+    }
+
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Center(
+        child: Card(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Cargando detalles...'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    try {
+      // Get assignment details
+      final assignments = await ApiService.getAssignments(refugeeId.toString());
+      
+      if (!context.mounted) return;
+      Navigator.of(context).pop(); // Close loading
+      
+      if (assignments.isNotEmpty) {
+        final assignmentData = assignments.first;
+        final response = RefugeeAssignmentResponse.fromJson({
+          'refugee': data,
+          'assignment': assignmentData,
+        });
+
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => AssignmentDetailScreen(response: response),
+          ),
+        );
+      } else {
+        // Fallback: show simple dialog with shelter info
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Row(
+              children: [
+                Icon(Icons.home, color: Colors.green),
+                SizedBox(width: 8),
+                Expanded(child: Text('Refugio Asignado')),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  shelterName,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (shelterAddress.isNotEmpty) ...[
+                  SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.location_on, size: 16, color: Colors.grey),
+                      SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          shelterAddress,
+                          style: TextStyle(color: Colors.grey.shade700),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('Cerrar'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (!context.mounted) return;
+      Navigator.of(context).pop(); // Close loading
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al cargar detalles: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Future<void> _viewAssignment(BuildContext context) async {

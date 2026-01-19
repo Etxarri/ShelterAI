@@ -9,7 +9,7 @@ class ApiService {
   // Create a client that we can replace in tests
   static http.Client client = http.Client();
 
-  // GET /api/refugees - Get all refugees
+  // GET /api/refugees - Get all refugees (unassigned)
   static Future<List<Map<String, dynamic>>> getRefugees() async {
     try {
       final response = await client.get(Uri.parse('$baseUrl/refugees'));
@@ -23,6 +23,24 @@ class ApiService {
     } catch (e) {
       // ignore: avoid_print
       print('Error fetching refugees: $e');
+      rethrow;
+    }
+  }
+
+  // GET /api/refugees/assigned - Get all assigned refugees
+  static Future<List<Map<String, dynamic>>> getAssignedRefugees() async {
+    try {
+      final response = await client.get(Uri.parse('$baseUrl/refugees/assigned'));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.cast<Map<String, dynamic>>();
+      } else {
+        throw Exception('Failed to load assigned refugees: ${response.statusCode}');
+      }
+    } catch (e) {
+      // ignore: avoid_print
+      print('Error fetching assigned refugees: $e');
       rethrow;
     }
   }
