@@ -13,9 +13,8 @@ This is a ToDo where i will be writting down what does our project's ai service 
     - [ ] Explain each model
         - [ ] K-Means
             - [X] Model-specific interpretation
-            - [ ] Decide if elbow interpretation is correct
             - [X] Internal evaluation metrics
-            - [ ] Interpretability
+            - [X] Interpretability
         - [ ] Hierarchical
             - [ ] Model-specific interpretation
             - [ ] Internal evaluation metrics
@@ -43,3 +42,23 @@ This is a ToDo where i will be writting down what does our project's ai service 
 - [ ] Documentation
     - [ ] Define and sort most important parameters that will be used for interpretation purposes. 
 
+---
+DBSCAN
+from sklearn.cluster import DBSCAN
+candidates = [
+    {"name": "DBSCAN eps=0.6 ms=10", "estimator": DBSCAN(eps=0.6, min_samples=10)},
+    {"name": "DBSCAN eps=0.7 ms=10", "estimator": DBSCAN(eps=0.7, min_samples=10)},
+]
+---
+Hierarchical (Agglomerative)
+from sklearn.cluster import AgglomerativeClustering
+candidates = [
+    {"name": "Agglo ward k=10", "estimator": AgglomerativeClustering(n_clusters=10, linkage="ward")},
+    {"name": "Agglo ward k=15", "estimator": AgglomerativeClustering(n_clusters=15, linkage="ward")},
+]
+---
+GMM
+from sklearn.mixture import GaussianMixture
+candidates = [
+    {"name": "GMM comp=10", "estimator": GaussianMixture(n_components=10, covariance_type="full", random_state=42)},
+]
