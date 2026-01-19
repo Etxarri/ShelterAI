@@ -248,10 +248,10 @@ class ApiService {
     ) async {
       try {
         final response = await client.post(
-          Uri.parse('$baseUrl/ai/select-shelter'),
+          Uri.parse('$baseUrl/ai/assign-shelter'),
           headers: {'Content-Type': 'application/json'},
           body: json.encode({
-            'refugee_id': refugeeId,
+            'refugee_id': int.tryParse(refugeeId),
             'shelter_id': shelterId,
           }),
         );

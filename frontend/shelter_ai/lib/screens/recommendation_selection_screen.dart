@@ -78,7 +78,7 @@ class _RecommendationSelectionScreenState
     // Verificar si es un refugiado o trabajador
     final auth = AuthScope.of(context);
     final isRefugee = auth.role == UserRole.refugee;
-    final canSelect = isRefugee; // Solo los refugiados pueden seleccionar
+    final canSelect = true; // ← CAMBIO: Ahora TANTO refugiados como trabajadores pueden seleccionar
 
     return WillPopScope(
       onWillPop: () async => !_isLoading,
@@ -142,17 +142,17 @@ class _RecommendationSelectionScreenState
                 child: Row(
                   children: [
                     Icon(
-                      canSelect ? Icons.lightbulb_outline : Icons.info_outline,
-                      color: canSelect ? Colors.blue.shade800 : Colors.orange.shade800,
+                      Icons.lightbulb_outline,
+                      color: Colors.blue.shade800,
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        canSelect
+                        isRefugee
                             ? 'Selecciona el refugio que prefieres. Te asignaremos al que elijas.'
-                            : 'Estas son las recomendaciones generadas por IA. El refugiado recibirá estas opciones y podrá elegir su preferencia.',
+                            : 'Selecciona uno de estos refugios para asignar al refugiado.',
                         style: TextStyle(
-                          color: canSelect ? Colors.blue.shade800 : Colors.orange.shade800,
+                          color: Colors.blue.shade800,
                           fontSize: 14,
                         ),
                       ),
@@ -480,8 +480,8 @@ class _RecommendationSelectionScreenState
                                         ],
                                       ),
                               ),
-                            // Mostrar indicador de "solo lectura" para trabajadores
-                            if (!canSelect && index == 0)
+                            // Mostrar indicador de "mejor opción" para el primer refugio
+                            if (index == 0)
                               Center(
                                 child: Container(
                                   margin: const EdgeInsets.only(top: 8),

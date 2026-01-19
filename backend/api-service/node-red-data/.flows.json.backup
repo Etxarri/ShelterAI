@@ -1368,74 +1368,6 @@
         "wires": []
     },
     {
-        "id": "ai_assign_shelter_endpoint",
-        "type": "http in",
-        "z": "tab_ai_integration",
-        "name": "POST /api/ai/assign-shelter",
-        "url": "/api/ai/assign-shelter",
-        "method": "post",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 170,
-        "y": 100,
-        "wires": [
-            [
-                "ai_prepare_request"
-            ]
-        ]
-    },
-    {
-        "id": "ai_prepare_request",
-        "type": "function",
-        "z": "tab_ai_integration",
-        "name": "Preparar datos para IA",
-        "func": "// Guardar datos originales del refugiado\nconst refugeeData = msg.payload;\n\n// Calcular family_size, has_children, children_count\nlet family_size = 1;\nlet has_children = false;\nlet children_count = 0;\n\nif (refugeeData.family_id) {\n    // TODO: Obtener datos reales de familia si es necesario\n    // Por ahora asumimos familia de 1 (solo el refugiado)\n    family_size = 1;\n}\n\n// Preparar payload para el servicio de IA\nmsg.payload = {\n    first_name: refugeeData.first_name,\n    last_name: refugeeData.last_name,\n    age: refugeeData.age,\n    gender: refugeeData.gender,\n    nationality: refugeeData.nationality,\n    languages_spoken: refugeeData.languages_spoken,\n    medical_conditions: refugeeData.medical_conditions,\n    has_disability: refugeeData.has_disability || false,\n    vulnerability_score: refugeeData.vulnerability_score || 0.0,\n    special_needs: refugeeData.special_needs,\n    family_id: refugeeData.family_id,\n    family_size: family_size,\n    has_children: has_children,\n    children_count: children_count\n};\n\n// Guardar en contexto para usar después\nmsg.refugeeData = refugeeData;\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 430,
-        "y": 100,
-        "wires": [
-            [
-                "ai_call_service"
-            ]
-        ]
-    },
-    {
-        "id": "ai_call_service",
-        "type": "http request",
-        "z": "tab_ai_integration",
-        "name": "Llamar servicio IA",
-        "method": "POST",
-        "ret": "obj",
-        "paytoqs": "ignore",
-        "url": "http://shelterai-ai-service:8000/api/recommend",
-        "tls": "",
-        "persist": false,
-        "proxy": "",
-        "insecureHTTPParser": false,
-        "authType": "",
-        "senderr": false,
-        "headers": [
-            {
-                "keyType": "Content-Type",
-                "keyValue": "",
-                "valueType": "application/json",
-                "valueValue": ""
-            }
-        ],
-        "x": 670,
-        "y": 100,
-        "wires": [
-            [
-                "ai_process_response"
-            ]
-        ]
-    },
-    {
         "id": "ai_process_response",
         "type": "function",
         "z": "tab_ai_integration",
@@ -1859,11 +1791,121 @@
         "wires": []
     },
     {
+        "id": "assign_shelter_http_in",
+        "type": "http in",
+        "z": "tab_ai_integration",
+        "name": "POST /api/ai/assign-shelter",
+        "url": "/api/ai/assign-shelter",
+        "method": "post",
+        "upload": false,
+        "x": 150,
+        "y": 800,
+        "wires": [
+            [
+                "assign_shelter_prepare"
+            ]
+        ]
+    },
+    {
+        "id": "assign_shelter_function",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Prepare Update Query",
+        "func": "// Desestructuramos los datos de entrada\nconst { refugee_id, shelter_id, recommendation_log_id } = msg.payload;\n\n// 1. Validación\nif (!refugee_id || !shelter_id) {\n    msg.statusCode = 400;\n    msg.payload = { error: 'Error: refugee_id y shelter_id son requeridos' };\n    // Salimos por el Output 2 (Error)\n    return [null, msg];\n}\n\n// 2. Guardar datos de contexto en el mensaje (Más seguro que flow.set)\n// Creamos una propiedad personalizada para que estos datos viajen al siguiente nodo\n// sin perderse tras la consulta SQL.\nmsg.assignmentContext = {\n    refugee_id: refugee_id,\n    shelter_id: shelter_id,\n    recommendation_log_id: recommendation_log_id\n};\n\n// 3. Query SQL\n// Usamos msg.query para ser consistentes\nmsg.query = `\n    UPDATE refugee \n    SET assigned_shelter_id = $1, \n        status = 'assigned',\n        updated_at = NOW()\n    WHERE id = $2\n    RETURNING id, first_name, last_name, assigned_shelter_id\n`;\n\n// 4. Parámetros\n// IMPORTANTE: Los parámetros van en msg.params, no en msg.payload\nmsg.params = [shelter_id, refugee_id];\n\n// Limpiamos payload para el nodo SQL\nmsg.payload = null;\n\nconsole.log(`[ASSIGN] Assigning shelter ${shelter_id} to refugee ${refugee_id}`);\n\n// Salimos por el Output 1 (Éxito)\nreturn [msg, null];",
+        "outputs": 2,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 450,
+        "y": 500,
+        "wires": [
+            [],
+            [
+                "assign_shelter_http_response"
+            ]
+        ]
+    },
+    {
+        "id": "assign_shelter_http_response",
+        "type": "http response",
+        "z": "tab_ai_integration",
+        "name": "Success Response",
+        "statusCode": "200",
+        "x": 1150,
+        "y": 780,
+        "wires": []
+    },
+    {
+        "id": "assign_shelter_prepare",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Prepare Update",
+        "func": "const { refugee_id, shelter_id } = msg.payload;\n\nif (!refugee_id || !shelter_id) {\n    msg.statusCode = 400;\n    msg.payload = { error: 'refugee_id y shelter_id son requeridos' };\n    return [null, msg];\n}\n\n// Preparar query para actualizar refugiado\nmsg.query = `UPDATE refugee \n             SET assigned_shelter_id = $1, \n                 status = 'assigned',\n                 updated_at = NOW()\n             WHERE id = $2\n             RETURNING id, assigned_shelter_id, status`;\n\nmsg.params = [shelter_id, refugee_id];\n\nconsole.log('[ASSIGN] Updating refugee', refugee_id, 'with shelter', shelter_id);\n\nreturn [msg, null];",
+        "outputs": 2,
+        "x": 400,
+        "y": 800,
+        "wires": [
+            [
+                "assign_shelter_query"
+            ],
+            [
+                "assign_shelter_error"
+            ]
+        ]
+    },
+    {
+        "id": "assign_shelter_query",
+        "type": "postgresql",
+        "z": "tab_ai_integration",
+        "name": "Update Refugee",
+        "query": "",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "outputs": 1,
+        "x": 650,
+        "y": 800,
+        "wires": [
+            [
+                "assign_shelter_response"
+            ]
+        ]
+    },
+    {
+        "id": "assign_shelter_response",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Format Response",
+        "func": "if (!msg.payload || msg.payload.length === 0) {\n    msg.statusCode = 404;\n    msg.payload = { error: 'Refugiado no encontrado' };\n    return [null, msg];\n}\n\nconst result = msg.payload[0];\n\nmsg.statusCode = 200;\nmsg.payload = {\n    success: true,\n    refugee_id: result.id,\n    assigned_shelter_id: result.assigned_shelter_id,\n    status: result.status,\n    message: 'Refugiado asignado exitosamente'\n};\n\nconsole.log('[ASSIGN] Refugiado asignado:', result.id, 'Shelter:', result.assigned_shelter_id);\n\nreturn [msg, null];",
+        "outputs": 2,
+        "x": 900,
+        "y": 800,
+        "wires": [
+            [
+                "assign_shelter_http_response"
+            ],
+            [
+                "assign_shelter_error"
+            ]
+        ]
+    },
+    {
+        "id": "assign_shelter_error",
+        "type": "http response",
+        "z": "tab_ai_integration",
+        "name": "Error Response",
+        "statusCode": "400",
+        "x": 1150,
+        "y": 820,
+        "wires": []
+    },
+    {
         "id": "login_validation",
         "type": "function",
         "z": "tab_login",
         "name": "Validar y Preparar",
-        "func": "// Validar entrada\nif (!msg.payload || typeof msg.payload !== 'object') {\n  msg.statusCode = 400;\n  msg.payload = {\n    success: false,\n    message: 'Datos inválidos'\n  };\n  return msg;\n}\n\nconst identifier = msg.payload.identifier || msg.payload.email || msg.payload.username;\nconst password = msg.payload.password;\n\n// Validación básica\nif (!identifier || !password || typeof password !== 'string' || password.length === 0) {\n  msg.statusCode = 400;\n  msg.payload = {\n    success: false,\n    message: 'Email/usuario y contraseña son requeridos'\n  };\n  return msg;\n}\n\n// Guardamos password en msg para verificarlo después\nmsg.passwordToVerify = password;\n\n// Buscar por email O username\nmsg.query = 'SELECT id, email, username, password, full_name, role FROM users WHERE email = $1 OR username = $1';\nmsg.params = [identifier];\n\nmsg.payload = null;\n\nreturn msg;\n",
+        "func": "// Validar entrada básica\nif (!msg.payload || typeof msg.payload !== 'object') {\n  msg.statusCode = 400;\n  msg.payload = {\n    success: false,\n    message: 'Datos inválidos'\n  };\n  return msg;\n}\n\n// El identificador puede ser email, username o phone_number\nconst identifier = msg.payload.identifier || msg.payload.email || msg.payload.username || msg.payload.phone_number;\nconst password = msg.payload.password;\n\n// Validación de campos requeridos\nif (!identifier || !password || typeof password !== 'string' || password.length === 0) {\n  msg.statusCode = 400;\n  msg.payload = {\n    success: false,\n    message: 'Email/usuario/teléfono y contraseña son requeridos'\n  };\n  return msg;\n}\n\n// Guardamos password en msg para verificarlo después\nmsg.passwordToVerify = password;\n\n// Buscar por email, username O phone_number\nmsg.query = 'SELECT id, email, username, password, full_name, role FROM users WHERE email = $1 OR username = $1 OR phone_number = $1';\nmsg.params = [identifier];\n\nmsg.payload = null;\n\nreturn msg;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
