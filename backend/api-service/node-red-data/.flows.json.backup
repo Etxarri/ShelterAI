@@ -1868,8 +1868,9 @@
         "z": "tab_ai_integration",
         "name": "Success Response",
         "statusCode": "200",
-        "x": 1150,
-        "y": 780,
+        "headers": {},
+        "x": 1650,
+        "y": 740,
         "wires": []
     },
     {
@@ -1918,16 +1919,18 @@
         "type": "function",
         "z": "tab_ai_integration",
         "name": "Format Response",
-        "func": "if (!msg.payload || msg.payload.length === 0) {\n    msg.statusCode = 404;\n    msg.payload = { error: 'Refugiado no encontrado' };\n    return [null, msg];\n}\n\nconst result = msg.payload[0];\n\nmsg.statusCode = 200;\nmsg.payload = {\n    success: true,\n    refugee_id: result.id,\n    assigned_shelter_id: result.assigned_shelter_id,\n    status: result.status,\n    message: 'Refugiado asignado exitosamente'\n};\n\nconsole.log('[ASSIGN] Refugiado asignado:', result.id, 'Shelter:', result.assigned_shelter_id);\n\nreturn [msg, null];",
-        "outputs": 2,
+        "func": "// 1. Validar que la asignación del refugiado funcionó (viene del nodo anterior)\nif (!msg.payload || msg.payload.length === 0) {\n    msg.statusCode = 404;\n    msg.payload = { error: 'Error: No se encontró el refugiado para actualizar.' };\n    return [null, msg]; // Salida de error\n}\n\nconst result = msg.payload[0];\nconst shelterId = result.assigned_shelter_id;\n\n// 2. GUARDAR DATOS EN LA \"MALETA\"\n// Como vamos a ejecutar otra query ahora, el msg.payload se va a borrar.\n// Guardamos los datos del refugiado aquí para usarlos al final del todo.\nmsg.datosRefugiado = {\n    refugee_id: result.id,\n    assigned_shelter_id: shelterId,\n    status: result.status\n};\n\n// 3. Preparar la Query para RESTAR AFORO (Update Shelter)\n// Restamos 1 al espacio disponible\nmsg.query = `\n    UPDATE shelters \n    SET available_space = available_space - 1,\n        updated_at = NOW()\n    WHERE id = $1\n`;\n\nmsg.params = [shelterId];\n\n// Limpiamos payload para el siguiente nodo SQL\nmsg.payload = null;\n\nconsole.log(`[LOGIC] Preparando resta de aforo para Shelter ID: ${shelterId}`);\n\n// Pasamos al siguiente nodo (Postgres)\nreturn [msg, null];",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
         "x": 900,
         "y": 800,
         "wires": [
             [
-                "assign_shelter_http_response"
-            ],
-            [
-                "assign_shelter_error"
+                "95cffb18972600be"
             ]
         ]
     },
@@ -1937,9 +1940,47 @@
         "z": "tab_ai_integration",
         "name": "Error Response",
         "statusCode": "",
-        "x": 1020,
-        "y": 880,
+        "x": 660,
+        "y": 900,
         "wires": []
+    },
+    {
+        "id": "95cffb18972600be",
+        "type": "postgresql",
+        "z": "tab_ai_integration",
+        "name": "",
+        "query": "",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 1130,
+        "y": 800,
+        "wires": [
+            [
+                "aca51ab62bc08951"
+            ]
+        ]
+    },
+    {
+        "id": "aca51ab62bc08951",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Format Final Response",
+        "func": "// Recuperamos los datos que guardamos en la \"maleta\" en el Paso A\nconst datos = msg.datosRefugiado;\n\n// Preparamos la respuesta final bonita para Flutter\nmsg.statusCode = 200;\nmsg.payload = {\n    success: true,\n    refugee_id: datos.refugee_id,\n    assigned_shelter_id: datos.assigned_shelter_id,\n    status: datos.status,\n    message: 'Proceso completo: Refugiado asignado y aforo del refugio actualizado.'\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1350,
+        "y": 800,
+        "wires": [
+            [
+                "assign_shelter_http_response"
+            ]
+        ]
     },
     {
         "id": "login_validation",
@@ -2033,7 +2074,7 @@
         "type": "function",
         "z": "tab_login",
         "name": "Validar y Preparar",
-        "func": "// 1. Extraemos los datos del Frontend (Flutter envía: name, email, password)\nvar payload = msg.payload || {};\n\nvar fullName = payload.name; // Flutter envía 'name'\nvar email = payload.email;\nvar password = payload.password;\n\n// 2. Validación de seguridad\nif (!email || !password || !fullName) {\n    msg.statusCode = 400;\n    msg.payload = { error: \"Faltan datos obligatorios: Nombre, Email y Contraseña\" };\n    // Cortamos flujo (usa node.error si tienes Catch, o devuelve array si usas switch)\n    return [null, msg];\n}\n\n// 3. Generación Automática de Username (CRÍTICO)\n// Como Flutter no envía 'username' para trabajadores, pero la BD lo exige (NOT NULL),\n// lo creamos cogiendo la parte de delante del email.\nvar autoUsername = email.split('@')[0]; \n\n// 4. Query SQL (Adaptada a tus columnas reales)\n// - Usamos 'password_hash' que es el nombre real de tu columna.\n// - Usamos 'worker' como rol fijo.\n// - Rellenamos 'username' con el generado.\nmsg.query = `\n    INSERT INTO users (\n        full_name, \n        email, \n        password_hash, \n        username, \n        role, \n        phone_number\n    ) \n    VALUES ($1, $2, $3, $4, 'worker', NULL) \n    RETURNING id, full_name, username, email, role\n`;\n\n// 5. Parámetros (ordenados)\nmsg.params = [\n    fullName,      // $1\n    email,         // $2\n    password,      // $3 (Debería ser hasheada previamente, pero aquí va lo que llega)\n    autoUsername   // $4\n];\n\n// 6. Limpieza\nmsg.payload = {};\n\nreturn msg;",
+        "func": "// 1. Extraemos los datos del Frontend\n// Flutter envía: { name: \"Juan Pérez\", email: \"...\", password: \"...\" }\nvar payload = msg.payload || {};\n\nvar rawName = payload.name || \"\";\nvar email = payload.email;\nvar password = payload.password;\n\n// 2. Validación de seguridad básica\nif (!email || !password || !rawName) {\n    msg.statusCode = 400;\n    msg.payload = { error: \"Faltan datos obligatorios: Nombre, Email y Contraseña\" };\n    // Cortamos el flujo para no intentar insertar nada\n    return [null, msg];\n}\n\n// 3. TRANSFORMACIÓN DE DATOS (Adaptación a tu Base de Datos)\n\n// A) Generar Username Automático\n// La tabla pide 'username' UNIQUE, pero el form de trabajador no lo pide.\n// Lo creamos usando la parte anterior al @ del email.\n// Ej: juan@ong.org -> username: juan\nvar autoUsername = email.split('@')[0];\n\n// B) Separar Nombre y Apellido\n// La tabla tiene 'first_name' y 'last_name', pero Flutter envía 'name' junto.\nvar parts = rawName.trim().split(\" \");\nvar firstName = parts[0]; // La primera palabra\nvar lastName = parts.slice(1).join(\" \") || \"\"; // El resto, o vacío si no tiene apellido\n\n// 4. Query SQL\n// Insertamos en: first_name, last_name, username, email, password, role.\n// role lo fijamos a 'worker'.\nmsg.query = `\n    INSERT INTO users (\n        first_name, \n        last_name, \n        username, \n        email, \n        password, \n        role,\n        phone_number\n    ) \n    VALUES ($1, $2, $3, $4, $5, 'worker', NULL) \n    RETURNING id, username, email, role, first_name, last_name\n`;\n\n// 5. Parámetros (En el orden exacto de los $1, $2...)\nmsg.params = [\n    firstName,     // $1\n    lastName,      // $2\n    autoUsername,  // $3 (Generado)\n    email,         // $4\n    password,      // $5\n];\n\n// 6. Limpieza\nmsg.payload = {};\n\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
