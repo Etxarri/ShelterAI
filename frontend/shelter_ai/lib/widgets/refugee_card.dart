@@ -4,6 +4,7 @@ import 'package:shelter_ai/models/refugee_assignment_response.dart';
 import 'package:shelter_ai/models/recommendation_response.dart';
 import 'package:shelter_ai/screens/assignment_detail_screen.dart';
 import 'package:shelter_ai/screens/recommendation_selection_screen.dart';
+import 'package:shelter_ai/widgets/custom_snackbar.dart';
 
 class RefugeeCard extends StatelessWidget {
   final Map<String, dynamic> data;
@@ -75,8 +76,9 @@ class RefugeeCard extends StatelessWidget {
     final shelterAddress = data['shelter_address']?.toString() ?? '';
     
     if (refugeeId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se puede ver la asignación')),
+      CustomSnackBar.showError(
+        context,
+        'No se puede ver la asignación',
       );
       return;
     }
@@ -174,11 +176,10 @@ class RefugeeCard extends StatelessWidget {
       if (!context.mounted) return;
       Navigator.of(context).pop(); // Close loading
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al cargar detalles: $e'),
-          backgroundColor: Colors.red,
-        ),
+      CustomSnackBar.showError(
+        context,
+        'Error al cargar detalles: $e',
+        duration: const Duration(seconds: 7),
       );
     }
   }
@@ -187,8 +188,9 @@ class RefugeeCard extends StatelessWidget {
     final refugeeId = data['id'];
     
     if (refugeeId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Cannot get assignment')),
+      CustomSnackBar.showError(
+        context,
+        'No se puede obtener la asignación',
       );
       return;
     }
@@ -272,11 +274,10 @@ class RefugeeCard extends StatelessWidget {
       if (!context.mounted) return;
       Navigator.of(context).pop(); // Close loading
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error getting assignment: $e'),
-          backgroundColor: Colors.red,
-        ),
+      CustomSnackBar.showError(
+        context,
+        'Error al obtener la asignación: $e',
+        duration: const Duration(seconds: 7),
       );
     }
   }

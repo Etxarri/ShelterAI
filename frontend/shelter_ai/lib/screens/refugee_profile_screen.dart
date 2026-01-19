@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/custom_snackbar.dart';
 import 'package:shelter_ai/providers/auth_state.dart';
 import 'package:shelter_ai/services/api_service.dart';
 import 'package:shelter_ai/models/recommendation_response.dart';
@@ -23,8 +24,9 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
     final refugeeId = auth.userId;
 
     if (refugeeId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se encontró el ID del refugiado en la sesión.')),
+      CustomSnackBar.showError(
+        context,
+        'No se encontró el ID del refugiado en la sesión.',
       );
       return;
     }
@@ -36,8 +38,9 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
 
       if (!hasAssignment) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Aún no has sido asignado a ningún refugio.')),
+        CustomSnackBar.showInfo(
+          context,
+          'Aún no has sido asignado a ningún refugio.',
         );
         return;
       }
@@ -60,14 +63,17 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
 
       // Si seleccionó, puedes mostrar confirmación
       if (result == true && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Has confirmado tu refugio.')),
+        CustomSnackBar.showSuccess(
+          context,
+          'Has confirmado tu refugio exitosamente',
         );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al verificar asignación: $e')),
+      CustomSnackBar.showError(
+        context,
+        'Error al verificar asignación: $e',
+        duration: const Duration(seconds: 7),
       );
     }
   }

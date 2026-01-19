@@ -7,7 +7,7 @@ class LoginResponse {
   final bool success;
   final int userId;
   final String name;
-  final String role; // 'worker' o 'refugee'
+  final String role;
   final String token;
 
   LoginResponse({
@@ -19,11 +19,25 @@ class LoginResponse {
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
+    // LOG DE DEPURACIÓN: Ver qué llega realmente
+    print("Parsing JSON en Flutter: $json"); 
+
+    // Construir nombre completo desde first_name y last_name
+    String fullName = '';
+    if (json['first_name'] != null || json['last_name'] != null) {
+      fullName = '${json['first_name'] ?? ''} ${json['last_name'] ?? ''}'.trim();
+    }
+    
     return LoginResponse(
-      success: json['success'] == true,
-      userId: json['user_id'] as int? ?? 0,
-      name: json['name']?.toString() ?? '',
-      role: json['role']?.toString() ?? '',
+      // A veces Node-RED devuelve "success": "true" (string) o true (bool), esto cubre ambos
+      success: json['success'] == true || json['success'] == 'true',
+      
+      userId: json['user_id'] as int? ?? json['id'] as int? ?? 0,
+      
+      // Usar first_name + last_name, o fallback a username
+      name: fullName.isNotEmpty ? fullName : (json['username']?.toString() ?? 'Usuario'),
+      
+      role: json['role']?.toString() ?? 'refugee',
       token: json['token']?.toString() ?? '',
     );
   }

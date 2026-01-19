@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/custom_snackbar.dart';
 import 'package:shelter_ai/providers/auth_state.dart';
 import 'package:shelter_ai/services/auth_service.dart';
 
@@ -26,8 +27,9 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _passwordCtrl.text.trim();
 
     if (identifier.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email, teléfono, usuario y contraseña requeridos')),
+      CustomSnackBar.showWarning(
+        context,
+        'Email, teléfono, usuario y contraseña requeridos',
       );
       return;
     }

@@ -5,6 +5,7 @@ import 'package:shelter_ai/models/refugee_assignment_response.dart';
 import 'package:shelter_ai/screens/assignment_detail_screen.dart';
 import 'package:shelter_ai/providers/auth_state.dart';
 import 'package:shelter_ai/screens/qr_scan_screen.dart';
+import 'package:shelter_ai/widgets/custom_snackbar.dart';
 import 'dart:convert';
 
 class AddRefugeeScreen extends StatefulWidget {
@@ -51,8 +52,9 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
   Future<void> _scanQr() async {
     final auth = AuthScope.of(context);
     if (auth.role != UserRole.worker) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Only workers can scan QR')),
+      CustomSnackBar.showWarning(
+        context,
+        'Solo los trabajadores pueden escanear códigos QR',
       );
       return;
     }
@@ -83,15 +85,17 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
       setState(() {});
       SchedulerBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Data loaded from QR')),
+        CustomSnackBar.showSuccess(
+          context,
+          'Datos cargados desde código QR exitosamente',
         );
       });
     } catch (e) {
       SchedulerBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Invalid QR: $e')),
+        CustomSnackBar.showError(
+          context,
+          'Código QR inválido: $e',
         );
       });
     }
@@ -137,8 +141,10 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      CustomSnackBar.showError(
+        context,
+        'Error al guardar: $e',
+        duration: const Duration(seconds: 7),
       );
     }
   }

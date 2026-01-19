@@ -3,7 +3,8 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(255) UNIQUE,
   username VARCHAR(255) UNIQUE,
   password VARCHAR(255),
-  full_name VARCHAR(255),
+  first_name VARCHAR(255),
+  last_name VARCHAR(255),
   role VARCHAR(50),
   phone_number VARCHAR(20)
 );

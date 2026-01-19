@@ -433,13 +433,48 @@
         "type": "postgresql",
         "z": "tab_refugees",
         "name": "Query All Refugees",
-        "query": "SELECT * FROM refugees ORDER BY id",
+        "query": "SELECT * FROM refugees WHERE assigned_shelter_id IS NULL OR status != 'assigned' ORDER BY id",
         "postgreSQLConfig": "301245f94e1239d9",
         "split": false,
         "rowsPerMsg": "",
         "outputs": 1,
         "x": 370,
         "y": 80,
+        "wires": [
+            [
+                "refugee_response"
+            ]
+        ]
+    },
+    {
+        "id": "refugee_get_assigned",
+        "type": "http in",
+        "z": "tab_refugees",
+        "name": "GET /api/refugees/assigned",
+        "url": "/api/refugees/assigned",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 160,
+        "y": 500,
+        "wires": [
+            [
+                "refugee_get_assigned_query"
+            ]
+        ]
+    },
+    {
+        "id": "refugee_get_assigned_query",
+        "type": "postgresql",
+        "z": "tab_refugees",
+        "name": "Query Assigned Refugees",
+        "query": "SELECT r.*, s.name as shelter_name, s.address as shelter_address FROM refugees r LEFT JOIN shelters s ON r.assigned_shelter_id = s.id WHERE r.assigned_shelter_id IS NOT NULL AND r.status = 'assigned' ORDER BY r.updated_at DESC",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": "",
+        "outputs": 1,
+        "x": 410,
+        "y": 500,
         "wires": [
             [
                 "refugee_response"
@@ -1727,7 +1762,7 @@
         "type": "function",
         "z": "tab_ai_integration",
         "name": "Formatear respuesta",
-        "func": "// Obtener los datos del refugiado original\nconst originalRefugee = flow.get('originalRefugee');\nconst aiResponse = msg.payload;\n\nif (!aiResponse || !aiResponse.recommendations || aiResponse.recommendations.length === 0) {\n    msg.statusCode = 404;\n    msg.payload = { error: 'No se encontraron recomendaciones de refugios' };\n    return msg;\n}\n\n// Tomar la mejor recomendación\nconst topRecommendation = aiResponse.recommendations[0];\n\n// Formatear respuesta en el formato que espera Flutter (RefugeeAssignmentResponse)\nmsg.payload = {\n    refugee: {\n        id: originalRefugee.id,\n        first_name: originalRefugee.first_name,\n        last_name: originalRefugee.last_name,\n        age: originalRefugee.age,\n        gender: originalRefugee.gender,\n        nationality: originalRefugee.nationality,\n        languages_spoken: originalRefugee.languages_spoken,\n        medical_conditions: originalRefugee.medical_conditions,\n        has_disability: originalRefugee.has_disability,\n        vulnerability_score: originalRefugee.vulnerability_score,\n        special_needs: originalRefugee.special_needs\n    },\n    assignment: {\n        shelter_id: topRecommendation.shelter_id,\n        shelter_name: topRecommendation.shelter_name,\n        confidence_score: topRecommendation.compatibility_score / 100,\n        compatibility_score: topRecommendation.compatibility_score,\n        available_space: topRecommendation.available_space,\n        explanation: topRecommendation.explanation,\n        matching_reasons: topRecommendation.matching_reasons,\n        vulnerability_level: aiResponse.vulnerability_level,\n        cluster_id: aiResponse.cluster_id,\n        alternative_shelters: aiResponse.recommendations.slice(1).map(rec => ({\n            shelter_id: rec.shelter_id,\n            shelter_name: rec.shelter_name,\n            compatibility_score: rec.compatibility_score,\n            available_space: rec.available_space\n        }))\n    }\n};\n\nmsg.statusCode = 200;\n\nreturn msg;",
+        "func": "// Obtener los datos del refugiado original\nconst originalRefugee = flow.get('originalRefugee');\nconst aiResponse = msg.payload;\n\nif (!aiResponse || !aiResponse.recommendations || aiResponse.recommendations.length === 0) {\n    msg.statusCode = 404;\n    msg.payload = { error: 'No se encontraron recomendaciones de refugios' };\n    return msg;\n}\n\n// Formatear respuesta en el formato que espera Flutter (RecommendationResponse)\nconst recommendations = aiResponse.recommendations.map(rec => ({\n    shelter_id: rec.shelter_id,\n    shelter_name: rec.shelter_name,\n    address: rec.address || '',\n    compatibility_score: rec.compatibility_score || 0,\n    priority_score: rec.total_score || 0,\n    max_capacity: rec.max_capacity || 0,\n    current_occupancy: rec.current_occupancy || 0,\n    available_space: rec.available_space || 0,\n    occupancy_rate: rec.occupancy_rate || 0,\n    has_medical_facilities: rec.has_medical_facilities === true,\n    has_childcare: rec.has_childcare === true,\n    has_disability_access: rec.has_disability_access === true,\n    languages_spoken: rec.languages_spoken || '',\n    shelter_type: rec.shelter_type || '',\n    services_offered: rec.services_offered || '',\n    explanation: rec.explanation || ''\n}));\n\nmsg.payload = {\n    refugee_name: (originalRefugee.first_name || '') + ' ' + (originalRefugee.last_name || ''),\n    refugee_age: originalRefugee.age || 0,\n    refugee_nationality: originalRefugee.nationality || '',\n    refugee_family_size: 1,\n    refugee_gender: originalRefugee.gender || '',\n    recommendations: recommendations,\n    cluster_id: aiResponse.cluster_id || 0,\n    cluster_label: aiResponse.cluster_label || 'No etiqueta',\n    vulnerability_level: aiResponse.vulnerability_level || 'unknown',\n    total_shelters_analyzed: aiResponse.total_shelters_analyzed || 0,\n    ml_model_version: aiResponse.model_version || '1.0'\n};\n\nmsg.statusCode = 200;\n\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -1842,10 +1877,15 @@
         "type": "function",
         "z": "tab_ai_integration",
         "name": "Prepare Update",
-        "func": "const { refugee_id, shelter_id } = msg.payload;\n\nif (!refugee_id || !shelter_id) {\n    msg.statusCode = 400;\n    msg.payload = { error: 'refugee_id y shelter_id son requeridos' };\n    return [null, msg];\n}\n\n// Preparar query para actualizar refugiado\nmsg.query = `UPDATE refugee \n             SET assigned_shelter_id = $1, \n                 status = 'assigned',\n                 updated_at = NOW()\n             WHERE id = $2\n             RETURNING id, assigned_shelter_id, status`;\n\nmsg.params = [shelter_id, refugee_id];\n\nconsole.log('[ASSIGN] Updating refugee', refugee_id, 'with shelter', shelter_id);\n\nreturn [msg, null];",
+        "func": "let body = msg.payload;\nif (typeof body === 'string') {\n  try { body = JSON.parse(body); } catch (e) { body = {}; }\n}\n\nconst rawRefugeeId = body.refugee_id;\nconst rawShelterId = body.shelter_id;\n\nconst refugee_id = Number(rawRefugeeId);\nconst shelter_id = Number(rawShelterId);\n\nif (!Number.isInteger(refugee_id) || !Number.isInteger(shelter_id) || refugee_id <= 0 || shelter_id <= 0) {\n    msg.statusCode = 400;\n    msg.payload = { error: 'refugee_id y shelter_id deben ser enteros > 0' };\n    return [null, msg];\n}\n\n// Preparar query para actualizar refugiado\nmsg.query = `UPDATE refugee \n             SET assigned_shelter_id = $1, \n                 status = 'assigned',\n                 updated_at = NOW()\n             WHERE id = $2\n             RETURNING id, assigned_shelter_id, status`;\n\nmsg.params = [shelter_id, refugee_id];\nmsg.payload = null;\n\nconsole.log('[ASSIGN] Updating refugee', refugee_id, 'with shelter', shelter_id);\n\nreturn [msg, null];",
         "outputs": 2,
-        "x": 400,
-        "y": 800,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 420,
+        "y": 840,
         "wires": [
             [
                 "assign_shelter_query"
@@ -1863,6 +1903,7 @@
         "query": "",
         "postgreSQLConfig": "301245f94e1239d9",
         "split": false,
+        "rowsPerMsg": "",
         "outputs": 1,
         "x": 650,
         "y": 800,
@@ -1895,9 +1936,9 @@
         "type": "http response",
         "z": "tab_ai_integration",
         "name": "Error Response",
-        "statusCode": "400",
-        "x": 1150,
-        "y": 820,
+        "statusCode": "",
+        "x": 1020,
+        "y": 880,
         "wires": []
     },
     {
@@ -1905,7 +1946,7 @@
         "type": "function",
         "z": "tab_login",
         "name": "Validar y Preparar",
-        "func": "// Validar entrada básica\nif (!msg.payload || typeof msg.payload !== 'object') {\n  msg.statusCode = 400;\n  msg.payload = {\n    success: false,\n    message: 'Datos inválidos'\n  };\n  return msg;\n}\n\n// El identificador puede ser email, username o phone_number\nconst identifier = msg.payload.identifier || msg.payload.email || msg.payload.username || msg.payload.phone_number;\nconst password = msg.payload.password;\n\n// Validación de campos requeridos\nif (!identifier || !password || typeof password !== 'string' || password.length === 0) {\n  msg.statusCode = 400;\n  msg.payload = {\n    success: false,\n    message: 'Email/usuario/teléfono y contraseña son requeridos'\n  };\n  return msg;\n}\n\n// Guardamos password en msg para verificarlo después\nmsg.passwordToVerify = password;\n\n// Buscar por email, username O phone_number\nmsg.query = 'SELECT id, email, username, password, full_name, role FROM users WHERE email = $1 OR username = $1 OR phone_number = $1';\nmsg.params = [identifier];\n\nmsg.payload = null;\n\nreturn msg;\n",
+        "func": "// Function: Validar y Preparar Login\n\n// 1. Validar que llegue algo\nif (!msg.payload || typeof msg.payload !== 'object') {\n  // Usamos node.error para activar el nodo Catch si lo tienes configurado\n  // O devolvemos el error directo si vas al HTTP Response.\n  msg.statusCode = 400;\n  msg.payload = { success: false, message: 'Datos inválidos' };\n  \n  // OPCIÓN A: Si usas Catch, descomenta la siguiente línea y pon return null\n  // node.error(\"Datos inválidos\", msg); return null; \n  \n  // OPCIÓN B (La actual): Devolver msg PERO asegúrate de no conectarlo al nodo Postgres\n  return msg; \n}\n\n// 2. Extracción Inteligente + LIMPIEZA (.trim())\n// Esto elimina espacios en blanco al inicio o final (súper común en móviles)\nlet identifier = msg.payload.identifier || msg.payload.email || msg.payload.username || msg.payload.phone_number;\n\nif (typeof identifier === 'string') {\n    identifier = identifier.trim();\n}\n\nconst password = msg.payload.password;\n\n// 3. Validación de campos requeridos\nif (!identifier || !password || typeof password !== 'string' || password.length === 0) {\n  msg.statusCode = 400;\n  msg.payload = {\n    success: false,\n    message: 'Error: Debes introducir usuario/email/teléfono y contraseña.'\n  };\n  \n  // Si validación falla, cortamos aquí.\n  // IMPORTANTE: Conecta una salida de este nodo directa al HTTP Response para estos casos,\n  // o usa node.error() como vimos antes.\n  return msg;\n}\n\n// 4. Guardar password para verificar después (Bcrypt)\nmsg.passwordToVerify = password;\n\n// 5. Query Multiuso\n// Buscamos coincidencia en CUALQUIERA de las 3 columnas\nmsg.query = 'SELECT id, email, username, password, first_name, last_name, role FROM users WHERE email = $1 OR username = $1 OR phone_number = $1';\nmsg.params = [identifier];\n\n// 6. Limpieza para seguridad\nmsg.payload = null;\n\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -1943,7 +1984,7 @@
         "type": "function",
         "z": "tab_login",
         "name": "Verificar y Responder",
-        "func": "try {\n  const result = msg.payload;\n  const passwordFromRequest = msg.passwordToVerify;\n  \n  // Verificar si el usuario existe\n  if (!Array.isArray(result) || result.length === 0) {\n    msg.statusCode = 401;\n    msg.payload = {\n      success: false,\n      message: 'Email o contraseña incorrectos'\n    };\n    return msg;\n  }\n  \n  const user = result[0];\n  \n  // Comparar contraseña (en prototipo es comparación directa)\n  // En producción: usar bcrypt.compare()\n  if (user.password !== passwordFromRequest) {\n    msg.statusCode = 401;\n    msg.payload = {\n      success: false,\n      message: 'Email o contraseña incorrectos'\n    };\n    return msg;\n  }\n  \n  // ÉXITO: Credentials válidas, devolver role\n  msg.statusCode = 200;\n  msg.payload = {\n    success: true,\n    user_id: user.id,\n    name: user.full_name,\n    email: user.email, // Necesario para notificación de login\n    role: user.role, // 'worker' o 'refugee'\n    token: 'simulated_token_' + Date.now() // Token simulado\n  };\n  \n  // Limpiar datos sensibles\n  delete msg.passwordToVerify;\n  \n  return msg;\n  \n} catch (err) {\n  msg.statusCode = 500;\n  msg.payload = {\n    success: false,\n    message: 'Error procesando login'\n  };\n  return msg;\n}",
+        "func": "// El nodo PostgreSQL devuelve un array con las filas insertadas\nvar filas = msg.payload;\n\ntry {\n  if (filas && filas.length > 0) {\n    var usuarioNuevo = filas[0];\n\n    // ÉXITO: Construimos la respuesta 201\n    msg.statusCode = 201;\n    msg.payload = {\n      \"success\": true,\n      \"user_id\": usuarioNuevo.id,\n      \"first_name\": usuarioNuevo.first_name,\n      \"last_name\": usuarioNuevo.last_name,\n      \"username\": usuarioNuevo.username,\n      \"email\": usuarioNuevo.email,\n      \"role\": usuarioNuevo.role,\n      \"token\": \"simulated_token_\" + Date.now()\n    };\n\n    // Devolvemos el mensaje por la salida normal\n    return msg;\n\n  } else {\n    // ERROR: No hay filas. \n    // Aquí es donde FORZAMOS la llamada al nodo Catch.\n\n    var errorMsg = \"No se pudo recuperar el usuario creado (la base de datos no devolvió filas)\";\n\n    // 1. Preparamos el mensaje de error para el Catch\n    // (El nodo Catch recibirá esto en msg.error)\n    var err = new Error(errorMsg);\n\n    // 2. Avisamos a Node-RED de que ha habido un error.\n    // El segundo parámetro 'msg' se pasa al nodo Catch para que no pierdas los datos.\n    node.error(err, msg);\n\n    // 3. Devolvemos null para CORTAR el flujo normal.\n    // Así no sigue hacia el nodo HTTP Response de éxito, sino que salta al Catch.\n    return null;\n  }\n} catch (e) {\n  // Si hay un error de código imprevisto (ej: variable undefined), también lo mandamos al Catch\n  node.error(e, msg);\n  return null;\n}// El nodo PostgreSQL devuelve un array con las filas insertadas\n// gracias al \"RETURNING\" que pusimos en la query.\nvar filas = msg.payload;\n\nif (filas && filas.length > 0) {\n  var usuarioNuevo = filas[0];\n\n  // Construimos la respuesta EXACTAMENTE igual que en el Login\n  // Así el frontend puede guardar el token y entrar directamente.\n  msg.statusCode = 201; // 201 Created (es lo correcto para registros)\n  msg.payload = {\n    \"success\": true,\n    \"user_id\": usuarioNuevo.id,\n    \"first_name\": usuarioNuevo.first_name,\n    \"last_name\": usuarioNuevo.last_name,\n    \"username\": usuarioNuevo.username,\n    \"email\": usuarioNuevo.email,\n    \"role\": usuarioNuevo.role, // Será 'refugee'\n    \"token\": \"simulated_token_\" + Date.now() // Token para que entre directo\n  };\n} else {\n  // Si por lo que sea no devuelve filas (raro si no dio error antes)\n  msg.statusCode = 500;\n  msg.payload = { \"error\": \"No se pudo recuperar el usuario creado\" };\n}\n\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -1992,7 +2033,7 @@
         "type": "function",
         "z": "tab_login",
         "name": "Validar y Preparar",
-        "func": "// 1. Extraemos los datos que vienen del formulario (Frontend)\nvar nombre = msg.payload.name;\nvar email = msg.payload.email;\nvar password = msg.payload.password;\n\n// 2. Validación básica de seguridad (por si acaso falla el frontend)\nif (!email || !password || !nombre) {\n    msg.statusCode = 400;\n    msg.payload = { error: \"Faltan datos: nombre, email o contraseña\" };\n    return msg;\n}\n\n// 3. Preparamos la Query SQL (INSERT)\n// Fíjate que ponemos el rol 'refugee' fijo, porque es un auto-registro.\nmsg.query = \"INSERT INTO users (full_name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, full_name, email, role\";\n\n// 4. Preparamos los parámetros (Array)\n// Usamos 'refugee' como cuarto parámetro para cumplir con el CHECK de la base de datos\nmsg.params = [nombre, email, password, 'refugee'];\n\n// 5. Limpiamos el payload para que no moleste al nodo de Postgres\nmsg.payload = null;\n\nreturn msg;",
+        "func": "// 1. Extraemos los datos del Frontend (Flutter envía: name, email, password)\nvar payload = msg.payload || {};\n\nvar fullName = payload.name; // Flutter envía 'name'\nvar email = payload.email;\nvar password = payload.password;\n\n// 2. Validación de seguridad\nif (!email || !password || !fullName) {\n    msg.statusCode = 400;\n    msg.payload = { error: \"Faltan datos obligatorios: Nombre, Email y Contraseña\" };\n    // Cortamos flujo (usa node.error si tienes Catch, o devuelve array si usas switch)\n    return [null, msg];\n}\n\n// 3. Generación Automática de Username (CRÍTICO)\n// Como Flutter no envía 'username' para trabajadores, pero la BD lo exige (NOT NULL),\n// lo creamos cogiendo la parte de delante del email.\nvar autoUsername = email.split('@')[0]; \n\n// 4. Query SQL (Adaptada a tus columnas reales)\n// - Usamos 'password_hash' que es el nombre real de tu columna.\n// - Usamos 'worker' como rol fijo.\n// - Rellenamos 'username' con el generado.\nmsg.query = `\n    INSERT INTO users (\n        full_name, \n        email, \n        password_hash, \n        username, \n        role, \n        phone_number\n    ) \n    VALUES ($1, $2, $3, $4, 'worker', NULL) \n    RETURNING id, full_name, username, email, role\n`;\n\n// 5. Parámetros (ordenados)\nmsg.params = [\n    fullName,      // $1\n    email,         // $2\n    password,      // $3 (Debería ser hasheada previamente, pero aquí va lo que llega)\n    autoUsername   // $4\n];\n\n// 6. Limpieza\nmsg.payload = {};\n\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -2030,7 +2071,7 @@
         "type": "function",
         "z": "tab_login",
         "name": "Verificar y Responder",
-        "func": "// El nodo PostgreSQL devuelve un array con las filas insertadas\n// gracias al \"RETURNING\" que pusimos en la query.\nvar filas = msg.payload;\n\nif (filas && filas.length > 0) {\n    var usuarioNuevo = filas[0];\n\n    // Construimos la respuesta EXACTAMENTE igual que en el Login\n    // Así el frontend puede guardar el token y entrar directamente.\n    msg.statusCode = 201; // 201 Created (es lo correcto para registros)\n    msg.payload = {\n        \"success\": true,\n        \"user_id\": usuarioNuevo.id,\n        \"name\": usuarioNuevo.full_name,\n        \"email\": usuarioNuevo.email,\n        \"role\": usuarioNuevo.role, // Será 'refugee'\n        \"token\": \"simulated_token_\" + Date.now() // Token para que entre directo\n    };\n} else {\n    // Si por lo que sea no devuelve filas (raro si no dio error antes)\n    msg.statusCode = 500;\n    msg.payload = { \"error\": \"No se pudo recuperar el usuario creado\" };\n}\n\nreturn msg;",
+        "func": "// El nodo PostgreSQL devuelve un array con las filas insertadas\nvar filas = msg.payload;\n\ntry {\n    if (filas && filas.length > 0) {\n        var usuarioNuevo = filas[0];\n\n        // ÉXITO: Construimos la respuesta 201\n        msg.statusCode = 201;\n        msg.payload = {\n            \"success\": true,\n            \"user_id\": usuarioNuevo.id,\n            \"name\": usuarioNuevo.full_name,\n            \"email\": usuarioNuevo.email,\n            \"role\": usuarioNuevo.role,\n            \"token\": \"simulated_token_\" + Date.now()\n        };\n\n        // Devolvemos el mensaje por la salida normal\n        return msg;\n\n    } else {\n        // ERROR: No hay filas. \n        // Aquí es donde FORZAMOS la llamada al nodo Catch.\n\n        var errorMsg = \"No se pudo recuperar el usuario creado (la base de datos no devolvió filas)\";\n\n        // 1. Preparamos el mensaje de error para el Catch\n        // (El nodo Catch recibirá esto en msg.error)\n        var err = new Error(errorMsg);\n\n        // 2. Avisamos a Node-RED de que ha habido un error.\n        // El segundo parámetro 'msg' se pasa al nodo Catch para que no pierdas los datos.\n        node.error(err, msg);\n\n        // 3. Devolvemos null para CORTAR el flujo normal.\n        // Así no sigue hacia el nodo HTTP Response de éxito, sino que salta al Catch.\n        return null;\n    }\n} catch (e) {\n    // Si hay un error de código imprevisto (ej: variable undefined), también lo mandamos al Catch\n    node.error(e, msg);\n    return null;\n}",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -2134,7 +2175,7 @@
         "type": "function",
         "z": "tab_login",
         "name": "Validar y Preparar",
-        "func": "// 1. Extraemos los datos que vienen del formulario (Frontend)\nvar nombre = msg.payload.first_name;\nvar apellido = msg.payload.last_name;\nvar username = msg.payload.username;\nvar email = msg.payload.email;\nvar password = msg.payload.password;\nvar phone = msg.payload.phone_number;\nvar address = msg.payload.address;\nvar age = msg.payload.age;\nvar gender = msg.payload.gender;\n\n// 2. Validación básica de seguridad (por si acaso falla el frontend)\nif (!username || !password || !nombre || !address || !age) {\n    msg.statusCode = 400;\n    msg.payload = { error: \"Faltan datos: nombre, email o contraseña\" };\n    return msg;\n}\n\n// 3. Preparamos la Query SQL (INSERT)\n// Fíjate que ponemos el rol 'refugee' fijo, porque es un auto-registro.\nmsg.query = \"INSERT INTO users (first_name, last_name, username, email, password, phone_number, address, age, gender, role) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, first_name, last_name, username, email, password, phone_number, address, age, gender, role\";\n// 4. Preparamos los parámetros (Array)\n// Usamos 'refugee' como cuarto parámetro para cumplir con el CHECK de la base de datos\nmsg.params = [nombre, apellido, username, email, password, phone, address, age, gender, 'refugee'];\n\n// 5. Limpiamos el payload para que no moleste al nodo de Postgres\nmsg.payload = null;\n\nreturn msg;",
+        "func": "// 1. Extraemos y limpiamos los datos\nvar payload = msg.payload || {};\n\n// Campos obligatorios (según tu lógica de negocio)\nvar firstName = payload.first_name;\nvar lastName = payload.last_name || \"\"; // Puede estar vacío\nvar username = payload.username;\nvar password = payload.password;\n\n// Generamos full_name automáticamente para que la BD esté ordenada\nvar fullName = (firstName + \" \" + lastName).trim();\n\n// Campos Opcionales (convertimos vacíos a null para Postgres)\nvar email = payload.email || null;\nvar phone = payload.phone_number || null;\nvar address = payload.address || null;\n\n// Convertir edad a entero (seguridad)\nvar age = (payload.age && !isNaN(payload.age)) ? parseInt(payload.age) : null;\nvar gender = payload.gender || null;\n\n// 2. Validación de Seguridad (Solo lo estrictamente obligatorio)\n// Quitamos address y age de aquí porque en el formulario eran opcionales\nif (!username || !password || !firstName) {\n    msg.statusCode = 400;\n    msg.payload = { \n        success: false,\n        error: \"Faltan datos obligatorios: Usuario, Contraseña o Nombre.\" \n    };\n    // Importante: Usamos node.error o return null para no activar el nodo SQL\n    return [null, msg]; \n}\n\n// 3. Query SQL (Solo columnas que existen en tabla users)\nmsg.query = `\n    INSERT INTO users (\n        first_name, last_name, \n        username, email, password, \n        phone_number, \n        role\n    ) \n    VALUES ($1, $2, $3, $4, $5, $6, 'refugee') \n    RETURNING id, first_name, last_name, username, email, role\n`;\n\n// 4. Parámetros (6 valores)\nmsg.params = [\n    firstName,  // $1\n    lastName,   // $2\n    username,   // $3\n    email,      // $4\n    password,   // $5\n    phone       // $6\n];\n\n// 5. Limpieza\nmsg.payload = null;\n\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -2166,5 +2207,37 @@
                 "5e41704bfdb79d59"
             ]
         ]
+    },
+    {
+        "id": "69a2ff37382fd8d7",
+        "type": "catch",
+        "z": "tab_login",
+        "name": "",
+        "scope": null,
+        "uncaught": false,
+        "x": 660,
+        "y": 160,
+        "wires": [
+            [
+                "30cff48a648b2fb3"
+            ]
+        ]
+    },
+    {
+        "id": "30cff48a648b2fb3",
+        "type": "debug",
+        "z": "tab_login",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 840,
+        "y": 160,
+        "wires": []
     }
 ]
