@@ -40,17 +40,17 @@ class _RefugeeListScreenState extends State<RefugeeListScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Refugiados'),
+        title: const Text('Refugees'),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
             Tab(
               icon: Icon(Icons.person_outline),
-              text: 'Sin Asignar',
+              text: 'Unassigned',
             ),
             Tab(
               icon: Icon(Icons.check_circle_outline),
-              text: 'Asignados',
+              text: 'Assigned',
             ),
           ],
         ),
@@ -93,7 +93,7 @@ class _RefugeeListScreenState extends State<RefugeeListScreen>
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: _loadRefugees,
-                  child: const Text('Reintentar'),
+                  child: const Text('Retry'),
                 ),
               ],
             ),
@@ -124,7 +124,7 @@ class _RefugeeListScreenState extends State<RefugeeListScreen>
                 ElevatedButton.icon(
                   onPressed: _loadRefugees,
                   icon: const Icon(Icons.refresh),
-                  label: const Text('Actualizar'),
+                  label: const Text('Refresh'),
                 ),
               ],
             ),

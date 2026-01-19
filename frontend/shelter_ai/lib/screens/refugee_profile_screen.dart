@@ -26,7 +26,7 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
     if (refugeeId == null) {
       CustomSnackBar.showError(
         context,
-        'No se encontró el ID del refugiado en la sesión.',
+        'Refugee ID not found in session.',
       );
       return;
     }
@@ -40,7 +40,7 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
         if (!mounted) return;
         CustomSnackBar.showInfo(
           context,
-          'Aún no has sido asignado a ningún refugio.',
+          'You have not yet been assigned to any shelter.',
         );
         return;
       }
@@ -65,14 +65,14 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
       if (result == true && mounted) {
         CustomSnackBar.showSuccess(
           context,
-          'Has confirmado tu refugio exitosamente',
+          'You have successfully confirmed your shelter',
         );
       }
     } catch (e) {
       if (!mounted) return;
       CustomSnackBar.showError(
         context,
-        'Error al verificar asignación: $e',
+        'Error checking assignment: $e',
         duration: const Duration(seconds: 7),
       );
     }
@@ -142,11 +142,9 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
               ),
             ),
             const SizedBox(height: 16),
-
-            // Botón para que el refugiado verifique su asignación y, si existe, elija entre las 3 opciones
             ElevatedButton.icon(
               icon: const Icon(Icons.home_work_outlined),
-              label: const Text('Verificar mi asignación y elegir refugio'),
+              label: const Text('Check assignment and choose shelter'),
               onPressed: _handleCheckAssignment,
             ),
             const SizedBox(height: 24),
@@ -212,7 +210,7 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: const [
             Text(
-              'Upon arriving at the center',
+              'Upon arriving at the shelter',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 12),
@@ -229,7 +227,7 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Urgent help'),
+        title: const Text('Request urgent help'),
         content: const Text(
           'We can prioritize you if there is pain, pregnancy, reduced mobility, unaccompanied minors or security risk.',
         ),

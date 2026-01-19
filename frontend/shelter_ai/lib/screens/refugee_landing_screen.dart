@@ -27,52 +27,52 @@ class _RefugeeLandingScreenState extends State<RefugeeLandingScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                '¿Qué deseas hacer?',
+                'What do you want to do?',
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
               const Text(
-                'Elige si prefieres iniciar sesión o crear una nueva cuenta para generar tu QR.',
+                'Choose if you prefer to log in or create a new account to generate your QR.',
               ),
               const SizedBox(height: 24),
               Expanded(
                 child: ListView(
                   children: [
                     _ActionCard(
-                      title: 'Crear nueva cuenta',
+                      title: 'Create new account',
                       description:
-                          'Regístrate rápidamente, completa tu información y genera tu QR para acceder sin esperas.',
+                          'Register quickly, complete your information and generate your QR to access without waiting.',
                       icon: Icons.person_add,
                       color: color.primary,
                       onTap: () => Navigator.pushReplacementNamed(
                         context,
                         '/refugee-register',
                       ),
-                      actionLabel: 'Registrarse',
+                      actionLabel: 'Register',
                     ),
                     _ActionCard(
-                      title: 'Ya tengo cuenta',
+                      title: 'I already have an account',
                       description:
-                          'Inicia sesión si ya te registraste anteriormente.',
+                          'Log in if you registered previously.',
                       icon: Icons.login,
                       color: color.secondary,
                       onTap: () => Navigator.pushReplacementNamed(
                         context,
                         '/refugee-login',
                       ),
-                      actionLabel: 'Iniciar sesión',
+                      actionLabel: 'Sign in',
                     ),
                     _ActionCard(
-                      title: 'Sin cuenta',
+                      title: 'Without account',
                       description:
-                          'Completa un formulario rápido y genera tu QR ahora mismo.',
+                          'Complete a quick form and generate your QR right now.',
                       icon: Icons.qr_code,
                       color: Colors.orange,
                       onTap: () => Navigator.pushReplacementNamed(
                         context,
                         '/refugee-self-form-qr',
                       ),
-                      actionLabel: 'Generar QR',
+                      actionLabel: 'Generate QR',
                     ),
                   ],
                 ),

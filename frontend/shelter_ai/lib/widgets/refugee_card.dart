@@ -61,7 +61,7 @@ class RefugeeCard extends StatelessWidget {
             isAssigned ? Icons.location_on : Icons.analytics_outlined,
             color: isAssigned ? Colors.green : Colors.blue,
           ),
-          tooltip: isAssigned ? 'Ver asignación' : 'Asignar refugio',
+          tooltip: isAssigned ? 'View assignment' : 'Assign shelter',
           onPressed: () => isAssigned 
             ? _viewAssignedShelter(context)
             : _viewAssignment(context),
@@ -78,7 +78,7 @@ class RefugeeCard extends StatelessWidget {
     if (refugeeId == null) {
       CustomSnackBar.showError(
         context,
-        'No se puede ver la asignación',
+        'Cannot view assignment',
       );
       return;
     }
@@ -96,7 +96,7 @@ class RefugeeCard extends StatelessWidget {
               children: [
                 CircularProgressIndicator(),
                 SizedBox(height: 16),
-                Text('Cargando detalles...'),
+                Text('Loading details...'),
               ],
             ),
           ),

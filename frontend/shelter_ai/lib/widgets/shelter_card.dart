@@ -19,7 +19,7 @@ class ShelterCard extends StatelessWidget {
     
     // Build subtitle with relevant information
     final typeInfo = shelterType.isNotEmpty ? '$shelterType • ' : '';
-    final capacityInfo = 'Cap: $maxCapacity • Ocup: $currentOccupancy • Disp: $available';
+    final capacityInfo = 'Cap: $maxCapacity • Occ: $currentOccupancy • Avail: $available';
     
     return Card(
       child: ListTile(

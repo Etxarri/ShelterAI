@@ -143,7 +143,7 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
       if (!mounted) return;
       CustomSnackBar.showError(
         context,
-        'Error al guardar: $e',
+        'Error saving: $e',
         duration: const Duration(seconds: 7),
       );
     }

@@ -27,7 +27,7 @@ class _RefugeeLoginScreenState extends State<RefugeeLoginScreen> {
 
     if (identifier.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email, teléfono o usuario y contraseña requeridos')),
+        const SnackBar(content: Text('Email, phone or username and password required')),
       );
       return;
     }
@@ -75,7 +75,7 @@ class _RefugeeLoginScreenState extends State<RefugeeLoginScreen> {
       onWillPop: () async => false,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Iniciar sesión'),
+          title: const Text('Sign In'),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: _isLoading
@@ -104,20 +104,20 @@ class _RefugeeLoginScreenState extends State<RefugeeLoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Text(
-                    'Acceso de refugiado',
+                    'Refugee Access',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Usa tu email, teléfono o usuario para acceder.',
+                    'Use your email, phone or username to access.',
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
                   TextField(
                     controller: _identifierCtrl,
                     decoration: InputDecoration(
-                      labelText: 'Email, teléfono o usuario',
+                      labelText: 'Email, phone or username',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -130,7 +130,7 @@ class _RefugeeLoginScreenState extends State<RefugeeLoginScreen> {
                   TextField(
                     controller: _passwordCtrl,
                     decoration: InputDecoration(
-                      labelText: 'Contraseña',
+                      labelText: 'Password',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -153,7 +153,7 @@ class _RefugeeLoginScreenState extends State<RefugeeLoginScreen> {
                           )
                         : const Icon(Icons.login),
                     label: Text(
-                      _isLoading ? 'Iniciando sesión...' : 'Iniciar sesión',
+                      _isLoading ? 'Signing in...' : 'Sign in',
                     ),
                   ),
                   TextButton(
@@ -164,7 +164,7 @@ class _RefugeeLoginScreenState extends State<RefugeeLoginScreen> {
                               '/refugee-register',
                             ),
                     child: Text(
-                      '¿No tienes cuenta? Regístrate',
+                      'Don\'t have an account? Register',
                       style: TextStyle(color: color.primary),
                     ),
                   ),
@@ -175,7 +175,7 @@ class _RefugeeLoginScreenState extends State<RefugeeLoginScreen> {
                               context,
                               '/refugee-landing',
                             ),
-                    child: const Text('Volver'),
+                    child: const Text('Back'),
                   ),
                 ],
               ),

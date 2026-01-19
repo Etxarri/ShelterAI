@@ -69,25 +69,25 @@ class AuthService {
       // ignore: avoid_print
       print('Response body: ${response.body}');
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         return LoginResponse.fromJson(data);
       } else if (response.statusCode == 401) {
-        throw Exception('Credenciales incorrectas');
+        throw Exception('Incorrect credentials');
       } else {
         throw Exception(
-          'Error en login: ${response.statusCode} - ${response.body}',
+          'Login error: ${response.statusCode} - ${response.body}',
         );
       }
     } on SocketException catch (_) {
       throw Exception(
-        'No se pudo conectar al backend. ¿Está levantado Node-RED en localhost:1880?',
+        'Could not reach the backend. Is Node-RED running on localhost:1880?',
       );
     } on TimeoutException catch (_) {
-      throw Exception('Tiempo de espera agotado al contactar el backend');
+      throw Exception('Request to backend timed out');
     } catch (e) {
       // ignore: avoid_print
-      print('Error login: $e');
+      print('Login error: $e');
       rethrow;
     }
   }
