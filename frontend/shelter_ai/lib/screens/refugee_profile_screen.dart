@@ -141,12 +141,6 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.home_work_outlined),
-              label: const Text('Check assignment and choose shelter'),
-              onPressed: _handleCheckAssignment,
-            ),
             const SizedBox(height: 24),
             const Text(
               'Your quick actions',
