@@ -68,8 +68,8 @@
         "method": "get",
         "upload": false,
         "swaggerDoc": "",
-        "x": 140,
-        "y": 80,
+        "x": 160,
+        "y": 260,
         "wires": [
             [
                 "shelter_get_all_query"
@@ -87,7 +87,7 @@
         "rowsPerMsg": "",
         "outputs": 1,
         "x": 370,
-        "y": 80,
+        "y": 260,
         "wires": [
             [
                 "shelter_response"
@@ -103,8 +103,8 @@
         "method": "get",
         "upload": false,
         "swaggerDoc": "",
-        "x": 150,
-        "y": 140,
+        "x": 170,
+        "y": 320,
         "wires": [
             [
                 "shelter_get_by_id_prepare"
@@ -116,10 +116,15 @@
         "type": "function",
         "z": "tab_shelters",
         "name": "Prepare Query",
-        "func": "msg.queryParameters = [parseInt(msg.req.params.id)];\nmsg.payload = \"SELECT * FROM shelters WHERE id = $1\";\nreturn msg;",
+        "func": "msg.queryParameters = [parseInt(msg.req.params.id)];\nmsg.query = \"SELECT * FROM shelters WHERE id = $1\";\nreturn msg;",
         "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
         "x": 380,
-        "y": 140,
+        "y": 320,
         "wires": [
             [
                 "shelter_get_by_id_query"
@@ -137,7 +142,7 @@
         "rowsPerMsg": "",
         "outputs": 1,
         "x": 580,
-        "y": 140,
+        "y": 320,
         "wires": [
             [
                 "shelter_single_response"
@@ -153,7 +158,7 @@
         "method": "get",
         "upload": false,
         "swaggerDoc": "",
-        "x": 170,
+        "x": 190,
         "y": 200,
         "wires": [
             [
@@ -171,170 +176,11 @@
         "split": false,
         "rowsPerMsg": "",
         "outputs": 1,
-        "x": 410,
+        "x": 420,
         "y": 200,
         "wires": [
             [
                 "shelter_response"
-            ]
-        ]
-    },
-    {
-        "id": "shelter_post",
-        "type": "http in",
-        "z": "tab_shelters",
-        "d": true,
-        "name": "POST /api/shelters",
-        "url": "/api/shelters",
-        "method": "post",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 140,
-        "y": 260,
-        "wires": [
-            [
-                "shelter_post_prepare"
-            ]
-        ]
-    },
-    {
-        "id": "shelter_post_prepare",
-        "type": "function",
-        "z": "tab_shelters",
-        "d": true,
-        "name": "Prepare Insert",
-        "func": "const data = msg.payload;\nmsg.queryParameters = [\n    data.name, data.address, data.phone_number, data.email,\n    data.max_capacity, data.current_occupancy || 0,\n    data.has_medical_facilities || false, data.has_childcare || false,\n    data.has_disability_access || false, data.languages_spoken,\n    data.latitude, data.longitude, data.shelter_type, data.services_offered\n];\nmsg.payload = `INSERT INTO shelters (name, address, phone_number, email, max_capacity, current_occupancy, has_medical_facilities, has_childcare, has_disability_access, languages_spoken, latitude, longitude, shelter_type, services_offered, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\nreturn msg;",
-        "outputs": 1,
-        "x": 370,
-        "y": 260,
-        "wires": [
-            [
-                "shelter_post_query"
-            ]
-        ]
-    },
-    {
-        "id": "shelter_post_query",
-        "type": "postgresql",
-        "z": "tab_shelters",
-        "d": true,
-        "name": "Insert Shelter",
-        "query": "",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 570,
-        "y": 260,
-        "wires": [
-            [
-                "shelter_created_response"
-            ]
-        ]
-    },
-    {
-        "id": "shelter_put",
-        "type": "http in",
-        "z": "tab_shelters",
-        "d": true,
-        "name": "PUT /api/shelters/:id",
-        "url": "/api/shelters/:id",
-        "method": "put",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 150,
-        "y": 320,
-        "wires": [
-            [
-                "shelter_put_prepare"
-            ]
-        ]
-    },
-    {
-        "id": "shelter_put_prepare",
-        "type": "function",
-        "z": "tab_shelters",
-        "d": true,
-        "name": "Prepare Update",
-        "func": "const data = msg.payload;\nconst id = parseInt(msg.req.params.id);\nmsg.queryParameters = [\n    data.name, data.address, data.phone_number, data.email,\n    data.max_capacity, data.current_occupancy,\n    data.has_medical_facilities, data.has_childcare,\n    data.has_disability_access, data.languages_spoken,\n    data.latitude, data.longitude, data.shelter_type, data.services_offered, id\n];\nmsg.payload = `UPDATE shelters SET name=$1, address=$2, phone_number=$3, email=$4, max_capacity=$5, current_occupancy=$6, has_medical_facilities=$7, has_childcare=$8, has_disability_access=$9, languages_spoken=$10, latitude=$11, longitude=$12, shelter_type=$13, services_offered=$14, updated_at=CURRENT_TIMESTAMP WHERE id=$15 RETURNING *`;\nreturn msg;",
-        "outputs": 1,
-        "x": 370,
-        "y": 320,
-        "wires": [
-            [
-                "shelter_put_query"
-            ]
-        ]
-    },
-    {
-        "id": "shelter_put_query",
-        "type": "postgresql",
-        "z": "tab_shelters",
-        "d": true,
-        "name": "Update Shelter",
-        "query": "",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 580,
-        "y": 320,
-        "wires": [
-            [
-                "shelter_single_response"
-            ]
-        ]
-    },
-    {
-        "id": "shelter_delete",
-        "type": "http in",
-        "z": "tab_shelters",
-        "d": true,
-        "name": "DELETE /api/shelters/:id",
-        "url": "/api/shelters/:id",
-        "method": "delete",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 160,
-        "y": 380,
-        "wires": [
-            [
-                "shelter_delete_prepare"
-            ]
-        ]
-    },
-    {
-        "id": "shelter_delete_prepare",
-        "type": "function",
-        "z": "tab_shelters",
-        "d": true,
-        "name": "Prepare Delete",
-        "func": "msg.queryParameters = [parseInt(msg.req.params.id)];\nmsg.payload = \"DELETE FROM shelters WHERE id = $1\";\nreturn msg;",
-        "outputs": 1,
-        "x": 380,
-        "y": 380,
-        "wires": [
-            [
-                "shelter_delete_query"
-            ]
-        ]
-    },
-    {
-        "id": "shelter_delete_query",
-        "type": "postgresql",
-        "z": "tab_shelters",
-        "d": true,
-        "name": "Delete Shelter",
-        "query": "",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 580,
-        "y": 380,
-        "wires": [
-            [
-                "shelter_delete_response"
             ]
         ]
     },
@@ -345,8 +191,8 @@
         "name": "Format Response",
         "func": "msg.statusCode = 200;\nmsg.payload = msg.payload || [];\nreturn msg;",
         "outputs": 1,
-        "x": 790,
-        "y": 80,
+        "x": 630,
+        "y": 240,
         "wires": [
             [
                 "shelter_http_response"
@@ -360,40 +206,13 @@
         "name": "Format Single",
         "func": "if (msg.payload && msg.payload.length > 0) {\n    msg.statusCode = 200;\n    msg.payload = msg.payload[0];\n} else {\n    msg.statusCode = 404;\n    msg.payload = { error: \"Shelter not found\" };\n}\nreturn msg;",
         "outputs": 1,
-        "x": 780,
-        "y": 140,
-        "wires": [
-            [
-                "shelter_http_response"
-            ]
-        ]
-    },
-    {
-        "id": "shelter_created_response",
-        "type": "function",
-        "z": "tab_shelters",
-        "d": true,
-        "name": "Format Created",
-        "func": "msg.statusCode = 201;\nmsg.payload = msg.payload[0];\nreturn msg;",
-        "outputs": 1,
-        "x": 790,
-        "y": 260,
-        "wires": [
-            [
-                "shelter_http_response"
-            ]
-        ]
-    },
-    {
-        "id": "shelter_delete_response",
-        "type": "function",
-        "z": "tab_shelters",
-        "d": true,
-        "name": "Format Delete",
-        "func": "msg.statusCode = 204;\nmsg.payload = \"\";\nreturn msg;",
-        "outputs": 1,
-        "x": 780,
-        "y": 380,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 800,
+        "y": 320,
         "wires": [
             [
                 "shelter_http_response"
@@ -408,7 +227,7 @@
         "statusCode": "",
         "headers": {},
         "x": 1000,
-        "y": 220,
+        "y": 260,
         "wires": []
     },
     {
@@ -433,7 +252,7 @@
         "type": "postgresql",
         "z": "tab_refugees",
         "name": "Query All Refugees",
-        "query": "SELECT * FROM refugees WHERE assigned_shelter_id IS NULL OR status != 'assigned' ORDER BY id",
+        "query": "SELECT * FROM refugee WHERE assigned_shelter_id IS NULL OR status != 'assigned' ORDER BY id",
         "postgreSQLConfig": "301245f94e1239d9",
         "split": false,
         "rowsPerMsg": "",
@@ -468,7 +287,7 @@
         "type": "postgresql",
         "z": "tab_refugees",
         "name": "Query Assigned Refugees",
-        "query": "SELECT r.*, s.name as shelter_name, s.address as shelter_address FROM refugees r LEFT JOIN shelters s ON r.assigned_shelter_id = s.id WHERE r.assigned_shelter_id IS NOT NULL AND r.status = 'assigned' ORDER BY r.updated_at DESC",
+        "query": "SELECT r.*, s.name as shelter_name, s.address as shelter_address FROM refugee r LEFT JOIN shelters s ON r.assigned_shelter_id = s.id WHERE r.assigned_shelter_id IS NOT NULL AND r.status = 'assigned' ORDER BY r.updated_at DESC",
         "postgreSQLConfig": "301245f94e1239d9",
         "split": false,
         "rowsPerMsg": "",
@@ -503,7 +322,7 @@
         "type": "function",
         "z": "tab_refugees",
         "name": "Prepare Query",
-        "func": "const data = msg.payload;\n\nmsg.topic = `INSERT INTO refugees (first_name, last_name, age, gender, nationality, languages_spoken, family_id, medical_conditions, has_disability, special_needs, vulnerability_score, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    parseInt(msg.req.params.id)\n];\n\nreturn msg;",
+        "func": "const data = msg.payload;\n\nmsg.query = `INSERT INTO refugee (first_name, last_name, age, gender, nationality, languages_spoken, email, family_id, medical_conditions, has_disability, special_needs, vulnerability_score, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    parseInt(msg.req.params.id)\n];\n\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -523,7 +342,7 @@
         "type": "postgresql",
         "z": "tab_refugees",
         "name": "Query Refugee",
-        "query": "{{msg.topic}}",
+        "query": "",
         "postgreSQLConfig": "301245f94e1239d9",
         "split": false,
         "rowsPerMsg": "",
@@ -537,67 +356,17 @@
         ]
     },
     {
-        "id": "refugee_post",
-        "type": "http in",
-        "z": "tab_refugees",
-        "name": "POST /api/refugees",
-        "url": "/api/refugees",
-        "method": "post",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 170,
-        "y": 400,
-        "wires": [
-            [
-                "refugee_post_prepare"
-            ]
-        ]
-    },
-    {
-        "id": "refugee_post_prepare",
-        "type": "function",
-        "z": "tab_refugees",
-        "name": "Prepare Insert",
-        "func": "const data = msg.payload;\n\nmsg.topic = `INSERT INTO refugees (first_name, last_name, age, gender, nationality, languages_spoken, family_id, medical_conditions, has_disability, special_needs, vulnerability_score, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    data.first_name, \n    data.last_name, \n    data.age, \n    data.gender,\n    data.nationality, \n    data.languages_spoken, \n    data.family_id,\n    data.medical_conditions,\n    data.has_disability,\n    data.special_needs, \n    data.vulnerability_score || 0\n];\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 380,
-        "y": 400,
-        "wires": [
-            [
-                "refugee_post_query"
-            ]
-        ]
-    },
-    {
-        "id": "refugee_post_query",
-        "type": "postgresql",
-        "z": "tab_refugees",
-        "name": "Insert Refugee",
-        "query": "{{msg.topic}}",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 580,
-        "y": 400,
-        "wires": [
-            [
-                "refugee_created_response"
-            ]
-        ]
-    },
-    {
         "id": "refugee_response",
         "type": "function",
         "z": "tab_refugees",
         "name": "Format Response",
         "func": "msg.statusCode = 200;\nmsg.payload = msg.payload || [];\nreturn msg;",
         "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
         "x": 710,
         "y": 240,
         "wires": [
@@ -615,26 +384,6 @@
         "outputs": 1,
         "x": 800,
         "y": 320,
-        "wires": [
-            [
-                "refugee_http_response"
-            ]
-        ]
-    },
-    {
-        "id": "refugee_created_response",
-        "type": "function",
-        "z": "tab_refugees",
-        "name": "Format Created",
-        "func": "msg.statusCode = 201;\nmsg.payload = msg.payload[0] || msg.payload; \nreturn msg;",
-        "outputs": 1,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 780,
-        "y": 400,
         "wires": [
             [
                 "refugee_http_response"
@@ -1093,7 +842,7 @@
         "wires": [
             [
                 "assign_shelter_http_response",
-                "41aa3f26b3b03799"
+                "5e96ea5e7035a231"
             ]
         ]
     },
@@ -1101,17 +850,16 @@
         "id": "41aa3f26b3b03799",
         "type": "function",
         "z": "tab_ai_integration",
-        "d": true,
         "name": "Preparar Correo",
-        "func": "// 1. Extraemos los datos que generó el nodo anterior\n// Usamos \"|| {}\" para evitar errores si algo viene vacío\nconst data = msg.payload || {};\nconst refugee = data.refugee || {};\nconst assignment = data.assignment || {};\n\n// 2. Extraemos el email del refugiado\nconst emailDestino = refugee.email;\n\n// SEGURIDAD: Si el refugiado no tiene email, cortamos aquí.\n// Usamos 'return null' para que el flujo NO siga hacia el nodo de Gmail y no dé error.\nif (!emailDestino) {\n  node.warn(\"Asignación completada, pero no se envió email (Falta correo del refugiado)\");\n  return null;\n}\n\n// 3. Preparamos variables para que el texto quede bonito\n// Usamos .trim() para quitar espacios sobrantes en el nombre\nconst nombreCompleto = `${refugee.first_name || ''} ${refugee.last_name || ''}`.trim() || 'Refugiado';\nconst nombreRefugio = assignment.shelter_name || 'Centro asignado';\nconst explicacion = assignment.explanation || 'Asignación basada en disponibilidad y necesidades.';\nconst fecha = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });\n\n// 4. Configuración para el nodo de Email (node-red-node-email)\nmsg.to = emailDestino;\nmsg.topic = `✅ Asignación Confirmada: ${nombreRefugio} - ShelterAI`;\n\n// 5. Cuerpo en Texto Plano (Por si el móvil del usuario no lee HTML)\nmsg.payload = `Hola ${nombreCompleto},\n\nTe confirmamos que el sistema ShelterAI te ha asignado plaza en: ${nombreRefugio}.\n\nMotivo de la selección: ${explicacion}\n\nPor favor, acude lo antes posible.\nFecha: ${fecha}\n\nAtentamente,\nEquipo ShelterAI`;\n\n// 6. Cuerpo en HTML (Diseño profesional con colores y tarjetas)\nmsg.html = `\n<div style=\"font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1);\">\n    \n    <div style=\"background-color: #2E7D32; padding: 20px; text-align: center;\">\n        <h2 style=\"color: white; margin: 0; font-size: 24px;\">¡Asignación Confirmada!</h2>\n    </div>\n\n    <div style=\"padding: 30px; background-color: #ffffff;\">\n        <p style=\"font-size: 16px; color: #333;\">Hola <strong>${nombreCompleto}</strong>,</p>\n        \n        <p style=\"font-size: 16px; color: #555;\">Hemos encontrado el refugio que mejor se adapta a tus necesidades actuales.</p>\n\n        <div style=\"background-color: #f1f8e9; border-left: 5px solid #2E7D32; padding: 20px; margin: 25px 0; border-radius: 4px;\">\n            <h3 style=\"margin-top: 0; color: #1B5E20; font-size: 20px;\">📍 ${nombreRefugio}</h3>\n            \n            <p style=\"margin-bottom: 5px;\"><strong>¿Por qué este refugio?</strong></p>\n            <p style=\"margin-top: 0; color: #444; font-style: italic;\">\"${explicacion}\"</p>\n            \n            <hr style=\"border: 0; border-top: 1px solid #dcedc8; margin: 15px 0;\">\n            \n            <p style=\"margin: 0; font-size: 14px; color: #555;\"><strong>Fecha de asignación:</strong> ${fecha}</p>\n        </div>\n\n        <p style=\"font-size: 14px; color: #777;\">Por favor, presenta este correo al llegar al centro para agilizar tu entrada.</p>\n    </div>\n\n    <div style=\"background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #999;\">\n        © 2026 ShelterAI Project - Ayuda Humanitaria Inteligente\n    </div>\n</div>\n`;\n\nreturn msg;",
+        "func": "// 1. Recuperamos los DATOS PERSONALES (Vienen del nodo Postgres que acabamos de poner)\nvar filas = msg.payload;\nif (!filas || filas.length === 0) {\n    node.warn(\"No se encontró el refugiado en la BD para enviar email.\");\n    return null; \n}\nconst datosPersonales = filas[0]; // Aquí está first_name, email...\n\n// 2. Recuperamos los DATOS DE ASIGNACIÓN (Que guardamos en la \"mochila\")\nconst datosAsignacion = msg.assignmentContext || {};\n\n// 3. Extraemos el email\nconst emailDestino = datosPersonales.email;\n\n// SEGURIDAD: Si no hay email, cortamos.\nif (!emailDestino) {\n    node.warn(`El refugiado ${datosPersonales.first_name} no tiene email registrado. No se envía correo.`);\n    return null;\n}\n\n// 4. Preparamos variables para el texto\nconst nombreCompleto = `${datosPersonales.first_name || ''} ${datosPersonales.last_name || ''}`.trim() || 'Refugiado';\n\n// Truco: Si no tenemos el nombre del refugio (porque solo tenemos el ID), ponemos un genérico o el ID.\nconst nombreRefugio = datosAsignacion.shelter_name || `Refugio #${datosAsignacion.shelter_id}`;\nconst explicacion = datosAsignacion.explanation || 'Asignación automática basada en disponibilidad.';\nconst fecha = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });\n\n// 5. Configuración para el nodo de Email\nmsg.to = emailDestino;\nmsg.topic = `✅ Asignación Confirmada - ShelterAI`;\n\n// 6. Cuerpo en Texto Plano\nmsg.payload = `Hola ${nombreCompleto},\n\nTe confirmamos que el sistema ShelterAI te ha asignado plaza en: ${nombreRefugio}.\nMotivo: ${explicacion}\n\nPor favor, acude lo antes posible.\nFecha: ${fecha}`;\n\n// 7. Cuerpo en HTML (Tu diseño bonito)\nmsg.html = `\n<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px;\">\n    <div style=\"background-color: #2E7D32; padding: 20px; text-align: center;\">\n        <h2 style=\"color: white; margin: 0;\">¡Asignación Confirmada!</h2>\n    </div>\n    <div style=\"padding: 30px;\">\n        <p>Hola <strong>${nombreCompleto}</strong>,</p>\n        <p>Hemos asignado tu plaza exitosamente.</p>\n        \n        <div style=\"background-color: #f1f8e9; border-left: 5px solid #2E7D32; padding: 15px; margin: 20px 0;\">\n            <h3 style=\"margin: 0; color: #1B5E20;\">📍 ${nombreRefugio}</h3>\n            <p style=\"margin-top: 10px; font-style: italic;\">\"${explicacion}\"</p>\n        </div>\n        \n        <p style=\"font-size: 12px; color: #777;\">Fecha: ${fecha}</p>\n    </div>\n</div>\n`;\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1440,
-        "y": 240,
+        "x": 1840,
+        "y": 220,
         "wires": [
             [
                 "ad8e96e2588a39af"
@@ -1122,7 +870,6 @@
         "id": "ad8e96e2588a39af",
         "type": "e-mail",
         "z": "tab_ai_integration",
-        "d": true,
         "server": "smtp.gmail.com",
         "port": "587",
         "authtype": "BASIC",
@@ -1132,9 +879,134 @@
         "tls": true,
         "name": "",
         "dname": "",
-        "x": 1610,
-        "y": 240,
+        "x": 2010,
+        "y": 220,
         "wires": []
+    },
+    {
+        "id": "f7d9550979f67a08",
+        "type": "http in",
+        "z": "tab_ai_integration",
+        "name": "POST /api/refugees",
+        "url": "/api/refugees",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 130,
+        "y": 480,
+        "wires": [
+            [
+                "83baf60cae5aa497"
+            ]
+        ]
+    },
+    {
+        "id": "83baf60cae5aa497",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Preparar INSERT refugiado",
+        "func": "const data = msg.payload;\n\nmsg.query = `INSERT INTO refugee (first_name, last_name, age, gender, nationality, languages_spoken, email, medical_conditions, has_disability, special_needs, vulnerability_score, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    data.first_name, \n    data.last_name, \n    data.age, \n    data.gender,\n    data.nationality, \n    data.languages_spoken, \n    data.email,\n    data.medical_conditions,\n    data.has_disability,\n    data.special_needs, \n    data.vulnerability_score || 0\n];\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 480,
+        "wires": [
+            [
+                "c663a95531a34404"
+            ]
+        ]
+    },
+    {
+        "id": "c663a95531a34404",
+        "type": "postgresql",
+        "z": "tab_ai_integration",
+        "name": "Guardar refugiado",
+        "query": "",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": "",
+        "outputs": 1,
+        "x": 730,
+        "y": 480,
+        "wires": [
+            [
+                "f3ba1097f96e6329"
+            ]
+        ]
+    },
+    {
+        "id": "b0dcf0fe6b4aa77b",
+        "type": "http response",
+        "z": "tab_ai_integration",
+        "name": "Respuesta HTTP",
+        "statusCode": "200",
+        "headers": {},
+        "x": 1170,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "f3ba1097f96e6329",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Format Response",
+        "func": "// 1. Recuperamos el resultado de la base de datos\nvar rows = msg.payload;\n\n// 2. Verificación de seguridad (Blindaje)\n// Si el array está vacío, significa que el INSERT falló silenciosamente.\nif (!rows || rows.length === 0) {\n    var errorMsg = \"Error: La base de datos no devolvió el refugiado creado.\";\n    \n    // Forzamos el error para que salte al nodo CATCH (si lo tienes)\n    node.error(new Error(errorMsg), msg);\n    \n    // O preparamos una respuesta de error manual si no usas Catch\n    msg.statusCode = 500;\n    msg.payload = { \n        success: false, \n        error: errorMsg \n    };\n    return msg;\n}\n\n// 3. Extraemos el objeto creado (siempre es el primero del array)\nvar newRefugee = rows[0];\n\n// 4. Construimos la respuesta HTTP (Estándar REST)\nmsg.statusCode = 201; // Código 201 significa \"Created\" (Creado exitosamente)\nmsg.payload = {\n    success: true,\n    message: \"Refugiado registrado correctamente\",\n    // Devolvemos el objeto completo. Es muy útil para que Flutter \n    // pueda actualizar la lista local sin tener que recargar internet.\n    data: newRefugee \n};\n\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 950,
+        "y": 480,
+        "wires": [
+            [
+                "b0dcf0fe6b4aa77b"
+            ]
+        ]
+    },
+    {
+        "id": "5e96ea5e7035a231",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Format GET refugee",
+        "func": "// 1. Recuperamos la info de la asignación (del nodo anterior)\n// Asumimos que msg.payload es el resultado del UPDATE o el objeto que creaste\nvar asignacion = msg.payload;\n\n// Si viene de un nodo Postgres puro, suele ser un array, cogemos el primero\nif (Array.isArray(asignacion)) {\n    asignacion = asignacion[0];\n}\n\n// 2. GUARDAR CONTEXTO (¡Importante!)\n// Guardamos la info de la asignación en una propiedad aparte 'msg.assignmentContext'\n// para que sobreviva a la siguiente consulta SQL.\nmsg.assignmentContext = {\n    refugee_id: asignacion.refugee_id || msg.refugee_id, // Asegura tener el ID\n    shelter_id: asignacion.assigned_shelter_id,\n    shelter_name: asignacion.shelter_name, // Si lo tienes. Si no, saldrá undefined.\n    explanation: \"Asignación prioritaria por vulnerabilidad\" // O el dato real si lo tienes\n};\n\n// 3. Preparar la Query para obtener EMAIL y NOMBRE\n// Usamos el refugee_id para buscar sus datos personales en la tabla 'refugee'\nmsg.query = \"SELECT first_name, last_name, email FROM refugee WHERE id = $1\";\nmsg.params = [msg.assignmentContext.refugee_id];\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1440,
+        "y": 220,
+        "wires": [
+            [
+                "ac43cf5439c90925"
+            ]
+        ]
+    },
+    {
+        "id": "ac43cf5439c90925",
+        "type": "postgresql",
+        "z": "tab_ai_integration",
+        "name": "",
+        "query": "",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 1650,
+        "y": 220,
+        "wires": [
+            [
+                "41aa3f26b3b03799"
+            ]
+        ]
     },
     {
         "id": "login_validation",

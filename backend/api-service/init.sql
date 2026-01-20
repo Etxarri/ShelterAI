@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS refugee (
   id SERIAL PRIMARY KEY,
   first_name VARCHAR(255),
   last_name VARCHAR(255),
+  email VARCHAR(255),
   age INT,
   gender VARCHAR(10),
   nationality VARCHAR(100),

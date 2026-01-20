@@ -108,7 +108,7 @@ class ApiService {
     }
   }
 
-  // POST /api/refugees-with-assignment - Create refugee WITH automatic AI assignment
+  // POST /api/refugees - Create refugee WITH automatic AI assignment
   static Future<Map<String, dynamic>> addRefugeeWithAssignment(
     Map<String, dynamic> refugee,
   ) async {
@@ -125,10 +125,29 @@ class ApiService {
       print('Assignment response body: "${response.body}"');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return json.decode(response.body) as Map<String, dynamic>;
+        final body = response.body.trim();
+        if (body.isEmpty || body == '[]' || body == 'null') {
+          return {'success': true};
+        }
+
+        final decoded = json.decode(body);
+
+        if (decoded == null) return {'success': true};
+
+        // If backend returns an array, pick first element
+        if (decoded is List) {
+          if (decoded.isEmpty) return {'success': true};
+          final first = decoded.first;
+          if (first == null) return {'success': true};
+          return first as Map<String, dynamic>;
+        }
+
+        if (decoded is Map<String, dynamic>) return decoded;
+
+        return {'success': true, 'data': decoded};
       } else {
         throw Exception(
-          'Failed to add refugee with assignment: ${response.statusCode} - ${response.body}',
+          'Failed to add refugee: ${response.statusCode} - ${response.body}',
         );
       }
     } catch (e) {

@@ -11,11 +11,8 @@ class ShelterCard extends StatelessWidget {
     final currentOccupancy = data['current_occupancy'] ?? 0;
     final shelterType = data['shelter_type'] ?? '';
     final address = data['address'] ?? '';
-    
-    // Calculate available spaces
-    final available = maxCapacity != '-' 
-        ? (maxCapacity - currentOccupancy) 
-        : '-';
+    final available = data['available_space'] ?? '';
+
     
     // Build subtitle with relevant information
     final typeInfo = shelterType.isNotEmpty ? '$shelterType • ' : '';
