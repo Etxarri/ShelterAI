@@ -717,6 +717,8 @@
         "url": "/api/ai/assign-shelter",
         "method": "post",
         "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
         "x": 150,
         "y": 340,
         "wires": [
@@ -887,13 +889,13 @@
         "id": "f7d9550979f67a08",
         "type": "http in",
         "z": "tab_ai_integration",
-        "name": "POST /api/refugees",
-        "url": "/api/refugees",
+        "name": "POST /api/refugees-with-assignment",
+        "url": "/api/refugees-with-assignment",
         "method": "post",
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 130,
+        "x": 180,
         "y": 480,
         "wires": [
             [
@@ -1063,7 +1065,8 @@
         "wires": [
             [
                 "login_http_response",
-                "63d32f953f6537d2"
+                "63d32f953f6537d2",
+                "792b60cad97c1b7b"
             ]
         ]
     },
@@ -1306,6 +1309,23 @@
         "statusType": "auto",
         "x": 1240,
         "y": 640,
+        "wires": []
+    },
+    {
+        "id": "792b60cad97c1b7b",
+        "type": "debug",
+        "z": "tab_login",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1260,
+        "y": 160,
         "wires": []
     }
 ]
