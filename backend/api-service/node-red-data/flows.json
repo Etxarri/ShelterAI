@@ -946,7 +946,7 @@
         "type": "http response",
         "z": "tab_ai_integration",
         "name": "Respuesta HTTP",
-        "statusCode": "200",
+        "statusCode": "",
         "headers": {},
         "x": 1170,
         "y": 480,

@@ -132,7 +132,7 @@ class RefugeeCard extends StatelessWidget {
               children: [
                 Icon(Icons.home, color: Colors.green),
                 SizedBox(width: 8),
-                Expanded(child: Text('Refugio Asignado')),
+                Expanded(child: Text('Shelter Assigned ')),
               ],
             ),
             content: Column(
@@ -166,7 +166,7 @@ class RefugeeCard extends StatelessWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: Text('Cerrar'),
+                child: Text('Close'),
               ),
             ],
           ),

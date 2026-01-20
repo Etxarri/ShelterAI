@@ -1,9 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:shelter_ai/models/refugee_assignment_response.dart';
+import 'package:shelter_ai/models/refugee.dart';
 import 'package:shelter_ai/providers/auth_state.dart';
-import 'package:shelter_ai/screens/assignment_detail_screen.dart';
 import 'package:shelter_ai/screens/qr_scan_screen.dart';
 import 'package:shelter_ai/services/api_service.dart';
 import 'package:shelter_ai/widgets/custom_snackbar.dart';
@@ -226,28 +225,39 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
     };
 
     try {
-      // Use the endpoint with automatic assignment
+      // Register refugee (without automatic assignment)
       final response = await ApiService.addRefugeeWithAssignment(payload);
-      final assignmentResponse = RefugeeAssignmentResponse.fromJson(response);
+      
+      if (response == null) {
+        throw Exception('El servidor no devolvió una respuesta válida.');
+      }
+
+      // Extract refugee data from response
+      final Map<String, dynamic> refugeeData = response['data'] ?? response;
+      final refugee = Refugee.fromJson(refugeeData);
 
       setState(() => _isLoading = false);
 
       if (!mounted) return;
 
-      // Show result and navigate to detail screen
-      _showSuccessDialog(assignmentResponse);
-    } catch (e) {
+      // Show success dialog with registered refugee info
+      _showSuccessDialog(refugee);
+    } catch (e, stackTrace) {
+      print("ERROR DETECTADO: $e");
+      print("STACK TRACE: $stackTrace");
+
       setState(() => _isLoading = false);
       if (!mounted) return;
+      
       CustomSnackBar.showError(
         context,
-        'Error saving: $e',
+        'Error al registrar refugiado: $e',
         duration: const Duration(seconds: 7),
       );
     }
   }
 
-  void _showSuccessDialog(RefugeeAssignmentResponse response) {
+  void _showSuccessDialog(Refugee refugee) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -257,7 +267,7 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
               children: [
                 Icon(Icons.check_circle, color: Colors.green, size: 32),
                 SizedBox(width: 12),
-                Expanded(child: Text('Refugee Registered')),
+                Expanded(child: Text('Refugiado Registrado')),
               ],
             ),
             content: Column(
@@ -265,114 +275,26 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${response.refugee.fullName}',
+                  '${refugee.firstName} ${refugee.lastName}',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 16),
-                Container(
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.home, color: Colors.blue, size: 20),
-                          SizedBox(width: 8),
-                          Text(
-                            'Assigned Shelter:',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        response.assignment.shelterName,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.blue.shade800,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildScoreCard(
-                        'Priority',
-                        response.assignment.priorityScore,
-                        response.assignment.priorityColor,
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: _buildScoreCard(
-                        'Confidence',
-                        response.assignment.confidencePercentage,
-                        Colors.teal,
-                      ),
-                    ),
-                  ],
+                Text(
+                  'El refugiado ha sido registrado exitosamente en el sistema.',
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
                 ),
               ],
             ),
             actions: [
-              TextButton(
+              ElevatedButton(
                 onPressed: () {
                   Navigator.of(context).pop(); // Close dialog
                   Navigator.of(context).pop(true); // Return to list
                 },
-                child: Text('Close'),
-              ),
-              ElevatedButton.icon(
-                icon: Icon(Icons.info_outline),
-                label: Text('View Details'),
-                onPressed: () {
-                  Navigator.of(context).pop(); // Close dialog
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder:
-                          (context) =>
-                              AssignmentDetailScreen(response: response),
-                    ),
-                  );
-                },
+                child: Text('Aceptar'),
               ),
             ],
           ),
-    );
-  }
-
-  Widget _buildScoreCard(String label, double value, Color color) {
-    return Container(
-      padding: EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            label,
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
-          ),
-          SizedBox(height: 4),
-          Text(
-            '${value.toStringAsFixed(0)}${label == 'Confidence' ? '%' : ''}',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -468,7 +390,7 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
                 onChanged: (selected) => setState(() => _languages = selected),
               ),
               const SizedBox(height: 18),
-              const _SectionHeader(title: 'Contacto'),
+              const _SectionHeader(title: 'Contact'),
               const SizedBox(height: 10),
               TextFormField(
                 controller: _phoneNumberCtrl,
@@ -496,7 +418,7 @@ class _AddRefugeeScreenState extends State<AddRefugeeScreen> {
                 ),
               ),
               const SizedBox(height: 18),
-              const _SectionHeader(title: 'Cuidados y acompañantes'),
+              const _SectionHeader(title: 'Care and companions'),
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
                 value: _medicalCondition,

@@ -1065,8 +1065,7 @@
         "wires": [
             [
                 "login_http_response",
-                "63d32f953f6537d2",
-                "792b60cad97c1b7b"
+                "63d32f953f6537d2"
             ]
         ]
     },
@@ -1309,23 +1308,6 @@
         "statusType": "auto",
         "x": 1240,
         "y": 640,
-        "wires": []
-    },
-    {
-        "id": "792b60cad97c1b7b",
-        "type": "debug",
-        "z": "tab_login",
-        "name": "debug 1",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1260,
-        "y": 160,
         "wires": []
     }
 ]
