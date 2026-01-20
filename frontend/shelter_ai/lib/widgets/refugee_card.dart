@@ -72,7 +72,7 @@ class RefugeeCard extends StatelessWidget {
 
   Future<void> _viewAssignedShelter(BuildContext context) async {
     final refugeeId = data['id'];
-    final shelterName = data['shelter_name']?.toString() ?? 'Refugio Asignado';
+    final shelterName = data['shelter_name']?.toString() ?? 'Assigned Shelter';
     final shelterAddress = data['shelter_address']?.toString() ?? '';
     
     if (refugeeId == null) {
