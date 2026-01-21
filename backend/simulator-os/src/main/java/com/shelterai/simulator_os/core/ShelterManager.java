@@ -16,8 +16,8 @@ public class ShelterManager {
 
     public ShelterManager() {
         // Pasamos la cola global a los refugios
-        createShelter("Norte", 3);
-        createShelter("Sur", 3);
+        createShelter("North", 3);
+        createShelter("South", 3);
     }
 
     public void createShelter(String id, int capacity) {
@@ -38,13 +38,5 @@ public class ShelterManager {
     public void updateCapacity(String shelterId, int capacity) {
         Shelter target = shelters.get(shelterId);
         if (target != null) target.setCapacity(capacity);
-    }
-
-    public String getAllStatuses() {
-        String jsonList = shelters.values().stream()
-                .map(Shelter::getStatusJson)
-                .collect(Collectors.joining(","));
-        // Añadimos info de la cola global al JSON
-        return String.format("{\"global_queue\": %d, \"shelters\": [%s]}", globalQueue.size(), jsonList);
     }
 }

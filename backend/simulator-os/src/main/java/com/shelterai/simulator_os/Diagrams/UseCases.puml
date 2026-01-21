@@ -1,0 +1,40 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor White
+  BorderColor Black
+}
+
+' =======================
+'          ACTORES
+' =======================
+actor "Foreign Client\n(Socket)" as Client
+actor "Admin" as Admin
+
+' =======================
+'          SISTEMA
+' =======================
+rectangle "ShelterAI Simulator OS" {
+
+    ' ---- Casos de uso expuestos ----
+    usecase "Refugee Register\n(ADD)" as UC_Add
+    usecase "Modifiy Capacity\n(SET_CAPACITY)" as UC_Capacity
+
+    ' ---- Casos de uso internos ----
+    usecase "Queue Refugee\nby Priority" as UC_Queue
+    usecase "Asign Refugee\na Shelter" as UC_Assign
+    usecase "Process Estance\nof Shelter" as UC_Process
+}
+
+' =======================
+'        RELACIONES
+' =======================
+Client --> UC_Add
+Admin --> UC_Capacity
+
+UC_Add --> UC_Queue : <<include>>
+UC_Queue --> UC_Assign : <<include>>
+UC_Assign --> UC_Process : <<include>>
+
+@enduml

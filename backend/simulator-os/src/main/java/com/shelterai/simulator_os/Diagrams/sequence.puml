@@ -1,0 +1,68 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+actor Client
+
+participant "ClientHandler\n(Network Thread)" as CH
+participant "ShelterManager" as SM
+participant "GlobalQueue\n(BlockingQueue)" as GQ
+
+participant "Shelter North\n(Shelter Thread)" as SN
+participant "Shelter South\n(Shelter Thread)" as SS
+
+participant "processStay\n(Worker Thread)" as PS
+
+' =================================================
+'  HILO DE RED – REGISTRO DEL REFUGIADO (ADD)
+' =================================================
+group Network Thread
+    Client -> CH : ADD:name:priority
+    activate CH
+
+    CH -> SM : addRefugeeToGlobalQueue(refugee)
+    activate SM
+
+    SM -> GQ : add(refugee)
+    deactivate SM
+
+    CH --> Client : JSON OK (REGISTERED)
+    deactivate CH
+end
+
+' =================================================
+'  HILOS DE REFUGIOS – CONSUMO CONCURRENTE
+' =================================================
+par Shelter Threads
+
+    group Shelter North Thread
+        activate SN
+        SN -> SN : beds.acquire()
+        SN -> GQ : take()
+        GQ --> SN : refugee
+        SN -> PS : start thread processStay(refugee)
+        deactivate SN
+    end
+
+    group Shelter South Thread
+        activate SS
+        SS -> SS : beds.acquire()
+        SS -> GQ : take()
+        GQ --> SS : refugee
+        SS -> PS : start thread processStay(refugee)
+        deactivate SS
+    end
+
+end
+
+' =================================================
+'  HILO DE PROCESAMIENTO – ESTANCIA
+' =================================================
+group Worker Thread
+    activate PS
+    PS -> PS : sleep(processingTime)
+    PS -> SN : beds.release()
+    deactivate PS
+end
+
+@enduml

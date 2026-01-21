@@ -1,0 +1,49 @@
+@startuml
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+' =======================
+'        NODOS
+' =======================
+node "Client Machine" {
+    component "Client\n(Socket)" as Client
+}
+
+node "Server Machine" {
+
+    node "JVM / Spring Boot" {
+
+        component "SimulatorOsApplication" as App
+        component "ServerListener" as SL
+        component "ShelterManager" as SM
+
+        component "ClientHandler\n(Network Threads)" as CH
+        component "Shelter North\n(Shelter Thread)" as SN
+        component "Shelter South\n(Shelter Thread)" as SS
+        component "processStay\n(Worker Threads)" as PS
+
+        database "Global Queue\n(PriorityBlockingQueue)" as GQ
+    }
+}
+
+' =======================
+'      CONEXIONES
+' =======================
+Client --> SL : TCP Socket
+
+SL --> CH : creates thread
+CH --> SM : addRefugeeToGlobalQueue()
+CH --> SM : updateCapacity()
+
+SM --> GQ : enqueue / dequeue
+
+SM --> SN : creates
+SM --> SS : creates
+
+SN --> GQ : take()
+SS --> GQ : take()
+
+SN --> PS : spawns
+SS --> PS : spawns
+
+@enduml
