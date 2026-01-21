@@ -1,0 +1,18 @@
+@startuml
+skinparam state {
+  BackgroundColor White
+  BorderColor Black
+}
+
+[*] --> Created : new Refugee()
+
+Created --> WaitingInQueue : addRefugeeToGlobalQueue()
+
+WaitingInQueue --> AssignedToShelter : Shelter takes from queue
+
+AssignedToShelter --> BeingProcessed : processStay started
+
+BeingProcessed --> Leaving : processingTime elapsed
+
+Leaving --> [*] : bed released
+@enduml

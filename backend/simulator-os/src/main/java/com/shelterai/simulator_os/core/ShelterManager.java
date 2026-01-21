@@ -39,12 +39,4 @@ public class ShelterManager {
         Shelter target = shelters.get(shelterId);
         if (target != null) target.setCapacity(capacity);
     }
-
-    public String getAllStatuses() {
-        String jsonList = shelters.values().stream()
-                .map(Shelter::getStatusJson)
-                .collect(Collectors.joining(","));
-        // Añadimos info de la cola global al JSON
-        return String.format("{\"global_queue\": %d, \"shelters\": [%s]}", globalQueue.size(), jsonList);
-    }
 }

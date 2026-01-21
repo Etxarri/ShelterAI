@@ -58,11 +58,6 @@ public class ClientHandler implements Runnable {
                         }
                         break;
 
-                    case "STATUS":
-                        // El manager ya devuelve JSON, así que lo enviamos tal cual
-                        out.println(manager.getAllStatuses());
-                        break;
-
                     case "SET_CAPACITY":
                         if (parts.length == 3) {
                             manager.updateCapacity(parts[1], Integer.parseInt(parts[2]));

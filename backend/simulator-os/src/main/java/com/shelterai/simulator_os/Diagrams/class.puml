@@ -2,16 +2,16 @@
 skinparam classAttributeIconSize 0
 
 ' =======================
-'      CORE
+'          CORE
 ' =======================
 package "core" {
+
     class ShelterManager {
         - globalQueue : BlockingQueue
         - shelters : Map
         + createShelter(id : String, capacity : int)
         + addRefugeeToGlobalQueue(refugee : Refugee)
         + updateCapacity(shelterId : String, capacity : int)
-        + getAllStatuses() : String
     }
 
     class Shelter <<Runnable>> {
@@ -28,9 +28,10 @@ package "core" {
 }
 
 ' =======================
-'      MODEL
+'          MODEL
 ' =======================
 package "model" {
+
     class Refugee <<Comparable>> {
         - id : String
         - priority : PriorityLevel
@@ -51,9 +52,10 @@ package "model" {
 }
 
 ' =======================
-'      NETWORK
+'         NETWORK
 ' =======================
 package "network" {
+
     class ClientHandler <<Runnable>> {
         - clientSocket : Socket
         - manager : ShelterManager
@@ -68,9 +70,10 @@ package "network" {
 }
 
 ' =======================
-'      APP
+'           APP
 ' =======================
 package "app" {
+
     class SimulatorOsApplication <<SpringBootApplication, CommandLineRunner>> {
         + main(args : String[])
         + run(args : String[])
@@ -78,33 +81,33 @@ package "app" {
 }
 
 ' =======================
-'   EXTERNAL / UTILS
+'     UTIL / EXTERNAL
 ' =======================
 class BlockingQueue
 class Semaphore
 class AtomicInteger
-class Socket
 class Map
+class Socket
 
 ' =======================
-'     RELACIONES
+'        RELATIONS
 ' =======================
 ShelterManager "1" *-- "0..*" Shelter : manages
 ShelterManager "1" *-- "1" BlockingQueue : globalQueue\n<Refugee>
 
-Shelter --> Refugee : processes
+Shelter --> BlockingQueue : sharedQueue\n<Refugee>
 Shelter --> Semaphore
 Shelter --> AtomicInteger
-Shelter --> BlockingQueue : sharedQueue\n<Refugee>
+Shelter --> Refugee : processes
 
 Refugee --> PriorityLevel
 
 ClientHandler --> ShelterManager
-ClientHandler --> Refugee
+ClientHandler --> Refugee : creates
 
 ServerListener *-- ShelterManager
-ServerListener --> ClientHandler
+ServerListener --> ClientHandler : spawns
 
-SimulatorOsApplication --> ServerListener
+SimulatorOsApplication --> ServerListener : starts
 
 @enduml
