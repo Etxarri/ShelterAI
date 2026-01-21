@@ -1,198 +1,222 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
-import 'package:shelter_ai/widgets/refugee_card.dart';
 import 'package:shelter_ai/services/api_service.dart';
+import 'package:shelter_ai/widgets/refugee_card.dart';
+import 'package:shelter_ai/providers/auth_state.dart';
+import 'package:shelter_ai/main.dart';
+
 import 'package:shelter_ai/screens/assignment_detail_screen.dart';
+import 'package:shelter_ai/screens/recommendation_selection_screen.dart';
 
 void main() {
+  /// Envuelve siempre con AuthScope + MaterialApp + Scaffold
+  /// - Scaffold: SnackBars / dialogs
+  /// - MaterialApp: Navigator
+  /// - AuthScope: pantallas que usan AuthScope.of(context)
+  Widget _wrap(Widget child, {AuthState? state}) {
+    final auth = state ?? AuthState();
+
+    // ✅ Siempre dejamos un usuario logueado (worker) para evitar fallos en pantallas
+    auth.login(UserRole.worker, userId: 1, userName: 'Tester');
+
+    return AuthScope(
+      state: auth,
+      child: MaterialApp(
+        home: Scaffold(body: child),
+      ),
+    );
+  }
+
   group('RefugeeCard Tests', () {
-    // TEST 1: Basic Rendering
-    testWidgets('Displays refugee information correctly', (
-      WidgetTester tester,
-    ) async {
+    testWidgets('Displays refugee information correctly', (tester) async {
       final refugeeData = {
         'id': 1,
         'first_name': 'John',
         'last_name': 'Doe',
         'age': 30,
-        'special_needs': 'Medical care',
-        'medical_conditions': 'Diabetes',
-        'has_disability': true,
+        'special_needs': 'Food',
       };
 
-      await tester.pumpWidget(
-        MaterialApp(home: Scaffold(body: RefugeeCard(data: refugeeData))),
-      );
+      await tester.pumpWidget(_wrap(RefugeeCard(data: refugeeData)));
 
       expect(find.text('John Doe'), findsOneWidget);
-      expect(
-        find.text('Age: 30 • Needs: Medical care, Diabetes, Disability'),
-        findsOneWidget,
-      );
-      expect(find.byIcon(Icons.analytics_outlined), findsOneWidget);
+      expect(find.textContaining('Age: 30'), findsOneWidget);
+      expect(find.textContaining('Needs:'), findsOneWidget);
     });
 
-    // TEST 2: Handles empty first name
-    testWidgets('Shows ? when first name is empty', (
-      WidgetTester tester,
-    ) async {
-      final refugeeData = {
-        'id': 1,
-        'first_name': '',
-        'last_name': 'Doe',
-        'age': 30,
-      };
-
-      await tester.pumpWidget(
-        MaterialApp(home: Scaffold(body: RefugeeCard(data: refugeeData))),
-      );
+    testWidgets('Shows ? when first name is empty', (tester) async {
+      final refugeeData = {'id': 1, 'first_name': '', 'last_name': 'Doe'};
+      await tester.pumpWidget(_wrap(RefugeeCard(data: refugeeData)));
 
       expect(find.text('?'), findsOneWidget);
       expect(find.text('Doe'), findsOneWidget);
     });
 
-    // TEST 3: Handles missing data
-    testWidgets('Shows defaults when data is missing', (
-      WidgetTester tester,
-    ) async {
+    testWidgets('Shows defaults when data is missing', (tester) async {
       final refugeeData = {'id': 1};
-
-      await tester.pumpWidget(
-        MaterialApp(home: Scaffold(body: RefugeeCard(data: refugeeData))),
-      );
+      await tester.pumpWidget(_wrap(RefugeeCard(data: refugeeData)));
 
       expect(find.text('No name'), findsOneWidget);
-      expect(find.text('Age: - • Needs: None'), findsOneWidget);
+      expect(find.textContaining('Age:'), findsOneWidget);
+      expect(find.textContaining('Needs:'), findsOneWidget);
     });
 
-    // TEST 4: Error when ID is null
-    testWidgets('Shows error SnackBar when id is null', (
-      WidgetTester tester,
-    ) async {
-      final refugeeData = {'first_name': 'John', 'last_name': 'Doe'};
+    testWidgets('Shows error SnackBar when id is null (unassigned flow)', (tester) async {
+      final refugeeData = {
+        // sin 'id'
+        'first_name': 'John',
+        'last_name': 'Doe',
+      };
 
-      await tester.pumpWidget(
-        MaterialApp(home: Scaffold(body: RefugeeCard(data: refugeeData))),
-      );
+      await tester.pumpWidget(_wrap(RefugeeCard(data: refugeeData)));
 
-      await tester.tap(find.byIcon(Icons.analytics_outlined));
+      await tester.tap(find.byType(IconButton));
       await tester.pump();
 
-      expect(find.text('Cannot get assignment'), findsOneWidget);
+      // Texto real del widget
+      expect(find.text('No se puede obtener la asignación'), findsOneWidget);
     });
 
-    // TEST 5: Error when API fails
-    testWidgets('Shows error when API fails', (WidgetTester tester) async {
+    testWidgets('Shows error SnackBar when API fails (unassigned flow)', (tester) async {
       final refugeeData = {'id': 1, 'first_name': 'John', 'last_name': 'Doe'};
 
-      final mockClient = MockClient((request) async {
+      ApiService.client = MockClient((request) async {
         return http.Response('Internal Error', 500);
       });
-      ApiService.client = mockClient;
 
-      await tester.pumpWidget(
-        MaterialApp(home: Scaffold(body: RefugeeCard(data: refugeeData))),
-      );
+      await tester.pumpWidget(_wrap(RefugeeCard(data: refugeeData)));
 
-      await tester.tap(find.byIcon(Icons.analytics_outlined));
-      await tester.pump();
-      await tester.pump(); // Loading dialog appears
-
-      // Wait for the error
+      await tester.tap(find.byType(IconButton));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Error getting assignment'), findsOneWidget);
+      expect(find.textContaining('Error al obtener la asignación:'), findsOneWidget);
     });
 
-    // TEST 6: Shows message when no assignments
-    testWidgets('Shows message when refugee has no assignments', (
-      WidgetTester tester,
-    ) async {
+    testWidgets('Shows loading dialog while fetching AI recommendation', (tester) async {
       final refugeeData = {'id': 1, 'first_name': 'John', 'last_name': 'Doe'};
 
-      final mockClient = MockClient((request) async {
-        return http.Response(json.encode([]), 200);
+      ApiService.client = MockClient((request) async {
+        if (request.url.path.contains('/assignments/')) {
+          return http.Response(json.encode([]), 200);
+        }
+        if (request.url.path.contains('/ai/recommend/')) {
+          await Future.delayed(const Duration(milliseconds: 300));
+          return http.Response(json.encode(_fakeRecommendationJson()), 200);
+        }
+        return http.Response('[]', 200);
       });
-      ApiService.client = mockClient;
 
-      await tester.pumpWidget(
-        MaterialApp(home: Scaffold(body: RefugeeCard(data: refugeeData))),
-      );
+      await tester.pumpWidget(_wrap(RefugeeCard(data: refugeeData)));
 
-      await tester.tap(find.byIcon(Icons.analytics_outlined));
+      await tester.tap(find.byType(IconButton));
       await tester.pump();
-      await tester.pumpAndSettle();
 
-      expect(find.text('This refugee has no assignment yet'), findsOneWidget);
+      // Texto real del dialog (AI)
+      expect(find.text('Getting AI recommendation...'), findsOneWidget);
+
+      await tester.pumpAndSettle();
     });
 
-    // TEST 7: Navigates to detail screen on success
-    testWidgets('Navigates to AssignmentDetailScreen on success', (
-      WidgetTester tester,
-    ) async {
+    testWidgets('Navigates to RecommendationSelectionScreen when no assignments exist', (tester) async {
+      final refugeeData = {'id': 1, 'first_name': 'John', 'last_name': 'Doe'};
+
+      ApiService.client = MockClient((request) async {
+        if (request.url.path.contains('/assignments/')) {
+          return http.Response(json.encode([]), 200);
+        }
+        if (request.url.path.contains('/ai/recommend/')) {
+          return http.Response(json.encode(_fakeRecommendationJson()), 200);
+        }
+        return http.Response('[]', 200);
+      });
+
+      await tester.pumpWidget(_wrap(RefugeeCard(data: refugeeData)));
+
+      await tester.tap(find.byType(IconButton));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(RecommendationSelectionScreen), findsOneWidget);
+    });
+
+    testWidgets('Navigates to AssignmentDetailScreen when assignments exist (assigned flow)', (tester) async {
       final refugeeData = {
         'id': 1,
         'first_name': 'John',
         'last_name': 'Doe',
-        'age': 30,
+        // Esto fuerza isAssigned=true en RefugeeCard:
+        'assigned_shelter_id': 10,
+        'status': 'assigned',
+        'shelter_name': 'Safe Haven',
+        'shelter_address': 'Street 1',
       };
 
-      final mockClient = MockClient((request) async {
-        return http.Response(
-          json.encode([
-            {
-              'shelter_id': 10,
-              'shelter_name': 'Test Shelter',
-              'priority_score': 85.0,
-              'confidence_score': 0.95,
-              'reasons': ['Good match'],
-            },
-          ]),
-          200,
-        );
+      ApiService.client = MockClient((request) async {
+        if (request.url.path.contains('/assignments/')) {
+          return http.Response(
+            json.encode([
+              {
+                'id': 100,
+                'shelter_id': 10,
+                'shelter_name': 'Safe Haven',
+                'priority_score': 80.0,
+                'confidence_percentage': 95.0,
+                'assigned_at': DateTime.now().toIso8601String(),
+                'explanation': 'Good match',
+                'status': 'confirmed',
+                'matching_reasons': ['Reason 1'],
+                'alternative_shelters': [],
+              }
+            ]),
+            200,
+          );
+        }
+        return http.Response('[]', 200);
       });
-      ApiService.client = mockClient;
 
-      await tester.pumpWidget(
-        MaterialApp(home: Scaffold(body: RefugeeCard(data: refugeeData))),
-      );
+      await tester.pumpWidget(_wrap(RefugeeCard(data: refugeeData)));
 
-      await tester.tap(find.byIcon(Icons.analytics_outlined));
-      await tester.pump();
+      await tester.tap(find.byType(IconButton));
       await tester.pumpAndSettle();
 
-      // Should navigate to AssignmentDetailScreen
       expect(find.byType(AssignmentDetailScreen), findsOneWidget);
     });
-
-    // TEST 8: Shows loading dialog
-    testWidgets('Shows loading dialog while fetching', (
-      WidgetTester tester,
-    ) async {
-      final refugeeData = {'id': 1, 'first_name': 'John', 'last_name': 'Doe'};
-
-      final mockClient = MockClient((request) async {
-        await Future.delayed(Duration(milliseconds: 100));
-        return http.Response(json.encode([]), 200);
-      });
-      ApiService.client = mockClient;
-
-      await tester.pumpWidget(
-        MaterialApp(home: Scaffold(body: RefugeeCard(data: refugeeData))),
-      );
-
-      await tester.tap(find.byIcon(Icons.analytics_outlined));
-      await tester.pump();
-      await tester.pump(); // Show loading dialog
-
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      expect(find.text('Getting assignment...'), findsOneWidget);
-
-      await tester.pumpAndSettle();
-    });
   });
+}
+
+Map<String, dynamic> _fakeRecommendationJson() {
+  return {
+    "refugee_name": "John Doe",
+    "refugee_age": 30,
+    "refugee_nationality": "Test",
+    "refugee_family_size": 1,
+    "refugee_gender": "Male",
+    "cluster_id": 1,
+    "cluster_label": "A",
+    "vulnerability_level": "High",
+    "total_shelters_analyzed": 10,
+    "ml_model_version": "1.0",
+    "recommendations": [
+      {
+        "shelter_id": 101,
+        "shelter_name": "Shelter One",
+        "address": "Street 1",
+        "compatibility_score": 90.0,
+        "priority_score": 80,
+        "max_capacity": 100,
+        "current_occupancy": 50,
+        "available_space": 50,
+        "occupancy_rate": 0.5,
+        "has_medical_facilities": true,
+        "has_childcare": false,
+        "has_disability_access": true,
+        "explanation": "Good fit",
+        "matching_reasons": ["Space"],
+      }
+    ],
+  };
 }

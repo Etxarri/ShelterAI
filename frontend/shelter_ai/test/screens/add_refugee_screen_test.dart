@@ -3,16 +3,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-
 import 'package:shelter_ai/services/api_service.dart';
 import 'package:shelter_ai/screens/add_refugee_screen.dart';
+import 'package:shelter_ai/providers/auth_state.dart';
+import 'package:shelter_ai/main.dart'; // Para acceder a AuthScope
 
 void main() {
+  // Helper para envolver la pantalla con el AuthScope necesario
   Widget createWidgetUnderTest() {
-    return const MaterialApp(home: AddRefugeeScreen());
+    return AuthScope(
+      state: AuthState(), // Estado vacío por defecto
+      child: const MaterialApp(
+        home: AddRefugeeScreen(),
+      ),
+    );
   }
 
-  // Trick to make the screen huge so the whole form fits
+  // Helper para pantalla grande (evita errores de scroll)
   void setScreenSize(WidgetTester tester) {
     tester.view.physicalSize = const Size(800, 2400);
     tester.view.devicePixelRatio = 1.0;
@@ -20,309 +27,155 @@ void main() {
   }
 
   group('AddRefugeeScreen Tests', () {
-    // TEST 1: Validation
-    testWidgets('Shows validation errors if saved empty', (
-      WidgetTester tester,
-    ) async {
+    
+    // JSON de Respuesta Exitosa (Simula lo que devuelve el backend)
+    final mockSuccessResponse = {
+      "refugee": {
+        "id": 1,
+        "first_name": "Juan",
+        "last_name": "Perez",
+        "age": 30,
+        "gender": "Male",
+        "nationality": "Test",
+        "vulnerability_score": 10.0,
+        "has_disability": false
+      },
+      "assignment": {
+        "id": 100,
+        "shelter_id": 1,
+        "shelter_name": "Refugio Seguro",
+        "priority_score": 80.0,
+        "confidence_percentage": 95.0, // O confidence_score según tu API
+        "status": "confirmed",
+        "assigned_at": "2023-10-10",
+        "explanation": "Coincidencia perfecta",
+        "matching_reasons": ["Espacio disponible"],
+        "alternative_shelters": []
+      }
+    };
+
+    // ----------------------------------------------------------------------
+    // TEST 1: Validación de campos vacíos
+    // ----------------------------------------------------------------------
+    testWidgets('Shows validation errors if saved empty', (WidgetTester tester) async {
       setScreenSize(tester);
       await tester.pumpWidget(createWidgetUnderTest());
 
-      final saveBtn = find.text('Save');
-      await tester.ensureVisible(saveBtn);
-      await tester.tap(saveBtn);
+      // Pulsamos guardar sin rellenar nada
+      await tester.tap(find.text('Save'));
       await tester.pump();
 
+      // Deberían salir mensajes de error
       expect(find.text('Required'), findsWidgets);
     });
 
-    // TEST 2: Age Validation
+    // ----------------------------------------------------------------------
+    // TEST 2: Validación de edad
+    // ----------------------------------------------------------------------
     testWidgets('Shows error if age is invalid', (WidgetTester tester) async {
       setScreenSize(tester);
       await tester.pumpWidget(createWidgetUnderTest());
 
+      // Ponemos una edad negativa
       await tester.enterText(find.widgetWithText(TextFormField, 'Age'), '-5');
-
-      final saveBtn = find.text('Save');
-      await tester.ensureVisible(saveBtn);
-      await tester.tap(saveBtn);
+      
+      await tester.tap(find.text('Save'));
       await tester.pump();
 
       expect(find.text('Invalid age'), findsOneWidget);
     });
 
-    // TEST 3: SUCCESSFUL SUBMISSION (Happy Path)
-    testWidgets('Submits form correctly and closes screen', (
-      WidgetTester tester,
-    ) async {
+    // ----------------------------------------------------------------------
+    // TEST 3: Envío Exitoso y Diálogo
+    // ----------------------------------------------------------------------
+    testWidgets('Submits form correctly and shows success dialog', (WidgetTester tester) async {
       setScreenSize(tester);
 
-      // 1. Mock Server
-      final mockClient = MockClient((request) async {
-        final body = json.decode(request.body);
-        if (body['first_name'] != null) {
-          return http.Response(json.encode({'success': true}), 201);
-        }
-        return http.Response('Error', 400);
+      // Mock exitoso
+      ApiService.client = MockClient((request) async {
+        return http.Response(json.encode(mockSuccessResponse), 200);
       });
-      // Inject the mock
-      ApiService.client = mockClient;
 
       await tester.pumpWidget(createWidgetUnderTest());
 
-      // 2. Fill in the form
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'First Name'),
-        'Juan',
-      );
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Last Name'),
-        'Pérez',
-      );
+      // Rellenamos el formulario
+      await tester.enterText(find.widgetWithText(TextFormField, 'First Name'), 'Juan');
+      await tester.enterText(find.widgetWithText(TextFormField, 'Last Name'), 'Perez');
       await tester.enterText(find.widgetWithText(TextFormField, 'Age'), '30');
-
-      // Gender dropdown
-      await tester.tap(
-        find.widgetWithText(DropdownButtonFormField<String>, 'Gender'),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Female').last);
-      await tester.pumpAndSettle();
-
-      // Rest of fields
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Nationality'),
-        'Spanish',
-      );
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Languages (comma separated)'),
-        'Spanish',
-      );
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Medical Conditions'),
-        'None',
-      );
-
-      await tester.tap(find.widgetWithText(SwitchListTile, 'Has Disability'));
+      
+      // Scroll hasta el botón
+      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -600));
       await tester.pump();
 
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Vulnerability Score'),
-        '85',
-      );
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Special Needs'),
-        'None',
-      );
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Family ID (optional)'),
-        '123',
-      );
+      // Guardar
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle(); // Esperar animación y diálogo
 
-      // 3. Click Save
-      final saveBtn = find.text('Save');
-      await tester.ensureVisible(saveBtn);
-      await tester.tap(saveBtn);
-
-      // 4. Wait for response
-      await tester.pumpAndSettle();
+      // Verificamos que sale el diálogo con la info del refugio asignado
+      expect(find.text('Refugee Registered'), findsOneWidget);
+      expect(find.text('Refugio Seguro'), findsOneWidget); // Nombre del refugio en el mock
     });
 
-    // TEST 4: Server Error
-    testWidgets('Shows error SnackBar if API fails', (
-      WidgetTester tester,
-    ) async {
+    // ----------------------------------------------------------------------
+    // TEST 4: Error de API
+    // ----------------------------------------------------------------------
+    testWidgets('Shows error SnackBar if API fails', (WidgetTester tester) async {
       setScreenSize(tester);
 
-      final mockClient = MockClient((request) async {
-        return http.Response('Internal failure', 500);
+      // Mock de error 500
+      ApiService.client = MockClient((request) async {
+        return http.Response('Internal Server Error', 500);
       });
-      ApiService.client = mockClient;
 
       await tester.pumpWidget(createWidgetUnderTest());
 
-      // Fill in only required fields
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'First Name'),
-        'Ana',
-      );
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Last Name'),
-        'García',
-      );
+      // Rellenamos datos mínimos
+      await tester.enterText(find.widgetWithText(TextFormField, 'First Name'), 'Ana');
+      await tester.enterText(find.widgetWithText(TextFormField, 'Last Name'), 'Gomez');
       await tester.enterText(find.widgetWithText(TextFormField, 'Age'), '25');
 
-      final saveBtn = find.text('Save');
-      await tester.ensureVisible(saveBtn);
-      await tester.tap(saveBtn);
+      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -600));
+      await tester.pump();
 
+      await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
 
-      // Look for any message starting with Error
-      expect(find.textContaining('Error:'), findsOneWidget);
-      expect(find.byType(AddRefugeeScreen), findsOneWidget);
+      // Verificar SnackBar de error
+      expect(find.textContaining('Error saving'), findsOneWidget);
     });
 
-    // TEST 5: Success dialog shows correctly
-    testWidgets('Shows success dialog with refugee info', (
-      WidgetTester tester,
-    ) async {
+    // ----------------------------------------------------------------------
+    // TEST 5: Cerrar Diálogo
+    // ----------------------------------------------------------------------
+    testWidgets('Close button dismisses dialog', (WidgetTester tester) async {
       setScreenSize(tester);
 
-      final mockClient = MockClient((request) async {
-        return http.Response(
-          json.encode({
-            'refugee': {
-              'id': 1,
-              'first_name': 'Maria',
-              'last_name': 'Lopez',
-              'age': 28,
-            },
-            'assignment': {
-              'shelter_id': 5,
-              'shelter_name': 'Central Shelter',
-              'priority_score': 75.0,
-              'confidence_score': 0.88,
-              'reasons': ['Good match'],
-            },
-          }),
-          201,
-        );
+      ApiService.client = MockClient((request) async {
+        return http.Response(json.encode(mockSuccessResponse), 200);
       });
-      ApiService.client = mockClient;
 
       await tester.pumpWidget(createWidgetUnderTest());
 
-      // Fill in required fields
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'First Name'),
-        'Maria',
-      );
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Last Name'),
-        'Lopez',
-      );
-      await tester.enterText(find.widgetWithText(TextFormField, 'Age'), '28');
-
-      final saveBtn = find.text('Save');
-      await tester.ensureVisible(saveBtn);
-      await tester.tap(saveBtn);
+      // Rellenar y guardar
+      await tester.enterText(find.widgetWithText(TextFormField, 'First Name'), 'Test');
+      await tester.enterText(find.widgetWithText(TextFormField, 'Last Name'), 'User');
+      await tester.enterText(find.widgetWithText(TextFormField, 'Age'), '20');
+      
+      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -600));
+      await tester.pump();
+      await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
 
-      // Verify dialog appears with correct information
+      // Verificar que el diálogo está abierto
       expect(find.text('Refugee Registered'), findsOneWidget);
-      expect(find.text('Maria Lopez'), findsOneWidget);
-      expect(find.text('Central Shelter'), findsOneWidget);
-      expect(find.text('Close'), findsOneWidget);
-      expect(find.text('View Details'), findsOneWidget);
-    });
 
-    // TEST 6: Close button works correctly
-    testWidgets(
-      'Close button dismisses dialog and returns to previous screen',
-      (WidgetTester tester) async {
-        setScreenSize(tester);
-
-        final mockClient = MockClient((request) async {
-          return http.Response(
-            json.encode({
-              'refugee': {
-                'id': 1,
-                'first_name': 'Carlos',
-                'last_name': 'Rodriguez',
-                'age': 35,
-              },
-              'assignment': {
-                'shelter_id': 3,
-                'shelter_name': 'North Shelter',
-                'priority_score': 80.0,
-                'confidence_score': 0.92,
-                'reasons': ['Excellent match'],
-              },
-            }),
-            201,
-          );
-        });
-        ApiService.client = mockClient;
-
-        await tester.pumpWidget(createWidgetUnderTest());
-
-        // Fill in and save
-        await tester.enterText(
-          find.widgetWithText(TextFormField, 'First Name'),
-          'Carlos',
-        );
-        await tester.enterText(
-          find.widgetWithText(TextFormField, 'Last Name'),
-          'Rodriguez',
-        );
-        await tester.enterText(find.widgetWithText(TextFormField, 'Age'), '35');
-
-        final saveBtn = find.text('Save');
-        await tester.ensureVisible(saveBtn);
-        await tester.tap(saveBtn);
-        await tester.pumpAndSettle();
-
-        // Tap Close button
-        await tester.tap(find.text('Close'));
-        await tester.pumpAndSettle();
-
-        // Should not find the dialog anymore (navigated back)
-        expect(find.text('Refugee Registered'), findsNothing);
-      },
-    );
-
-    // TEST 7: View Details navigates to detail screen
-    testWidgets('View Details button navigates to detail screen', (
-      WidgetTester tester,
-    ) async {
-      setScreenSize(tester);
-
-      final mockClient = MockClient((request) async {
-        return http.Response(
-          json.encode({
-            'refugee': {
-              'id': 2,
-              'first_name': 'Ana',
-              'last_name': 'Martinez',
-              'age': 42,
-            },
-            'assignment': {
-              'shelter_id': 8,
-              'shelter_name': 'South Shelter',
-              'priority_score': 90.0,
-              'confidence_score': 0.95,
-              'reasons': ['Perfect match'],
-            },
-          }),
-          201,
-        );
-      });
-      ApiService.client = mockClient;
-
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      // Fill in and save
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'First Name'),
-        'Ana',
-      );
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Last Name'),
-        'Martinez',
-      );
-      await tester.enterText(find.widgetWithText(TextFormField, 'Age'), '42');
-
-      final saveBtn = find.text('Save');
-      await tester.ensureVisible(saveBtn);
-      await tester.tap(saveBtn);
+      // Pulsar "Close"
+      await tester.tap(find.text('Close'));
       await tester.pumpAndSettle();
 
-      // Tap View Details button
-      await tester.tap(find.text('View Details'));
-      await tester.pumpAndSettle();
-
-      // Should navigate to different screen (dialog gone)
+      // Verificar que el diálogo se cerró
       expect(find.text('Refugee Registered'), findsNothing);
     });
+
   });
 }

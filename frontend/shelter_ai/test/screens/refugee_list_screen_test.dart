@@ -24,48 +24,56 @@ void main() {
   }
 
   group('RefugeeListScreen Tests', () {
-
     // ----------------------------------------------------------------------
-    // TEST 1: LOADING STATE (CircularProgressIndicator)
+    // TEST 1: LOADING STATE
     // ----------------------------------------------------------------------
     testWidgets('Shows loading indicator while waiting for API', (WidgetTester tester) async {
-      // Mock that takes a while to respond (to give us time to see loading)
       final mockClient = MockClient((request) async {
-        await Future.delayed(const Duration(milliseconds: 500)); 
+        await Future.delayed(const Duration(milliseconds: 500));
         return http.Response('[]', 200);
       });
       ApiService.client = mockClient;
 
       await tester.pumpWidget(createWidgetUnderTest());
 
-      // 🛑 DO NOT use pumpAndSettle here, because we want to see "during", not "final".
-      // Use pump(Duration) to advance just a little bit of time.
+      // Queremos ver el estado "loading"
       await tester.pump(const Duration(milliseconds: 100));
-
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      
-      // Now let it finish to clean up the test
+
+      // Dejar que termine
       await tester.pumpAndSettle();
     });
 
     // ----------------------------------------------------------------------
-    // TEST 2: EMPTY LIST ("No data")
+    // TEST 2: EMPTY LIST
     // ----------------------------------------------------------------------
     testWidgets('Shows message when there are no refugees', (WidgetTester tester) async {
       final mockClient = MockClient((request) async {
-        return http.Response(json.encode([]), 200); // Empty list
+        // Devuelve lista vacía para cualquier endpoint
+        return http.Response(json.encode([]), 200);
       });
       ApiService.client = mockClient;
 
       await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle(); // Wait for loading to finish
+      await tester.pumpAndSettle();
 
-      expect(find.text('No data'), findsOneWidget);
+      // Por defecto estamos en la pestaña "Unassigned"
+      expect(find.text('No hay refugiados sin asignar'), findsOneWidget);
+      expect(find.byType(RefugeeCard), findsNothing);
+
+      // También existe el botón "Refresh" en el estado vacío
+      expect(find.text('Refresh'), findsOneWidget);
+
+      // Cambiamos a la pestaña "Assigned" y comprobamos su mensaje vacío
+      await tester.tap(find.text('Assigned'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('No hay refugiados asignados'), findsOneWidget);
       expect(find.byType(RefugeeCard), findsNothing);
     });
 
     // ----------------------------------------------------------------------
-    // TEST 3: WITH DATA (Shows RefugeeCards)
+    // TEST 3: WITH DATA
     // ----------------------------------------------------------------------
     testWidgets('Shows list of cards when API returns data', (WidgetTester tester) async {
       setScreenSize(tester);
@@ -78,14 +86,18 @@ void main() {
             'last_name': 'Perez',
             'age': 30,
             'nationality': 'Siria',
-            'vulnerability_score': 80.5
+            'vulnerability_score': 80.5,
+            'gender': 'Male',
+            'has_disability': false,
           },
           {
             'first_name': 'Maria',
             'last_name': 'Gomez',
             'age': 25,
             'nationality': 'Ucrania',
-            'vulnerability_score': 60.0
+            'vulnerability_score': 60.0,
+            'gender': 'Female',
+            'has_disability': false,
           }
         ];
         return http.Response(json.encode(mockData), 200);
@@ -93,17 +105,15 @@ void main() {
       ApiService.client = mockClient;
 
       await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle(); // Wait for everything to paint
+      await tester.pumpAndSettle();
 
       // Verify loading is gone and empty text is gone
       expect(find.byType(CircularProgressIndicator), findsNothing);
-      expect(find.text('No data'), findsNothing);
+      expect(find.text('No hay refugiados sin asignar'), findsNothing);
 
-      // Verify there's a list and cards
+      // Verify list and cards
       expect(find.byType(ListView), findsOneWidget);
-      // Should have 2 RefugeeCard widgets
       expect(find.byType(RefugeeCard), findsNWidgets(2));
     });
-
   });
 }
