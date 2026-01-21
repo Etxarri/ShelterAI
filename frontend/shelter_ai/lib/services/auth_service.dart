@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:http/http.dart' as http;
+
+import 'package:shelter_ai/services/api_service.dart'; // Importante
 
 class LoginResponse {
   final bool success;
@@ -20,23 +21,21 @@ class LoginResponse {
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
     // LOG DE DEPURACIÓN: Ver qué llega realmente
-    print("Parsing JSON en Flutter: $json"); 
+    // ignore: avoid_print
+    print("Parsing JSON en Flutter: $json");
 
     // Construir nombre completo desde first_name y last_name
     String fullName = '';
     if (json['first_name'] != null || json['last_name'] != null) {
       fullName = '${json['first_name'] ?? ''} ${json['last_name'] ?? ''}'.trim();
     }
-    
+
     return LoginResponse(
       // A veces Node-RED devuelve "success": "true" (string) o true (bool), esto cubre ambos
       success: json['success'] == true || json['success'] == 'true',
-      
-      userId: json['user_id'] as int? ?? json['id'] as int? ?? 0,
-      
+      userId: (json['user_id'] as int?) ?? (json['id'] as int?) ?? 0,
       // Usar first_name + last_name, o fallback a username
       name: fullName.isNotEmpty ? fullName : (json['username']?.toString() ?? 'Usuario'),
-      
       role: json['role']?.toString() ?? 'refugee',
       token: json['token']?.toString() ?? '',
     );
@@ -55,14 +54,16 @@ class AuthService {
     required String password,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'identifier': identifier, 
-          'password': password,
-        }),
-      ).timeout(_timeout);
+      final response = await ApiService.client
+          .post(
+            Uri.parse('$baseUrl/login'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'identifier': identifier, // <--- ¡AQUÍ ESTÁN! No los borres.
+              'password': password, // <--- Son vitales.
+            }),
+          )
+          .timeout(_timeout);
 
       // ignore: avoid_print
       print('Login response: ${response.statusCode}');
@@ -93,6 +94,7 @@ class AuthService {
   }
 
   /// Registro para refugiados con todos los datos básicos
+  /// ✅ IMPORTANTE: usa ApiService.client (así MockClient funciona en tests)
   static Future<LoginResponse> registerRefugee({
     required String firstName,
     required String lastName,
@@ -105,21 +107,23 @@ class AuthService {
     String? gender,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/register-refugee'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'first_name': firstName,
-          'last_name': lastName,
-          'username': username,
-          'email': email,
-          'password': password,
-          'phone_number': phoneNumber,
-          'address': address,
-          'age': age,
-          'gender': gender,
-        }),
-      ).timeout(_timeout);
+      final response = await ApiService.client
+          .post(
+            Uri.parse('$baseUrl/register-refugee'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'first_name': firstName,
+              'last_name': lastName,
+              'username': username,
+              'email': email,
+              'password': password,
+              'phone_number': phoneNumber,
+              'address': address,
+              'age': age,
+              'gender': gender,
+            }),
+          )
+          .timeout(_timeout);
 
       // ignore: avoid_print
       print('Register refugee response: ${response.statusCode}');
@@ -154,21 +158,24 @@ class AuthService {
   }
 
   /// Registro para trabajadores
+  /// ✅ IMPORTANTE: usa ApiService.client (así MockClient funciona en tests)
   static Future<LoginResponse> register({
     required String name,
     required String email,
     required String password,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/register'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'name': name,
-          'email': email,
-          'password': password,
-        }),
-      ).timeout(_timeout);
+      final response = await ApiService.client
+          .post(
+            Uri.parse('$baseUrl/register'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'name': name,
+              'email': email,
+              'password': password,
+            }),
+          )
+          .timeout(_timeout);
 
       // ignore: avoid_print
       print('Register response: ${response.statusCode}');
