@@ -1,0 +1,40 @@
+SHELTERAI - FINAL CLUSTERING MODEL (AGGLOMERATIVE)
+======================================================================
+
+training_date: 20260121_171215
+model_version: 2.0-agglomerative-ward-k30
+n_samples: 8957
+n_features: 555
+n_clusters: 30
+
+Clusters index:
+  cluster 0: n=765 share=0.0854
+  cluster 1: n=68 share=0.0076
+  cluster 2: n=125 share=0.0140
+  cluster 3: n=311 share=0.0347
+  cluster 4: n=474 share=0.0529
+  cluster 5: n=65 share=0.0073
+  cluster 6: n=1868 share=0.2086
+  cluster 7: n=149 share=0.0166
+  cluster 8: n=146 share=0.0163
+  cluster 9: n=336 share=0.0375
+  cluster 10: n=521 share=0.0582
+  cluster 11: n=349 share=0.0390
+  cluster 12: n=158 share=0.0176
+  cluster 13: n=760 share=0.0848
+  cluster 14: n=43 share=0.0048
+  cluster 15: n=246 share=0.0275
+  cluster 16: n=147 share=0.0164
+  cluster 17: n=119 share=0.0133
+  cluster 18: n=89 share=0.0099
+  cluster 19: n=324 share=0.0362
+  cluster 20: n=119 share=0.0133
+  cluster 21: n=227 share=0.0253
+  cluster 22: n=155 share=0.0173
+  cluster 23: n=2 share=0.0002
+  cluster 24: n=37 share=0.0041
+  cluster 25: n=450 share=0.0502
+  cluster 26: n=50 share=0.0056
+  cluster 27: n=320 share=0.0357
+  cluster 28: n=415 share=0.0463
+  cluster 29: n=119 share=0.0133

@@ -1,393 +1,360 @@
 """
-Script de validación del modelo de clustering HDBSCAN
-Este script valida el modelo entrenado usando métricas de clustering
-y verifica que no exista overfitting comparando train vs test
+ShelterAI - Validation script for the FINAL clustering model (AGGLOMERATIVE)
+
+Goal
+----
+This script validates the trained *final* Agglomerative model using standard clustering metrics
+and checks train vs. test consistency to detect instability / potential overfitting-like behavior.
+
+Notes
+-----
+- AgglomerativeClustering does NOT support "predict" on new data.
+  So for the TEST set we assign clusters by:
+    1) computing train centroids in the *same feature space used for clustering*
+    2) assigning each test sample to the nearest centroid (Euclidean)
+
+- This is a practical validation approach for hierarchical clustering deployments:
+  the "model" is a fixed partition of the training space; new samples are mapped to that partition.
+
+Assumptions
+-----------
+- You trained the final model with:
+    AgglomerativeClustering(n_clusters=30, linkage="ward")
+  on the *scaled full feature space* (NO UMAP for clustering).
+- artifacts saved in ../models/shelter_model.pkl include:
+    - 'clusterer'
+    - 'scaler'
+    - 'feature_names'
+    - 'model_version'
+    - 'training_date'
+    - 'n_clusters'
+
+If your train/test CSVs are already one-hot encoded, this script aligns columns to feature_names.
+If not, you should validate using the same preprocessing pipeline used at training time.
 """
 
-import pandas as pd
-import numpy as np
-import joblib
-from sklearn.metrics import (
-    silhouette_score, 
-    calinski_harabasz_score, 
-    davies_bouldin_score
-)
-from sklearn.preprocessing import StandardScaler
-from sklearn.impute import SimpleImputer
 import os
+import joblib
+import numpy as np
+import pandas as pd
 from datetime import datetime
+from sklearn.metrics import silhouette_score, calinski_harabasz_score, davies_bouldin_score
 
-# Configuración
-MODEL_PATH = '../models/shelter_model.pkl'
-TRAIN_DATA_PATH = '../data/train_data.csv'
-TEST_DATA_PATH = '../data/test_data.csv'
-VALIDATION_REPORT_PATH = '../models/validation_report.txt'
+
+# ======================
+# Configuration
+# ======================
+MODEL_PATH = "../models/shelter_model.pkl"
+TRAIN_DATA_PATH = "../data/train_data.csv"
+TEST_DATA_PATH = "../data/test_data.csv"
+VALIDATION_REPORT_PATH = "../models/validation_report.txt"
+
+# Final model config (documented best)
+FINAL_MODEL_NAME = "AgglomerativeClustering"
+FINAL_N_CLUSTERS = 30
+FINAL_LINKAGE = "ward"
 
 print("=" * 80)
-print("VALIDACIÓN DEL MODELO DE CLUSTERING HDBSCAN")
+print("VALIDATION OF FINAL CLUSTERING MODEL (AGGLOMERATIVE)")
 print("=" * 80)
 
-# ===== 1. CARGAR MODELO =====
-print("\n[1/5] Cargando modelo entrenado...")
+
+# ======================
+# 1) Load model artifacts
+# ======================
+print("\n[1/6] Loading trained model...")
 if not os.path.exists(MODEL_PATH):
-    print(f"❌ Error: Modelo no encontrado en {MODEL_PATH}")
-    print("   Por favor, ejecuta primero train_final_model.py")
-    exit(1)
+    print(f"❌ Error: Model not found at {MODEL_PATH}")
+    print("   Please run train_final_model.py first.")
+    raise SystemExit(1)
 
 artifacts = joblib.load(MODEL_PATH)
-print(f"   ✓ Modelo cargado exitosamente")
-print(f"   - Versión: {artifacts['model_version']}")
-print(f"   - Fecha entrenamiento: {artifacts['training_date']}")
-print(f"   - Clusters: {artifacts['n_clusters']}")
+
+print("   ✓ Model loaded successfully")
+print(f"   - Version: {artifacts.get('model_version')}")
+print(f"   - Training date: {artifacts.get('training_date')}")
+print(f"   - n_clusters: {artifacts.get('n_clusters')}")
 
 
-# ===== 2. FUNCIÓN DE PREPROCESAMIENTO =====
-def preprocess_data(df, artifacts):
+# ======================
+# 2) Preprocess helper
+# ======================
+def preprocess_aligned(df: pd.DataFrame, feature_names: list) -> pd.DataFrame:
     """
-    Preprocesa datos que ya vienen one-hot encoded desde train_data.csv/test_data.csv
+    Align a (possibly one-hot encoded) dataframe to the training feature space.
+
+    - Adds missing columns with 0
+    - Drops extra columns
+    - Orders columns to match training
     """
-    # Los datos ya están preprocesados, solo asegurar que tengan todas las columnas
-    # Asegurar que tenga todas las columnas del entrenamiento
-    for col in artifacts['feature_names']:
+    df = df.copy()
+
+    # Add missing
+    for col in feature_names:
         if col not in df.columns:
             df[col] = 0
-    
-    # Mantener solo las columnas del entrenamiento en el mismo orden
-    df_aligned = df[artifacts['feature_names']]
-    
-    return df_aligned
+
+    # Keep only training columns, in order
+    return df[feature_names]
 
 
-# ===== 3. CARGAR Y PREPROCESAR DATOS =====
-print("\n[2/5] Cargando y preprocesando datos de train y test...")
+# ======================
+# 3) Load and scale train/test
+# ======================
+print("\n[2/6] Loading and preprocessing train/test data...")
 
-# Train data
+feature_names = artifacts["feature_names"]
+scaler = artifacts["scaler"]
+clusterer = artifacts["clusterer"]
+
 df_train = pd.read_csv(TRAIN_DATA_PATH)
-X_train_processed = preprocess_data(df_train, artifacts)
-X_train_scaled = artifacts['scaler'].transform(X_train_processed)
-X_train_reduced = artifacts['umap_reducer'].transform(X_train_scaled)
+X_train = preprocess_aligned(df_train, feature_names)
+X_train_scaled = scaler.transform(X_train)
 
-print(f"   ✓ Train data: {X_train_processed.shape[0]} muestras")
-print(f"     - Features: {X_train_processed.shape[1]}")
-print(f"     - Reducido a: {X_train_reduced.shape[1]} dimensiones")
-
-# Test data
 df_test = pd.read_csv(TEST_DATA_PATH)
-X_test_processed = preprocess_data(df_test, artifacts)
-X_test_scaled = artifacts['scaler'].transform(X_test_processed)
-X_test_reduced = artifacts['umap_reducer'].transform(X_test_scaled)
+X_test = preprocess_aligned(df_test, feature_names)
+X_test_scaled = scaler.transform(X_test)
 
-print(f"   ✓ Test data: {X_test_processed.shape[0]} muestras")
-print(f"     - Features: {X_test_processed.shape[1]}")
-print(f"     - Reducido a: {X_test_reduced.shape[1]} dimensiones")
+print(f"   ✓ Train: {X_train_scaled.shape[0]} samples | {X_train_scaled.shape[1]} features")
+print(f"   ✓ Test : {X_test_scaled.shape[0]} samples | {X_test_scaled.shape[1]} features")
 
 
-# ===== 4. PREDECIR CLUSTERS EN TRAIN Y TEST =====
-print("\n[3/5] Prediciendo clusters para train y test...")
+# ======================
+# 4) Get train labels (fit_partition) + test labels (nearest centroid)
+# ======================
+print("\n[3/6] Getting cluster assignments...")
 
-# Usar approximate_predict de HDBSCAN para ambos conjuntos
-import hdbscan
+# Train labels: the partition used to train the final model
+train_labels = clusterer.fit_predict(X_train_scaled)
+n_clusters_train = len(np.unique(train_labels))
 
-# Train labels
-train_labels, train_probs = hdbscan.approximate_predict(artifacts['clusterer'], X_train_reduced)
-n_clusters_train = len(set(train_labels)) - (1 if -1 in train_labels else 0)
-n_noise_train = list(train_labels).count(-1)
+print("   ✓ TRAIN:")
+print(f"     - Clusters found: {n_clusters_train}")
 
-print(f"   ✓ TRAIN:")
-print(f"     - Clusters: {n_clusters_train}")
-print(f"     - Puntos de ruido: {n_noise_train} ({n_noise_train/len(train_labels)*100:.1f}%)")
+# Sanity check vs documented final config
+if n_clusters_train != FINAL_N_CLUSTERS:
+    print(f"   ⚠️ Warning: train produced {n_clusters_train} clusters, but expected {FINAL_N_CLUSTERS}.")
+    print("     Check your saved model configuration/artifacts.")
 
-# Test labels
-test_labels, test_probs = hdbscan.approximate_predict(artifacts['clusterer'], X_test_reduced)
+# Compute centroids in scaled feature space
+centroids = np.vstack([X_train_scaled[train_labels == c].mean(axis=0) for c in range(n_clusters_train)])
 
-n_clusters_test = len(set(test_labels)) - (1 if -1 in test_labels else 0)
-n_noise_test = list(test_labels).count(-1)
+# Assign test points to nearest centroid (Euclidean)
+# (vectorized distance computation)
+# dist[i, c] = ||x_i - centroid_c||^2
+dists = (
+    (X_test_scaled ** 2).sum(axis=1, keepdims=True)
+    - 2 * (X_test_scaled @ centroids.T)
+    + (centroids ** 2).sum(axis=1)
+)
+test_labels = np.argmin(dists, axis=1)
 
-print(f"   ✓ TEST:")
-print(f"     - Clusters: {n_clusters_test}")
-print(f"     - Puntos de ruido: {n_noise_test} ({n_noise_test/len(test_labels)*100:.1f}%)")
+n_clusters_test = len(np.unique(test_labels))
+print("   ✓ TEST (nearest-centroid mapping):")
+print(f"     - Clusters used: {n_clusters_test} (should match train: {n_clusters_train})")
 
 
-# ===== 5. CALCULAR MÉTRICAS DE CLUSTERING =====
-print("\n[4/5] Calculando métricas de clustering...")
+# ======================
+# 5) Compute clustering metrics (train + test)
+# ======================
+print("\n[4/6] Computing clustering metrics...")
 
-results = {
-    'train': {},
-    'test': {},
-    'comparison': {}
-}
+results = {"train": {}, "test": {}, "comparison": {}}
 
-# === MÉTRICAS PARA TRAIN ===
+# ---- Train metrics ----
 print("\n   📊 TRAIN SET:")
+train_silhouette = silhouette_score(X_train_scaled, train_labels)
+train_ch = calinski_harabasz_score(X_train_scaled, train_labels)
+train_db = davies_bouldin_score(X_train_scaled, train_labels)
 
-# Filtrar ruido para métricas (no se pueden calcular con cluster -1)
-train_labels_no_noise = train_labels[train_labels != -1]
-X_train_reduced_no_noise = X_train_reduced[train_labels != -1]
+results["train"]["silhouette"] = float(train_silhouette)
+results["train"]["calinski_harabasz"] = float(train_ch)
+results["train"]["davies_bouldin"] = float(train_db)
 
-if len(train_labels_no_noise) > 0:
-    # Silhouette Score (rango: [-1, 1], más cercano a 1 es mejor)
-    # Mide qué tan similares son los puntos dentro del mismo cluster vs otros clusters
-    train_silhouette = silhouette_score(X_train_reduced_no_noise, train_labels_no_noise)
-    results['train']['silhouette'] = train_silhouette
-    print(f"     - Silhouette Score: {train_silhouette:.4f}")
-    print(f"       (Rango: [-1, 1], óptimo: cercano a 1)")
+print(f"     - Silhouette Score: {train_silhouette:.4f}")
+print(f"     - Calinski-Harabasz: {train_ch:.2f}")
+print(f"     - Davies-Bouldin: {train_db:.4f}")
 
-    # Calinski-Harabasz Score (más alto es mejor)
-    # Mide la ratio de dispersión entre clusters vs dentro de clusters
-    train_ch = calinski_harabasz_score(X_train_reduced_no_noise, train_labels_no_noise)
-    results['train']['calinski_harabasz'] = train_ch
-    print(f"     - Calinski-Harabasz: {train_ch:.2f}")
-    print(f"       (Más alto = mejor separación de clusters)")
+train_dist = pd.Series(train_labels).value_counts().sort_index()
+results["train"]["cluster_distribution"] = train_dist.to_dict()
 
-    # Davies-Bouldin Score (más bajo es mejor)
-    # Mide la ratio promedio de similitud entre cada cluster y su más similar
-    train_db = davies_bouldin_score(X_train_reduced_no_noise, train_labels_no_noise)
-    results['train']['davies_bouldin'] = train_db
-    print(f"     - Davies-Bouldin: {train_db:.4f}")
-    print(f"       (Más bajo = clusters mejor definidos)")
-else:
-    print("     ⚠️  No se pudieron calcular métricas (todos los puntos son ruido)")
+# ---- Test metrics ----
+print("\n   📊 TEST SET (mapped to train centroids):")
+test_silhouette = silhouette_score(X_test_scaled, test_labels)
+test_ch = calinski_harabasz_score(X_test_scaled, test_labels)
+test_db = davies_bouldin_score(X_test_scaled, test_labels)
 
-# Distribución de clusters
-train_cluster_dist = pd.Series(train_labels).value_counts().sort_index()
-results['train']['cluster_distribution'] = train_cluster_dist.to_dict()
+results["test"]["silhouette"] = float(test_silhouette)
+results["test"]["calinski_harabasz"] = float(test_ch)
+results["test"]["davies_bouldin"] = float(test_db)
 
+print(f"     - Silhouette Score: {test_silhouette:.4f}")
+print(f"     - Calinski-Harabasz: {test_ch:.2f}")
+print(f"     - Davies-Bouldin: {test_db:.4f}")
 
-# === MÉTRICAS PARA TEST ===
-print("\n   📊 TEST SET:")
-
-# Filtrar ruido para métricas (no se pueden calcular con cluster -1)
-test_labels_no_noise = test_labels[test_labels != -1]
-X_test_reduced_no_noise = X_test_reduced[test_labels != -1]
-
-if len(test_labels_no_noise) > 0:
-    test_silhouette = silhouette_score(X_test_reduced_no_noise, test_labels_no_noise)
-    results['test']['silhouette'] = test_silhouette
-    print(f"     - Silhouette Score: {test_silhouette:.4f}")
-    
-    test_ch = calinski_harabasz_score(X_test_reduced_no_noise, test_labels_no_noise)
-    results['test']['calinski_harabasz'] = test_ch
-    print(f"     - Calinski-Harabasz: {test_ch:.2f}")
-    
-    test_db = davies_bouldin_score(X_test_reduced_no_noise, test_labels_no_noise)
-    results['test']['davies_bouldin'] = test_db
-    print(f"     - Davies-Bouldin: {test_db:.4f}")
-else:
-    print("     ⚠️  No se pudieron calcular métricas (todos los puntos son ruido)")
+test_dist = pd.Series(test_labels).value_counts().sort_index()
+results["test"]["cluster_distribution"] = test_dist.to_dict()
 
 
-# Distribución de clusters en test
-test_cluster_dist = pd.Series(test_labels).value_counts().sort_index()
-results['test']['cluster_distribution'] = test_cluster_dist.to_dict()
+# ======================
+# 6) Train vs test consistency checks (stability)
+# ======================
+print("\n[5/6] Train vs test consistency checks...")
+
+silhouette_diff = abs(train_silhouette - test_silhouette)
+ch_diff_percent = abs(train_ch - test_ch) / (abs(train_ch) + 1e-12) * 100
+db_diff_percent = abs(train_db - test_db) / (abs(train_db) + 1e-12) * 100
+
+results["comparison"]["silhouette_diff"] = float(silhouette_diff)
+results["comparison"]["ch_diff_percent"] = float(ch_diff_percent)
+results["comparison"]["db_diff_percent"] = float(db_diff_percent)
+
+print(f"   - Silhouette diff: {silhouette_diff:.4f}")
+print(f"   - Calinski-Harabasz diff: {ch_diff_percent:.2f}%")
+print(f"   - Davies-Bouldin diff: {db_diff_percent:.2f}%")
+
+# Simple warning rules (practical heuristics)
+overfitting_like = False
+warnings = []
+
+if silhouette_diff > 0.15:
+    overfitting_like = True
+    warnings.append(f"⚠️ Large silhouette shift (diff={silhouette_diff:.4f})")
+
+if ch_diff_percent > 30:
+    overfitting_like = True
+    warnings.append(f"⚠️ Large CH shift ({ch_diff_percent:.1f}%)")
+
+if db_diff_percent > 30:
+    overfitting_like = True
+    warnings.append(f"⚠️ Large DB shift ({db_diff_percent:.1f}%)")
+
+results["comparison"]["flagged_instability"] = overfitting_like
+results["comparison"]["warnings"] = warnings
 
 
-# === COMPARACIÓN TRAIN VS TEST ===
-print("\n   🔍 COMPARACIÓN TRAIN vs TEST (Detección de Overfitting):")
+# ======================
+# 7) Final summary + save report
+# ======================
+print("\n[6/6] Final summary + saving report...")
 
-if len(test_labels_no_noise) > 0:
-    # Diferencias en métricas
-    silhouette_diff = abs(train_silhouette - test_silhouette)
-    ch_diff_percent = abs(train_ch - test_ch) / train_ch * 100
-    db_diff_percent = abs(train_db - test_db) / train_db * 100
-    
-    results['comparison']['silhouette_diff'] = silhouette_diff
-    results['comparison']['ch_diff_percent'] = ch_diff_percent
-    results['comparison']['db_diff_percent'] = db_diff_percent
-    
-    print(f"     - Diferencia Silhouette: {silhouette_diff:.4f}")
-    print(f"       (< 0.1 es bueno, indica consistencia)")
-    
-    print(f"     - Diferencia Calinski-Harabasz: {ch_diff_percent:.2f}%")
-    print(f"       (< 20% es bueno)")
-    
-    print(f"     - Diferencia Davies-Bouldin: {db_diff_percent:.2f}%")
-    print(f"       (< 20% es bueno)")
-    
-    # Evaluación de overfitting
-    overfitting = False
-    warnings = []
-    
-    if silhouette_diff > 0.15:
-        overfitting = True
-        warnings.append(f"⚠️ Silhouette muy diferente (diff={silhouette_diff:.4f})")
-    
-    if ch_diff_percent > 30:
-        overfitting = True
-        warnings.append(f"⚠️ Calinski-Harabasz muy diferente ({ch_diff_percent:.1f}%)")
-    
-    if db_diff_percent > 30:
-        overfitting = True
-        warnings.append(f"⚠️ Davies-Bouldin muy diferente ({db_diff_percent:.1f}%)")
-    
-    # Verificar distribución de ruido
-    noise_train_percent = (list(train_labels).count(-1) / len(train_labels)) * 100
-    noise_test_percent = (list(test_labels).count(-1) / len(test_labels)) * 100
-    noise_diff = abs(noise_train_percent - noise_test_percent)
-    
-    results['comparison']['noise_train_percent'] = noise_train_percent
-    results['comparison']['noise_test_percent'] = noise_test_percent
-    results['comparison']['noise_diff'] = noise_diff
-    
-    print(f"\n     - Ruido en train: {noise_train_percent:.1f}%")
-    print(f"     - Ruido en test: {noise_test_percent:.1f}%")
-    print(f"     - Diferencia: {noise_diff:.1f}%")
-    
-    if noise_diff > 15:
-        warnings.append(f"⚠️ Diferencia de ruido significativa ({noise_diff:.1f}%)")
-    
-    results['comparison']['overfitting'] = overfitting
-    results['comparison']['warnings'] = warnings
+def silhouette_quality_label(v: float) -> str:
+    if v > 0.50:
+        return "EXCELLENT"
+    if v > 0.30:
+        return "GOOD"
+    if v > 0.20:
+        return "ACCEPTABLE"
+    return "WEAK"
 
+def db_quality_label(v: float) -> str:
+    if v < 1.0:
+        return "EXCELLENT"
+    if v < 1.5:
+        return "GOOD"
+    if v < 2.0:
+        return "ACCEPTABLE"
+    return "WEAK"
 
-# ===== 6. EVALUACIÓN FINAL =====
-print("\n[5/5] Evaluación final del modelo...")
+train_sil_q = silhouette_quality_label(train_silhouette)
+test_sil_q = silhouette_quality_label(test_silhouette)
+train_db_q = db_quality_label(train_db)
+test_db_q = db_quality_label(test_db)
 
 print("\n" + "=" * 80)
-print("RESUMEN DE VALIDACIÓN")
+print("VALIDATION SUMMARY")
 print("=" * 80)
 
-# Interpretación de métricas
-print("\n📈 CALIDAD DEL CLUSTERING:")
+print("\n📌 MODEL CONFIG (FINAL):")
+print(f"   - Model: {FINAL_MODEL_NAME}")
+print(f"   - n_clusters: {FINAL_N_CLUSTERS}")
+print(f"   - linkage: {FINAL_LINKAGE}")
 
-# Silhouette interpretation
-if train_silhouette > 0.5:
-    silhouette_quality = "EXCELENTE"
-elif train_silhouette > 0.3:
-    silhouette_quality = "BUENA"
-elif train_silhouette > 0.2:
-    silhouette_quality = "ACEPTABLE"
+print("\n📈 CLUSTERING QUALITY:")
+print(f"   - Silhouette: Train {train_silhouette:.4f} [{train_sil_q}] | Test {test_silhouette:.4f} [{test_sil_q}]")
+print(f"   - Davies-Bouldin: Train {train_db:.4f} [{train_db_q}] | Test {test_db:.4f} [{test_db_q}]")
+
+print("\n🎯 STABILITY CHECK (train vs test):")
+if not overfitting_like:
+    print("   ✅ No major instability detected (metrics are reasonably consistent).")
 else:
-    silhouette_quality = "MEJORABLE"
+    print("   ⚠️ Possible instability detected:")
+    for w in warnings:
+        print(f"   - {w}")
 
-print(f"   - Silhouette Score: {silhouette_quality}")
-print(f"     Train: {train_silhouette:.4f} | Test: {test_silhouette:.4f}")
-
-# Davies-Bouldin interpretation (lower is better)
-if train_db < 1.0:
-    db_quality = "EXCELENTE"
-elif train_db < 1.5:
-    db_quality = "BUENA"
-elif train_db < 2.0:
-    db_quality = "ACEPTABLE"
-else:
-    db_quality = "MEJORABLE"
-
-print(f"   - Davies-Bouldin: {db_quality}")
-print(f"     Train: {train_db:.4f} | Test: {test_db:.4f}")
-
-# Overfitting evaluation
-print(f"\n🎯 DETECCIÓN DE OVERFITTING:")
-if not overfitting:
-    print("   ✅ NO SE DETECTÓ OVERFITTING")
-    print("   El modelo generaliza bien a datos no vistos")
-else:
-    print("   ⚠️ POSIBLE OVERFITTING DETECTADO")
-    for warning in warnings:
-        print(f"   {warning}")
-
-# Distribución de clusters
-print(f"\n📊 DISTRIBUCIÓN DE CLUSTERS:")
-print("\n   TRAIN:")
-for cluster_id in sorted(train_cluster_dist.index):
-    count = train_cluster_dist[cluster_id]
-    label = f"Cluster {cluster_id}" if cluster_id >= 0 else "Ruido"
-    print(f"     {label:15s}: {count:4d} ({count/len(train_labels)*100:5.1f}%)")
-
-print("\n   TEST:")
-for cluster_id in sorted(test_cluster_dist.index):
-    count = test_cluster_dist[cluster_id]
-    label = f"Cluster {cluster_id}" if cluster_id >= 0 else "Ruido"
-    print(f"     {label:15s}: {count:4d} ({count/len(test_labels)*100:5.1f}%)")
+print("\n📊 CLUSTER DISTRIBUTION:")
+print("   TRAIN:")
+for c in train_dist.index:
+    count = int(train_dist[c])
+    print(f"     Cluster {c:2d}: {count:5d} ({count/len(train_labels)*100:5.1f}%)")
+print("   TEST:")
+for c in test_dist.index:
+    count = int(test_dist[c])
+    print(f"     Cluster {c:2d}: {count:5d} ({count/len(test_labels)*100:5.1f}%)")
 
 
-# ===== 7. GUARDAR REPORTE =====
-print(f"\n💾 Guardando reporte de validación...")
+# Save report
+os.makedirs(os.path.dirname(VALIDATION_REPORT_PATH), exist_ok=True)
 
-with open(VALIDATION_REPORT_PATH, 'w', encoding='utf-8') as f:
-    f.write("SHELTER AI - REPORTE DE VALIDACIÓN DEL MODELO\n")
+with open(VALIDATION_REPORT_PATH, "w", encoding="utf-8") as f:
+    f.write("SHELTERAI - CLUSTER MODEL VALIDATION REPORT\n")
     f.write("=" * 80 + "\n\n")
-    f.write(f"Fecha de validación: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-    f.write(f"Modelo: {MODEL_PATH}\n")
-    f.write(f"Versión del modelo: {artifacts['model_version']}\n")
-    f.write(f"Fecha de entrenamiento: {artifacts['training_date']}\n\n")
-    
-    f.write("MÉTRICAS DE CLUSTERING\n")
-    f.write("-" * 80 + "\n\n")
-    
-    f.write("TRAIN SET:\n")
-    f.write(f"  Silhouette Score:     {train_silhouette:.4f} [{silhouette_quality}]\n")
-    f.write(f"  Calinski-Harabasz:    {train_ch:.2f}\n")
-    f.write(f"  Davies-Bouldin:       {train_db:.4f} [{db_quality}]\n")
-    f.write(f"  Muestras:             {len(train_labels)}\n")
-    f.write(f"  Clusters:             {n_clusters_test}\n")
-    f.write(f"  Ruido:                {noise_train_percent:.1f}%\n\n")
-    
-    f.write("TEST SET:\n")
-    f.write(f"  Silhouette Score:     {test_silhouette:.4f}\n")
-    f.write(f"  Calinski-Harabasz:    {test_ch:.2f}\n")
-    f.write(f"  Davies-Bouldin:       {test_db:.4f}\n")
-    f.write(f"  Muestras:             {len(test_labels)}\n")
-    f.write(f"  Clusters:             {n_clusters_test}\n")
-    f.write(f"  Ruido:                {noise_test_percent:.1f}%\n\n")
-    
-    f.write("COMPARACIÓN TRAIN vs TEST\n")
-    f.write("-" * 80 + "\n\n")
-    f.write(f"  Diferencia Silhouette:        {silhouette_diff:.4f}\n")
-    f.write(f"  Diferencia Calinski-Harabasz: {ch_diff_percent:.2f}%\n")
-    f.write(f"  Diferencia Davies-Bouldin:    {db_diff_percent:.2f}%\n")
-    f.write(f"  Diferencia Ruido:             {noise_diff:.1f}%\n\n")
-    
-    f.write("EVALUACIÓN DE OVERFITTING\n")
-    f.write("-" * 80 + "\n\n")
-    if not overfitting:
-        f.write("✅ NO SE DETECTÓ OVERFITTING\n")
-        f.write("El modelo generaliza bien a datos no vistos.\n\n")
-    else:
-        f.write("⚠️ POSIBLE OVERFITTING DETECTADO\n\n")
-        f.write("Warnings:\n")
-        for warning in warnings:
-            f.write(f"  - {warning}\n")
-        f.write("\n")
-    
-    f.write("DISTRIBUCIÓN DE CLUSTERS\n")
-    f.write("-" * 80 + "\n\n")
+    f.write(f"Validation date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+    f.write(f"Model path: {MODEL_PATH}\n")
+    f.write(f"Model version: {artifacts.get('model_version')}\n")
+    f.write(f"Training date: {artifacts.get('training_date')}\n\n")
+
+    f.write("FINAL MODEL CONFIG\n")
+    f.write("-" * 80 + "\n")
+    f.write(f"Model: {FINAL_MODEL_NAME}\n")
+    f.write(f"n_clusters: {FINAL_N_CLUSTERS}\n")
+    f.write(f"linkage: {FINAL_LINKAGE}\n\n")
+
+    f.write("METRICS\n")
+    f.write("-" * 80 + "\n")
     f.write("TRAIN:\n")
-    for cluster_id in sorted(train_cluster_dist.index):
-        count = train_cluster_dist[cluster_id]
-        label = f"Cluster {cluster_id}" if cluster_id >= 0 else "Ruido"
-        f.write(f"  {label:15s}: {count:4d} ({count/len(train_labels)*100:5.1f}%)\n")
-    
-    f.write("\nTEST:\n")
-    for cluster_id in sorted(test_cluster_dist.index):
-        count = test_cluster_dist[cluster_id]
-        label = f"Cluster {cluster_id}" if cluster_id >= 0 else "Ruido"
-        f.write(f"  {label:15s}: {count:4d} ({count/len(test_labels)*100:5.1f}%)\n")
-    
-    f.write("\n" + "=" * 80 + "\n")
-    f.write("INTERPRETACIÓN DE MÉTRICAS\n")
-    f.write("=" * 80 + "\n\n")
-    f.write("Silhouette Score:\n")
-    f.write("  - Rango: [-1, 1]\n")
-    f.write("  - > 0.5:  Excelente separación de clusters\n")
-    f.write("  - 0.3-0.5: Buena separación\n")
-    f.write("  - 0.2-0.3: Aceptable\n")
-    f.write("  - < 0.2:  Clusters poco definidos\n\n")
-    
-    f.write("Calinski-Harabasz Score:\n")
-    f.write("  - Más alto = mejor\n")
-    f.write("  - Mide ratio de dispersión entre/dentro de clusters\n\n")
-    
-    f.write("Davies-Bouldin Score:\n")
-    f.write("  - Más bajo = mejor\n")
-    f.write("  - < 1.0:  Excelente\n")
-    f.write("  - 1.0-1.5: Bueno\n")
-    f.write("  - 1.5-2.0: Aceptable\n")
-    f.write("  - > 2.0:  Mejorable\n\n")
+    f.write(f"  Silhouette:        {train_silhouette:.4f} [{train_sil_q}]\n")
+    f.write(f"  Calinski-Harabasz: {train_ch:.2f}\n")
+    f.write(f"  Davies-Bouldin:    {train_db:.4f} [{train_db_q}]\n")
+    f.write(f"  Samples:           {len(train_labels)}\n")
+    f.write(f"  Clusters:          {n_clusters_train}\n\n")
 
-print(f"   ✓ Reporte guardado en: {VALIDATION_REPORT_PATH}")
+    f.write("TEST (nearest-centroid mapping):\n")
+    f.write(f"  Silhouette:        {test_silhouette:.4f} [{test_sil_q}]\n")
+    f.write(f"  Calinski-Harabasz: {test_ch:.2f}\n")
+    f.write(f"  Davies-Bouldin:    {test_db:.4f} [{test_db_q}]\n")
+    f.write(f"  Samples:           {len(test_labels)}\n")
+    f.write(f"  Clusters:          {n_clusters_test}\n\n")
+
+    f.write("TRAIN vs TEST CONSISTENCY\n")
+    f.write("-" * 80 + "\n")
+    f.write(f"  Silhouette diff:        {silhouette_diff:.4f}\n")
+    f.write(f"  Calinski-Harabasz diff: {ch_diff_percent:.2f}%\n")
+    f.write(f"  Davies-Bouldin diff:    {db_diff_percent:.2f}%\n\n")
+
+    f.write("STABILITY FLAGS\n")
+    f.write("-" * 80 + "\n")
+    if not overfitting_like:
+        f.write("✅ No major instability detected.\n\n")
+    else:
+        f.write("⚠️ Possible instability detected:\n")
+        for w in warnings:
+            f.write(f"  - {w}\n")
+        f.write("\n")
+
+    f.write("CLUSTER DISTRIBUTION\n")
+    f.write("-" * 80 + "\n")
+    f.write("TRAIN:\n")
+    for c in train_dist.index:
+        count = int(train_dist[c])
+        f.write(f"  Cluster {c:2d}: {count:5d} ({count/len(train_labels)*100:5.1f}%)\n")
+    f.write("\nTEST:\n")
+    for c in test_dist.index:
+        count = int(test_dist[c])
+        f.write(f"  Cluster {c:2d}: {count:5d} ({count/len(test_labels)*100:5.1f}%)\n")
+
+print(f"\n💾 Report saved to: {VALIDATION_REPORT_PATH}")
 
 print("\n" + "=" * 80)
-print("✅ VALIDACIÓN COMPLETADA EXITOSAMENTE")
+print("✅ VALIDATION COMPLETED SUCCESSFULLY")
 print("=" * 80)
-print("\nEl modelo ha sido validado. Revisa el reporte detallado en:")
-print(f"  {VALIDATION_REPORT_PATH}")
