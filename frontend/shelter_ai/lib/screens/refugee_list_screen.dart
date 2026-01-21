@@ -59,9 +59,9 @@ class _RefugeeListScreenState extends State<RefugeeListScreen>
         controller: _tabController,
         children: [
           // Tab 1: Refugiados sin asignar
-          _buildRefugeeList(_unassignedFuture, 'No hay refugiados sin asignar'),
+          _buildRefugeeList(_unassignedFuture, 'There are no unassigned refugees'),
           // Tab 2: Refugiados asignados
-          _buildRefugeeList(_assignedFuture, 'No hay refugiados asignados'),
+          _buildRefugeeList(_assignedFuture, 'There are no refugees assigned'),
         ],
       ),
     );

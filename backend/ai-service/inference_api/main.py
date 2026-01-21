@@ -180,7 +180,7 @@ async def recommend_shelter(
         if not available_shelters:
             raise HTTPException(
                 status_code=404,
-                detail="No hay refugios disponibles en este momento"
+                detail="There are no shelters available at this time"
             )
         
         print(f"   Refugios analizados: {len(available_shelters)}")
