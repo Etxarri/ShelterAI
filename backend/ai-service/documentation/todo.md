@@ -35,11 +35,5 @@ This is a ToDo where i will be writting down what does our project's ai service 
     - [X] interpretability algorithm: Explain why is a good idea. Write a code summary to explain better how does that works.
     - [X] Choose the best model configurations according to the defined metrics in the introduction
     - [ ] Explain better the choosen model output, and interpretation
-    - [ ] Configure final model deployment
-    - [ ] Fix / change final model's output system
-- [ ] Documentation
-    - [ ] Define and sort most important parameters that will be used for interpretation purposes. 
-
-
-- [ ] Change model.conf
-- [ ] Change main.py
+    - [-] Configure final model deployment
+    - [-] Fix / change final model's output system
