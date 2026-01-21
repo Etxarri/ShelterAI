@@ -39,3 +39,7 @@ This is a ToDo where i will be writting down what does our project's ai service 
     - [ ] Fix / change final model's output system
 - [ ] Documentation
     - [ ] Define and sort most important parameters that will be used for interpretation purposes. 
+
+
+- [ ] Change model.conf
+- [ ] Change main.py

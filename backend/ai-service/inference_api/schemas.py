@@ -1,46 +1,47 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 
-# ===== INPUT SCHEMAS =====
-
-class ShelterSelectionRequest(BaseModel):
-    """Request para seleccionar un refugio de las recomendaciones"""
-    refugee_id: int = Field(..., ge=1, description="ID del refugiado")
-    shelter_id: int = Field(..., ge=1, description="ID del refugio seleccionado")
-
+# ============================================================
+# INPUT SCHEMAS
+# ============================================================
 
 class RefugeeInput(BaseModel):
-    """Datos del refugiado para recomendación de refugio"""
-    
-    # Información básica
-    first_name: str = Field(..., description="Nombre")
-    last_name: str = Field(..., description="Apellido")
-    age: int = Field(..., ge=0, le=120, description="Edad")
-    gender: str = Field(..., description="Género: M/F/Other")
-    nationality: str = Field(..., description="Nacionalidad")
-    
-    # Familia
-    family_size: Optional[int] = Field(None, ge=1, description="Tamaño de la familia")
-    has_children: Optional[bool] = Field(None, description="¿Tiene niños?")
-    children_count: Optional[int] = Field(0, ge=0, description="Número de niños")
-    
-    # Salud y necesidades especiales
-    medical_conditions: Optional[str] = Field(None, description="Condiciones médicas")
-    has_disability: Optional[bool] = Field(False, description="¿Tiene discapacidad?")
-    psychological_distress: Optional[bool] = Field(False, description="¿Tiene angustia psicológica?")
-    requires_medical_facilities: Optional[bool] = Field(False, description="¿Requiere instalaciones médicas?")
-    
-    # Idiomas
-    languages_spoken: Optional[str] = Field(None, description="Idiomas que habla (separados por comas)")
-    
-    # Situación
-    status: Optional[str] = Field("refugee", description="Estado: refugee/idp/returnee")
-    special_needs: Optional[str] = Field(None, description="Necesidades especiales adicionales")
-    
-    # Prioridad calculada (puede venir del sistema o calcularse)
-    vulnerability_score: Optional[float] = Field(None, ge=0, le=10, description="Puntuación de vulnerabilidad (0-10)")
-    
+    """
+    Refugee/person data used to compute the cluster assignment.
+
+    Note: These fields represent *product-level* information for the UI/workflow.
+    The ML pipeline will internally map/encode/impute as needed.
+    """
+
+    # Basic info
+    first_name: str = Field(..., description="First name")
+    last_name: str = Field(..., description="Last name")
+    age: int = Field(..., ge=0, le=120, description="Age")
+    gender: str = Field(..., description="Gender: M/F/Other")
+    nationality: str = Field(..., description="Nationality")
+
+    # Family
+    family_size: Optional[int] = Field(None, ge=1, description="Family size")
+    has_children: Optional[bool] = Field(None, description="Has children?")
+    children_count: Optional[int] = Field(0, ge=0, description="Number of children")
+
+    # Health / special needs (high-level, optional)
+    medical_conditions: Optional[str] = Field(None, description="Medical conditions (free text)")
+    has_disability: Optional[bool] = Field(False, description="Has disability?")
+    psychological_distress: Optional[bool] = Field(False, description="Psychological distress?")
+    requires_medical_facilities: Optional[bool] = Field(False, description="Requires medical facilities?")
+
+    # Languages
+    languages_spoken: Optional[str] = Field(None, description="Languages spoken (comma-separated)")
+
+    # Status / notes
+    status: Optional[str] = Field("refugee", description="Status: refugee/idp/returnee")
+    special_needs: Optional[str] = Field(None, description="Additional special needs (free text)")
+
+    # Optional external score (if your product already has one)
+    vulnerability_score: Optional[float] = Field(None, ge=0, le=10, description="Vulnerability score (0-10)")
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -64,111 +65,78 @@ class RefugeeInput(BaseModel):
         }
 
 
-# ===== OUTPUT SCHEMAS =====
+# ============================================================
+# OUTPUT SCHEMAS (NO SHELTER RECOMMENDATIONS)
+# ============================================================
 
-class ShelterRecommendation(BaseModel):
-    """Recomendación de un refugio específico"""
-    
-    shelter_id: int = Field(..., description="ID del refugio")
-    shelter_name: str = Field(..., description="Nombre del refugio")
-    address: Optional[str] = Field(None, description="Dirección")
-    
-    # Puntuaciones
-    compatibility_score: float = Field(..., ge=0, le=100, description="Puntuación de compatibilidad (0-100)")
-    priority_score: float = Field(..., description="Puntuación de prioridad")
-    
-    # Información del refugio
-    max_capacity: int = Field(..., description="Capacidad máxima")
-    current_occupancy: int = Field(..., description="Ocupación actual")
-    available_space: int = Field(..., description="Espacios disponibles")
-    occupancy_rate: float = Field(..., description="Tasa de ocupación (%)")
-    
-    # Servicios
-    has_medical_facilities: bool
-    has_childcare: bool
-    has_disability_access: bool
-    languages_spoken: Optional[str]
-    shelter_type: Optional[str]
-    services_offered: Optional[str]
-    
-    # Explicación
-    explanation: str = Field(..., description="Explicación de por qué se recomienda este refugio")
-    matching_reasons: List[str] = Field(..., description="Razones específicas de compatibilidad")
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "shelter_id": 1,
-                "shelter_name": "Centro Acogida Madrid Norte",
-                "address": "Calle Alcalá 123, Madrid",
-                "compatibility_score": 92.5,
-                "priority_score": 8.5,
-                "max_capacity": 150,
-                "current_occupancy": 45,
-                "available_space": 105,
-                "occupancy_rate": 30.0,
-                "has_medical_facilities": True,
-                "has_childcare": True,
-                "has_disability_access": True,
-                "languages_spoken": "Spanish,English,Arabic,French",
-                "shelter_type": "long-term",
-                "services_offered": "Medical,Education,Legal Aid,Childcare",
-                "explanation": "Este refugio es altamente compatible debido a que cuenta con instalaciones médicas necesarias para la diabetes, ofrece cuidado infantil para los 3 niños de la familia, y tiene personal que habla árabe e inglés.",
-                "matching_reasons": [
-                    "✓ Instalaciones médicas disponibles (requerido por condición médica)",
-                    "✓ Servicio de cuidado infantil para 3 niños",
-                    "✓ Personal que habla árabe e inglés",
-                    "✓ Alta disponibilidad (70% espacios libres)",
-                    "✓ Refugio de largo plazo apropiado para familias"
-                ]
-            }
-        }
+class ClusterFeatureSignal(BaseModel):
+    """
+    Human-readable signals that explain why this person fits the cluster.
+
+    - feature: internal feature name (or friendly name if you map it)
+    - direction: "higher" / "lower" / "present" (depending on your encoding)
+    - strength: effect size / lift / contribution (your pipeline decides)
+    - note: short explanation for staff
+    """
+    feature: str
+    direction: Optional[str] = None
+    strength: Optional[float] = None
+    note: Optional[str] = None
 
 
-class RecommendationResponse(BaseModel):
-    """Respuesta completa con recomendaciones de refugios"""
-    
-    # Información del refugiado
-    refugee_info: dict = Field(..., description="Información básica del refugiado procesado")
-    
-    # Clasificación
-    cluster_id: int = Field(..., description="Cluster asignado por el modelo")
-    cluster_label: str = Field(..., description="Etiqueta descriptiva del cluster")
-    vulnerability_level: str = Field(..., description="Nivel de vulnerabilidad: low/medium/high/critical")
-    
-    # Recomendaciones
-    recommendations: List[ShelterRecommendation] = Field(..., description="Lista de refugios recomendados")
-    total_shelters_analyzed: int = Field(..., description="Total de refugios analizados")
-    
+class ClusterSummary(BaseModel):
+    """
+    Information that helps staff understand what this cluster represents.
+
+    This should be built from your offline cluster profiling step:
+    - label/title + short description
+    - key needs / typical signals
+    - prevalence (share of population)
+    - cautions / operational notes
+    """
+    cluster_id: int = Field(..., description="Cluster id produced by the model")
+    cluster_label: str = Field(..., description="Short descriptive label for the cluster")
+    description: Optional[str] = Field(None, description="Short explanation of what this cluster represents")
+
+    # Optional stats from training/profiling
+    cluster_size: Optional[int] = Field(None, description="Number of people in this cluster in training data")
+    cluster_share: Optional[float] = Field(None, ge=0, le=1, description="Share of training population (0-1)")
+
+    # What to highlight to staff
+    top_signals: List[ClusterFeatureSignal] = Field(default_factory=list, description="Key signals / needs for this cluster")
+    operational_notes: Optional[List[str]] = Field(default_factory=list, description="Practical notes for staff (e.g., typical needs, cautions)")
+    suggested_questions: Optional[List[str]] = Field(default_factory=list, description="Questions staff may ask to confirm needs / context")
+
+
+class PersonClusterResult(BaseModel):
+    """
+    Full response for the staff workflow:
+    - person summary
+    - model assignment
+    - cluster summary (precomputed profile)
+    - individualized signals for this person
+    """
+    person: Dict[str, Any] = Field(..., description="Basic person information echoed back to the UI")
+
+    # Assignment
+    cluster_id: int = Field(..., description="Assigned cluster")
+    cluster_label: str = Field(..., description="Cluster label")
+    confidence: Optional[float] = Field(None, ge=0, le=1, description="Optional confidence/probability (if available)")
+    assignment_method: str = Field(..., description="How the assignment was computed (e.g., 'agglomerative+nearest-centroid')")
+
+    # Summaries
+    cluster_summary: ClusterSummary = Field(..., description="Precomputed cluster profile information")
+    person_signals: List[ClusterFeatureSignal] = Field(default_factory=list, description="Most important signals for this specific person")
+
     # Metadata
-    timestamp: datetime = Field(default_factory=datetime.now, description="Timestamp de la recomendación")
-    ml_model_version: str = Field(..., description="Versión del modelo usado")
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "refugee_info": {
-                    "name": "Ahmed Al-Hassan",
-                    "age": 42,
-                    "nationality": "Syrian",
-                    "family_size": 5
-                },
-                "cluster_id": 2,
-                "cluster_label": "Familias con necesidades médicas",
-                "vulnerability_level": "high",
-                "recommendations": [],  # Se llenaría con ejemplos de ShelterRecommendation
-                "total_shelters_analyzed": 5,
-                "timestamp": "2026-01-07T10:30:00",
-                "model_version": "1.0"
-            }
-        }
+    timestamp: datetime = Field(default_factory=datetime.now, description="Response timestamp")
+    ml_model_version: str = Field(..., description="Model version used")
 
 
 class HealthCheck(BaseModel):
-    """Estado de salud de la API"""
+    """API health status"""
     status: str
     ml_model_loaded: bool
-    database_connected: bool
     timestamp: datetime
-    
+
     model_config = {"protected_namespaces": ()}
