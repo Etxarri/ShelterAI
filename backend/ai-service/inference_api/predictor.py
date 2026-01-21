@@ -25,37 +25,67 @@ class ShelterPredictor:
         if model_path is None:
             model_path = settings.MODEL_PATH
         
-        if not os.path.exists(model_path):
-            raise FileNotFoundError(f"Modelo no encontrado en: {model_path}")
+        # Inicializar como None por defecto
+        self.artifacts = None
+        self.clusterer = None
+        self.umap_reducer = None
+        self.scaler = None
+        self.numeric_imputer = None
+        self.categorical_imputer = None
+        self.feature_names = None
         
-        print(f"📦 Cargando modelo desde: {model_path}")
-        self.artifacts = joblib.load(model_path)
+        # Intentar cargar el modelo si existe
+        if os.path.exists(model_path):
+            print(f"📦 Cargando modelo desde: {model_path}")
+            try:
+                self.artifacts = joblib.load(model_path)
+                
+                # Extraer componentes
+                self.clusterer = self.artifacts['clusterer']
+                self.umap_reducer = self.artifacts['umap_reducer']
+                self.scaler = self.artifacts['scaler']
+                self.numeric_imputer = self.artifacts['numeric_imputer']
+                self.categorical_imputer = self.artifacts['categorical_imputer']
+                self.feature_names = self.artifacts['feature_names']
+                self.numeric_cols = self.artifacts['numeric_cols']
+                self.categorical_cols = self.artifacts['categorical_cols']
+                self.n_clusters = self.artifacts['n_clusters']
+                self.model_version = self.artifacts.get('model_version', '1.0')
+                print("✅ Modelo cargado exitosamente")
+            except Exception as e:
+                print(f"⚠️  Error al cargar modelo: {e}")
+                print("⚠️  El servicio funcionará sin modelo ML (modo fallback)")
+                self.artifacts = None
+        else:
+            print(f"⚠️  Modelo no encontrado en: {model_path}")
+            print("⚠️  El servicio funcionará sin modelo ML (modo fallback)")
+            self.artifacts = None
         
-        # Extraer componentes
-        self.clusterer = self.artifacts['clusterer']
-        self.umap_reducer = self.artifacts['umap_reducer']
-        self.scaler = self.artifacts['scaler']
-        self.numeric_imputer = self.artifacts['numeric_imputer']
-        self.categorical_imputer = self.artifacts['categorical_imputer']
-        self.feature_names = self.artifacts['feature_names']
-        self.numeric_cols = self.artifacts['numeric_cols']
-        self.categorical_cols = self.artifacts['categorical_cols']
-        self.n_clusters = self.artifacts['n_clusters']
-        self.model_version = self.artifacts.get('model_version', '1.0')
+        # Si no hay modelo, usar valores por defecto
+        if self.artifacts is None:
+            self.numeric_cols = []
+            self.categorical_cols = []
+            self.n_clusters = 3
+            self.model_version = '0.0-fallback'
+            self.X_train_reduced = None
+            self.y_train_clusters = None
+        else:
+            # Intentar cargar datos de entrenamiento reducidos si están disponibles
+            self.X_train_reduced = self.artifacts.get('X_train_reduced', None)
+            self.y_train_clusters = self.artifacts.get('y_train_clusters', None)
+            
+            # Si no tenemos datos de entrenamiento, usaremos el exemplars del clusterer
+            if self.X_train_reduced is None and hasattr(self.clusterer, 'exemplars_'):
+                print(f"⚠️  Usando exemplars del clusterer para KNN")
+                self.X_train_reduced = self.clusterer.exemplars_
+                self.y_train_clusters = self.clusterer.labels_[self.clusterer.exemplars_indices_]
         
-        # Intentar cargar datos de entrenamiento reducidos si están disponibles
-        self.X_train_reduced = self.artifacts.get('X_train_reduced', None)
-        self.y_train_clusters = self.artifacts.get('y_train_clusters', None)
-        
-        # Si no tenemos datos de entrenamiento, usaremos el exemplars del clusterer
-        if self.X_train_reduced is None and hasattr(self.clusterer, 'exemplars_'):
-            print(f"⚠️  Usando exemplars del clusterer para KNN")
-            self.X_train_reduced = self.clusterer.exemplars_
-            self.y_train_clusters = self.clusterer.labels_[self.clusterer.exemplars_indices_]
-        
-        print(f"✅ Modelo cargado exitosamente (versión {self.model_version})")
-        print(f"   - {self.n_clusters} clusters")
-        print(f"   - {len(self.feature_names)} features")
+        if self.artifacts is not None:
+            print(f"✅ Modelo cargado exitosamente (versión {self.model_version})")
+            print(f"   - {self.n_clusters} clusters")
+            print(f"   - {len(self.feature_names)} features")
+        else:
+            print(f"✅ Servicio iniciado en modo fallback (sin modelo ML)")
     
     
     def preprocess_refugee_data(self, refugee: RefugeeInput) -> np.ndarray:
@@ -66,6 +96,17 @@ class ShelterPredictor:
         creamos un vector con todas las features esperadas, usando valores neutros
         por defecto donde no tengamos información del refugiado actual.
         """
+        # Fallback: si no hay lista de features (sin modelo), devolver vector mínimo
+        if self.feature_names is None or not isinstance(self.feature_names, (list, tuple)) or len(self.feature_names) == 0:
+            # Usar algunos indicadores básicos como proxy (edad, tamaño familia, medical/disability)
+            base = [
+                float(refugee.age or 30),
+                float(refugee.family_size or 1),
+                1.0 if (refugee.has_disability or refugee.requires_medical_facilities) else 0.0,
+                1.0 if (refugee.has_children and (refugee.children_count or 0) > 0) else 0.0
+            ]
+            return np.array([base], dtype=float)
+
         # Inicializar diccionario con TODAS las features en 0.5 (valor neutro en lugar de 0)
         # Esto ayuda a que el punto no sea tan diferente de los datos de entrenamiento
         features = {col: 0.5 for col in self.feature_names}
@@ -143,7 +184,25 @@ class ShelterPredictor:
             tuple: (cluster_id, cluster_label, vulnerability_level)
         """
         print(f"🔍 [PREDICTOR] Iniciando predicción...")
-        
+
+        # Fallback completo cuando no hay modelo entrenado
+        if self.artifacts is None or self.scaler is None or self.umap_reducer is None:
+            # Heurística simple para asignar cluster sin ML
+            # Prioriza condiciones médicas/discapacidad, luego edad, luego familia
+            if refugee.has_disability or refugee.requires_medical_facilities or (refugee.medical_conditions and str(refugee.medical_conditions).lower() != "none"):
+                cluster_id = 2  # Personas con necesidades médicas
+            elif refugee.age is not None and refugee.age > 65:
+                cluster_id = 3  # Adultos mayores
+            elif (refugee.has_children and (refugee.family_size or 1) >= 4) or ((refugee.family_size or 1) >= 5):
+                cluster_id = 1  # Familias numerosas con niños
+            else:
+                cluster_id = 0  # Individuos jóvenes/pequeñas familias
+
+            cluster_label, vulnerability_level = self._get_cluster_info(cluster_id, refugee)
+            print(f"   ✓ [Fallback] Cluster: {cluster_id} ({cluster_label}), nivel {vulnerability_level}")
+            return int(cluster_id), cluster_label, vulnerability_level
+
+        # Camino normal con modelo
         # Preprocesar datos
         print(f"🔍 [PREDICTOR] Preprocesando datos del refugiado...")
         X = self.preprocess_refugee_data(refugee)

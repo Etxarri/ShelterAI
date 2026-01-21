@@ -9,7 +9,7 @@ class ApiService {
   // Create a client that we can replace in tests
   static http.Client client = http.Client();
 
-  // GET /api/refugees - Get all refugees
+  // GET /api/refugees - Get all refugees (unassigned)
   static Future<List<Map<String, dynamic>>> getRefugees() async {
     try {
       final response = await client.get(Uri.parse('$baseUrl/refugees'));
@@ -23,6 +23,24 @@ class ApiService {
     } catch (e) {
       // ignore: avoid_print
       print('Error fetching refugees: $e');
+      rethrow;
+    }
+  }
+
+  // GET /api/refugees/assigned - Get all assigned refugees
+  static Future<List<Map<String, dynamic>>> getAssignedRefugees() async {
+    try {
+      final response = await client.get(Uri.parse('$baseUrl/refugees/assigned'));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.cast<Map<String, dynamic>>();
+      } else {
+        throw Exception('Failed to load assigned refugees: ${response.statusCode}');
+      }
+    } catch (e) {
+      // ignore: avoid_print
+      print('Error fetching assigned refugees: $e');
       rethrow;
     }
   }
@@ -90,7 +108,7 @@ class ApiService {
     }
   }
 
-  // POST /api/refugees-with-assignment - Create refugee WITH automatic AI assignment
+  // POST /api/refugees - Create refugee WITH automatic AI assignment
   static Future<Map<String, dynamic>> addRefugeeWithAssignment(
     Map<String, dynamic> refugee,
   ) async {
@@ -107,10 +125,29 @@ class ApiService {
       print('Assignment response body: "${response.body}"');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return json.decode(response.body) as Map<String, dynamic>;
+        final body = response.body.trim();
+        if (body.isEmpty || body == '[]' || body == 'null') {
+          return {'success': true};
+        }
+
+        final decoded = json.decode(body);
+
+        if (decoded == null) return {'success': true};
+
+        // If backend returns an array, pick first element
+        if (decoded is List) {
+          if (decoded.isEmpty) return {'success': true};
+          final first = decoded.first;
+          if (first == null) return {'success': true};
+          return first as Map<String, dynamic>;
+        }
+
+        if (decoded is Map<String, dynamic>) return decoded;
+
+        return {'success': true, 'data': decoded};
       } else {
         throw Exception(
-          'Failed to add refugee with assignment: ${response.statusCode} - ${response.body}',
+          'Failed to add refugee: ${response.statusCode} - ${response.body}',
         );
       }
     } catch (e) {
@@ -248,10 +285,10 @@ class ApiService {
     ) async {
       try {
         final response = await client.post(
-          Uri.parse('$baseUrl/ai/select-shelter'),
+          Uri.parse('$baseUrl/ai/assign-shelter'),
           headers: {'Content-Type': 'application/json'},
           body: json.encode({
-            'refugee_id': refugeeId,
+            'refugee_id': int.tryParse(refugeeId),
             'shelter_id': shelterId,
           }),
         );

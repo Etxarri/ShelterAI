@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/custom_snackbar.dart';
 import 'package:shelter_ai/providers/auth_state.dart';
 import 'package:shelter_ai/services/api_service.dart';
 import 'package:shelter_ai/models/recommendation_response.dart';
@@ -15,7 +16,7 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
   void _logout() {
     final auth = AuthScope.of(context);
     auth.logout();
-    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+    Navigator.pushNamedAndRemoveUntil(context, '/refugee-login', (route) => false);
   }
 
   Future<void> _handleCheckAssignment() async {
@@ -23,8 +24,9 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
     final refugeeId = auth.userId;
 
     if (refugeeId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se encontró el ID del refugiado en la sesión.')),
+      CustomSnackBar.showError(
+        context,
+        'Refugee ID not found in session.',
       );
       return;
     }
@@ -36,8 +38,9 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
 
       if (!hasAssignment) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Aún no has sido asignado a ningún refugio.')),
+        CustomSnackBar.showInfo(
+          context,
+          'You have not yet been assigned to any shelter.',
         );
         return;
       }
@@ -60,14 +63,17 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
 
       // Si seleccionó, puedes mostrar confirmación
       if (result == true && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Has confirmado tu refugio.')),
+        CustomSnackBar.showSuccess(
+          context,
+          'You have successfully confirmed your shelter',
         );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al verificar asignación: $e')),
+      CustomSnackBar.showError(
+        context,
+        'Error checking assignment: $e',
+        duration: const Duration(seconds: 7),
       );
     }
   }
@@ -135,14 +141,6 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-
-            // Botón para que el refugiado verifique su asignación y, si existe, elija entre las 3 opciones
-            ElevatedButton.icon(
-              icon: const Icon(Icons.home_work_outlined),
-              label: const Text('Verificar mi asignación y elegir refugio'),
-              onPressed: _handleCheckAssignment,
-            ),
             const SizedBox(height: 24),
             const Text(
               'Your quick actions',
@@ -206,7 +204,7 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: const [
             Text(
-              'Upon arriving at the center',
+              'Upon arriving at the shelter',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 12),
@@ -223,7 +221,7 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Urgent help'),
+        title: const Text('Request urgent help'),
         content: const Text(
           'We can prioritize you if there is pain, pregnancy, reduced mobility, unaccompanied minors or security risk.',
         ),

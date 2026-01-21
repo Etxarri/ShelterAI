@@ -37,21 +37,21 @@ class _RecommendationSelectionScreenState
 
       if (!context.mounted) return;
 
-      // Mostrar mensaje de éxito
+      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('¡Refugio asignado exitosamente!'),
+          content: Text('Shelter assigned successfully!'),
           backgroundColor: Colors.green,
           duration: Duration(seconds: 2),
         ),
       );
 
-      // Esperar un momento para que el usuario vea el mensaje
+      // Wait a moment for the user to see the message
       await Future.delayed(const Duration(seconds: 1));
 
       if (!context.mounted) return;
 
-      // Regresar a la pantalla anterior con resultado exitoso
+      // Return to previous screen with successful result
       Navigator.of(context).pop(true);
 
     } catch (e) {
@@ -60,7 +60,7 @@ class _RecommendationSelectionScreenState
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error al asignar refugio: $e'),
+          content: Text('Error assigning shelter: $e'),
           backgroundColor: Colors.red,
         ),
       );
@@ -75,23 +75,22 @@ class _RecommendationSelectionScreenState
     final refugeeAge = response.refugeeAge;
     final refugeeNationality = response.refugeeNationality;
     
-    // Verificar si es un refugiado o trabajador
     final auth = AuthScope.of(context);
     final isRefugee = auth.role == UserRole.refugee;
-    final canSelect = isRefugee; // Solo los refugiados pueden seleccionar
+    final canSelect = true; // Both refugees and workers can select
 
     return WillPopScope(
       onWillPop: () async => !_isLoading,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Seleccionar Refugio para $refugeeName'),
+          title: Text('Select Shelter for $refugeeName'),
           elevation: 0,
         ),
         body: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header con información del refugiado
+              // Header with refugee information
               Container(
                 color: Colors.blue.shade50,
                 padding: const EdgeInsets.all(16),
@@ -101,7 +100,9 @@ class _RecommendationSelectionScreenState
                       radius: 40,
                       backgroundColor: Colors.blue,
                       child: Text(
-                        refugeeName.isNotEmpty ? refugeeName[0].toUpperCase() : '?',
+                        refugeeName.isNotEmpty
+                            ? refugeeName[0].toUpperCase()
+                            : '?',
                         style: const TextStyle(
                           fontSize: 32,
                           color: Colors.white,
@@ -118,7 +119,7 @@ class _RecommendationSelectionScreenState
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '$refugeeAge años • $refugeeNationality',
+                      '$refugeeAge years • $refugeeNationality',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey.shade700,
@@ -128,7 +129,7 @@ class _RecommendationSelectionScreenState
                 ),
               ),
 
-              // Banner de información
+              // Information banner
               Container(
                 margin: const EdgeInsets.all(16),
                 padding: const EdgeInsets.all(12),
@@ -142,17 +143,17 @@ class _RecommendationSelectionScreenState
                 child: Row(
                   children: [
                     Icon(
-                      canSelect ? Icons.lightbulb_outline : Icons.info_outline,
-                      color: canSelect ? Colors.blue.shade800 : Colors.orange.shade800,
+                      Icons.lightbulb_outline,
+                      color: Colors.blue.shade800,
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        canSelect
-                            ? 'Selecciona el refugio que prefieres. Te asignaremos al que elijas.'
-                            : 'Estas son las recomendaciones generadas por IA. El refugiado recibirá estas opciones y podrá elegir su preferencia.',
+                        isRefugee
+                            ? 'Select the shelter you prefer. We will assign you to your choice.'
+                            : 'Select one of these shelters to assign to the refugee.',
                         style: TextStyle(
-                          color: canSelect ? Colors.blue.shade800 : Colors.orange.shade800,
+                          color: Colors.blue.shade800,
                           fontSize: 14,
                         ),
                       ),
@@ -161,11 +162,11 @@ class _RecommendationSelectionScreenState
                 ),
               ),
 
-              // Título de recomendaciones
+              // Recommendations title
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
-                  '${recommendations.length} Refugios Recomendados',
+                  '${recommendations.length} Recommended Shelters',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -174,7 +175,7 @@ class _RecommendationSelectionScreenState
               ),
               const SizedBox(height: 16),
 
-              // Mensaje si no hay recomendaciones
+              // Message if no recommendations
               if (recommendations.isEmpty)
                 Padding(
                   padding: const EdgeInsets.all(32),
@@ -187,7 +188,7 @@ class _RecommendationSelectionScreenState
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'No se encontraron refugios compatibles',
+                        'No compatible shelters found',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -197,7 +198,7 @@ class _RecommendationSelectionScreenState
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Por favor, contacta con un administrador para obtener ayuda.',
+                        'Please contact an administrator for assistance.',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey.shade500,
@@ -289,7 +290,7 @@ class _RecommendationSelectionScreenState
 
                             const SizedBox(height: 12),
 
-                            // Score de compatibilidad
+                            // Compatibility score
                             Row(
                               children: [
                                 Expanded(
@@ -298,7 +299,7 @@ class _RecommendationSelectionScreenState
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Compatibilidad',
+                                        'Compatibility',
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: Colors.grey.shade600,
@@ -350,13 +351,13 @@ class _RecommendationSelectionScreenState
 
                             const SizedBox(height: 12),
 
-                            // Capacidad e instalaciones
+                            // Capacity and facilities
                             Row(
                               children: [
                                 Expanded(
                                   child: _buildInfoChip(
                                     icon: Icons.group,
-                                    label: 'Capacidad',
+                                    label: 'Capacity',
                                     value:
                                         '${recommendation.availableSpace}/${recommendation.maxCapacity}',
                                   ),
@@ -365,7 +366,7 @@ class _RecommendationSelectionScreenState
                                 Expanded(
                                   child: _buildInfoChip(
                                     icon: Icons.medical_services,
-                                    label: 'Médico',
+                                    label: 'Medical',
                                     value: recommendation.hasMedicalFacilities
                                         ? '✓'
                                         : '✗',
@@ -379,7 +380,7 @@ class _RecommendationSelectionScreenState
                                 Expanded(
                                   child: _buildInfoChip(
                                     icon: Icons.child_care,
-                                    label: 'Guardería',
+                                    label: 'Childcare',
                                     value: recommendation.hasChildcare
                                         ? '✓'
                                         : '✗',
@@ -393,10 +394,10 @@ class _RecommendationSelectionScreenState
 
                             const SizedBox(height: 12),
 
-                            // Explicación (expandible)
+                            // Explanation (expandable)
                             ExpansionTile(
                               title: const Text(
-                                'Por qué se recomienda este refugio',
+                                'Why this shelter is recommended',
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
@@ -451,7 +452,7 @@ class _RecommendationSelectionScreenState
                               ],
                             ),
 
-                            // Botón de selección o indicador de lectura
+                            // Selection button or loading indicator
                             const SizedBox(height: 8),
                             if (canSelect && _selectedShelterId == recommendation.shelterId)
                               Center(
@@ -471,7 +472,7 @@ class _RecommendationSelectionScreenState
                                               color: Colors.green.shade700),
                                           const SizedBox(width: 8),
                                           Text(
-                                            'Asignando...',
+                                                'Assigning...',
                                             style: TextStyle(
                                               color: Colors.green.shade700,
                                               fontWeight: FontWeight.w600,
@@ -480,8 +481,8 @@ class _RecommendationSelectionScreenState
                                         ],
                                       ),
                               ),
-                            // Mostrar indicador de "solo lectura" para trabajadores
-                            if (!canSelect && index == 0)
+                            // Show "best option" indicator for the first shelter
+                            if (index == 0)
                               Center(
                                 child: Container(
                                   margin: const EdgeInsets.only(top: 8),
@@ -495,7 +496,7 @@ class _RecommendationSelectionScreenState
                                     border: Border.all(color: Colors.blue.shade200),
                                   ),
                                   child: Text(
-                                    '⭐ Mejor opción',
+                                    '⭐ Best option',
                                     style: TextStyle(
                                       color: Colors.blue.shade700,
                                       fontSize: 12,

@@ -20,7 +20,7 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
   final TextEditingController _ageCtrl = TextEditingController();
   final TextEditingController _passwordCtrl = TextEditingController();
   final TextEditingController _confirmCtrl = TextEditingController();
-  String _gender = 'Masculino';
+  String _gender = 'Male';
   bool _isLoading = false;
 
   @override
@@ -84,14 +84,14 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
       setState(() => _isLoading = false);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error de registro: $e')),
+        SnackBar(content: Text('Registration error: $e')),
       );
     }
   }
 
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
-      return null; // Email es opcional
+      return null; // Email is optional
     }
     final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
     if (!emailRegex.hasMatch(value.trim())) {
@@ -116,7 +116,7 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
     final color = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Registrarse como refugiado'),
+        title: const Text('Register as Refugee'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: _isLoading
@@ -147,25 +147,25 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Text(
-                    'Crear cuenta de refugiado',
+                    'Create Refugee Account',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Rápido y seguro. Genera tu QR después.',
+                    'Quick and secure. Generate your QR later.',
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
                   const Text(
-                    'Información personal',
+                    'Personal Information',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _firstNameCtrl,
                     decoration: const InputDecoration(
-                      labelText: 'Nombre',
+                      labelText: 'First Name',
                       prefixIcon: Icon(Icons.person),
                       border: OutlineInputBorder(),
                     ),
@@ -177,7 +177,7 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
                   TextFormField(
                     controller: _lastNameCtrl,
                     decoration: const InputDecoration(
-                      labelText: 'Apellido',
+                      labelText: 'Last Name',
                       prefixIcon: Icon(Icons.person_outline),
                       border: OutlineInputBorder(),
                     ),
@@ -189,7 +189,7 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
                   TextFormField(
                     controller: _ageCtrl,
                     decoration: const InputDecoration(
-                      labelText: 'Edad',
+                      labelText: 'Age',
                       prefixIcon: Icon(Icons.cake),
                       border: OutlineInputBorder(),
                     ),
@@ -209,27 +209,27 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
                   DropdownButtonFormField<String>(
                     value: _gender,
                     items: const [
-                      DropdownMenuItem(value: 'Masculino', child: Text('Masculino')),
-                      DropdownMenuItem(value: 'Femenino', child: Text('Femenino')),
-                      DropdownMenuItem(value: 'Otro', child: Text('Otro')),
+                      DropdownMenuItem(value: 'Male', child: Text('Male')),
+                      DropdownMenuItem(value: 'Female', child: Text('Female')),
+                      DropdownMenuItem(value: 'Other', child: Text('Other')),
                     ],
-                    onChanged: _isLoading ? null : (v) => setState(() => _gender = v ?? 'Masculino'),
+                    onChanged: _isLoading ? null : (v) => setState(() => _gender = v ?? 'Male'),
                     decoration: const InputDecoration(
-                      labelText: 'Género',
+                      labelText: 'Gender',
                       prefixIcon: Icon(Icons.wc),
                       border: OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 20),
                   const Text(
-                    'Contacto (algunos opcionales)',
+                    'Contact (some optional)',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _emailCtrl,
                     decoration: const InputDecoration(
-                      labelText: 'Email (opcional)',
+                      labelText: 'Email (optional)',
                       prefixIcon: Icon(Icons.email),
                       border: OutlineInputBorder(),
                     ),
@@ -241,10 +241,10 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
                   TextFormField(
                     controller: _phoneCtrl,
                     decoration: const InputDecoration(
-                      labelText: 'Teléfono (opcional)',
+                      labelText: 'Phone (optional)',
                       prefixIcon: Icon(Icons.phone),
                       border: OutlineInputBorder(),
-                      hintText: 'ej: +34 123456789',
+                      hintText: 'e.g: +34 123456789',
                     ),
                     keyboardType: TextInputType.phone,
                     validator: _validatePhone,
@@ -262,14 +262,14 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
                   ),
                   const SizedBox(height: 20),
                   const Text(
-                    'Credenciales',
+                    'Credentials',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _usernameCtrl,
                     decoration: const InputDecoration(
-                      labelText: 'Usuario',
+                      labelText: 'Username',
                       prefixIcon: Icon(Icons.badge),
                       border: OutlineInputBorder(),
                     ),
@@ -321,7 +321,7 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
                           )
                         : const Icon(Icons.person_add),
                     label: Text(
-                      _isLoading ? 'Registrando...' : 'Registrarse',
+                      _isLoading ? 'Registering...' : 'Register',
                     ),
                   ),
                   TextButton(
@@ -332,7 +332,7 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
                               '/refugee-login',
                             ),
                     child: Text(
-                      'Ya tengo cuenta',
+                      'I already have an account',
                       style: TextStyle(color: color.primary),
                     ),
                   ),

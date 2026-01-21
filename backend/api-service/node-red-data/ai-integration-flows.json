@@ -127,7 +127,7 @@
         "type": "function",
         "z": "tab_ai_integration",
         "name": "Preparar INSERT refugiado",
-        "func": "const data = msg.payload;\n\n// Guardar datos completos para después\nflow.set('tempRefugeeData', data);\n\nmsg.topic = `INSERT INTO refugees (first_name, last_name, age, gender, nationality, languages_spoken, family_id, medical_conditions, has_disability, special_needs, vulnerability_score, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    data.first_name, \n    data.last_name, \n    data.age, \n    data.gender,\n    data.nationality, \n    data.languages_spoken, \n    data.family_id,\n    data.medical_conditions,\n    data.has_disability || false,\n    data.special_needs, \n    data.vulnerability_score || 0\n];\n\nreturn msg;",
+        "func": "const data = msg.payload;\n\n// Guardar datos completos para después\nflow.set('tempRefugeeData', data);\n\nmsg.topic = `INSERT INTO refugees (first_name, last_name, age, gender, nationality, languages_spoken, email, family_id, medical_conditions, has_disability, special_needs, vulnerability_score, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    data.first_name, \n    data.last_name, \n    data.age, \n    data.gender,\n    data.nationality, \n    data.languages_spoken, \n    data.email,\n    data.family_id,\n    data.medical_conditions,\n    data.has_disability,\n    data.special_needs, \n    data.vulnerability_score || 0\n];\n\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,

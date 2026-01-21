@@ -68,8 +68,8 @@
         "method": "get",
         "upload": false,
         "swaggerDoc": "",
-        "x": 140,
-        "y": 80,
+        "x": 160,
+        "y": 260,
         "wires": [
             [
                 "shelter_get_all_query"
@@ -87,7 +87,7 @@
         "rowsPerMsg": "",
         "outputs": 1,
         "x": 370,
-        "y": 80,
+        "y": 260,
         "wires": [
             [
                 "shelter_response"
@@ -103,8 +103,8 @@
         "method": "get",
         "upload": false,
         "swaggerDoc": "",
-        "x": 150,
-        "y": 140,
+        "x": 170,
+        "y": 320,
         "wires": [
             [
                 "shelter_get_by_id_prepare"
@@ -116,10 +116,15 @@
         "type": "function",
         "z": "tab_shelters",
         "name": "Prepare Query",
-        "func": "msg.queryParameters = [parseInt(msg.req.params.id)];\nmsg.payload = \"SELECT * FROM shelters WHERE id = $1\";\nreturn msg;",
+        "func": "msg.queryParameters = [parseInt(msg.req.params.id)];\nmsg.query = \"SELECT * FROM shelters WHERE id = $1\";\nreturn msg;",
         "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
         "x": 380,
-        "y": 140,
+        "y": 320,
         "wires": [
             [
                 "shelter_get_by_id_query"
@@ -137,7 +142,7 @@
         "rowsPerMsg": "",
         "outputs": 1,
         "x": 580,
-        "y": 140,
+        "y": 320,
         "wires": [
             [
                 "shelter_single_response"
@@ -153,7 +158,7 @@
         "method": "get",
         "upload": false,
         "swaggerDoc": "",
-        "x": 170,
+        "x": 190,
         "y": 200,
         "wires": [
             [
@@ -171,170 +176,11 @@
         "split": false,
         "rowsPerMsg": "",
         "outputs": 1,
-        "x": 410,
+        "x": 420,
         "y": 200,
         "wires": [
             [
                 "shelter_response"
-            ]
-        ]
-    },
-    {
-        "id": "shelter_post",
-        "type": "http in",
-        "z": "tab_shelters",
-        "d": true,
-        "name": "POST /api/shelters",
-        "url": "/api/shelters",
-        "method": "post",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 140,
-        "y": 260,
-        "wires": [
-            [
-                "shelter_post_prepare"
-            ]
-        ]
-    },
-    {
-        "id": "shelter_post_prepare",
-        "type": "function",
-        "z": "tab_shelters",
-        "d": true,
-        "name": "Prepare Insert",
-        "func": "const data = msg.payload;\nmsg.queryParameters = [\n    data.name, data.address, data.phone_number, data.email,\n    data.max_capacity, data.current_occupancy || 0,\n    data.has_medical_facilities || false, data.has_childcare || false,\n    data.has_disability_access || false, data.languages_spoken,\n    data.latitude, data.longitude, data.shelter_type, data.services_offered\n];\nmsg.payload = `INSERT INTO shelters (name, address, phone_number, email, max_capacity, current_occupancy, has_medical_facilities, has_childcare, has_disability_access, languages_spoken, latitude, longitude, shelter_type, services_offered, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\nreturn msg;",
-        "outputs": 1,
-        "x": 370,
-        "y": 260,
-        "wires": [
-            [
-                "shelter_post_query"
-            ]
-        ]
-    },
-    {
-        "id": "shelter_post_query",
-        "type": "postgresql",
-        "z": "tab_shelters",
-        "d": true,
-        "name": "Insert Shelter",
-        "query": "",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 570,
-        "y": 260,
-        "wires": [
-            [
-                "shelter_created_response"
-            ]
-        ]
-    },
-    {
-        "id": "shelter_put",
-        "type": "http in",
-        "z": "tab_shelters",
-        "d": true,
-        "name": "PUT /api/shelters/:id",
-        "url": "/api/shelters/:id",
-        "method": "put",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 150,
-        "y": 320,
-        "wires": [
-            [
-                "shelter_put_prepare"
-            ]
-        ]
-    },
-    {
-        "id": "shelter_put_prepare",
-        "type": "function",
-        "z": "tab_shelters",
-        "d": true,
-        "name": "Prepare Update",
-        "func": "const data = msg.payload;\nconst id = parseInt(msg.req.params.id);\nmsg.queryParameters = [\n    data.name, data.address, data.phone_number, data.email,\n    data.max_capacity, data.current_occupancy,\n    data.has_medical_facilities, data.has_childcare,\n    data.has_disability_access, data.languages_spoken,\n    data.latitude, data.longitude, data.shelter_type, data.services_offered, id\n];\nmsg.payload = `UPDATE shelters SET name=$1, address=$2, phone_number=$3, email=$4, max_capacity=$5, current_occupancy=$6, has_medical_facilities=$7, has_childcare=$8, has_disability_access=$9, languages_spoken=$10, latitude=$11, longitude=$12, shelter_type=$13, services_offered=$14, updated_at=CURRENT_TIMESTAMP WHERE id=$15 RETURNING *`;\nreturn msg;",
-        "outputs": 1,
-        "x": 370,
-        "y": 320,
-        "wires": [
-            [
-                "shelter_put_query"
-            ]
-        ]
-    },
-    {
-        "id": "shelter_put_query",
-        "type": "postgresql",
-        "z": "tab_shelters",
-        "d": true,
-        "name": "Update Shelter",
-        "query": "",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 580,
-        "y": 320,
-        "wires": [
-            [
-                "shelter_single_response"
-            ]
-        ]
-    },
-    {
-        "id": "shelter_delete",
-        "type": "http in",
-        "z": "tab_shelters",
-        "d": true,
-        "name": "DELETE /api/shelters/:id",
-        "url": "/api/shelters/:id",
-        "method": "delete",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 160,
-        "y": 380,
-        "wires": [
-            [
-                "shelter_delete_prepare"
-            ]
-        ]
-    },
-    {
-        "id": "shelter_delete_prepare",
-        "type": "function",
-        "z": "tab_shelters",
-        "d": true,
-        "name": "Prepare Delete",
-        "func": "msg.queryParameters = [parseInt(msg.req.params.id)];\nmsg.payload = \"DELETE FROM shelters WHERE id = $1\";\nreturn msg;",
-        "outputs": 1,
-        "x": 380,
-        "y": 380,
-        "wires": [
-            [
-                "shelter_delete_query"
-            ]
-        ]
-    },
-    {
-        "id": "shelter_delete_query",
-        "type": "postgresql",
-        "z": "tab_shelters",
-        "d": true,
-        "name": "Delete Shelter",
-        "query": "",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 580,
-        "y": 380,
-        "wires": [
-            [
-                "shelter_delete_response"
             ]
         ]
     },
@@ -345,8 +191,8 @@
         "name": "Format Response",
         "func": "msg.statusCode = 200;\nmsg.payload = msg.payload || [];\nreturn msg;",
         "outputs": 1,
-        "x": 790,
-        "y": 80,
+        "x": 630,
+        "y": 240,
         "wires": [
             [
                 "shelter_http_response"
@@ -360,40 +206,13 @@
         "name": "Format Single",
         "func": "if (msg.payload && msg.payload.length > 0) {\n    msg.statusCode = 200;\n    msg.payload = msg.payload[0];\n} else {\n    msg.statusCode = 404;\n    msg.payload = { error: \"Shelter not found\" };\n}\nreturn msg;",
         "outputs": 1,
-        "x": 780,
-        "y": 140,
-        "wires": [
-            [
-                "shelter_http_response"
-            ]
-        ]
-    },
-    {
-        "id": "shelter_created_response",
-        "type": "function",
-        "z": "tab_shelters",
-        "d": true,
-        "name": "Format Created",
-        "func": "msg.statusCode = 201;\nmsg.payload = msg.payload[0];\nreturn msg;",
-        "outputs": 1,
-        "x": 790,
-        "y": 260,
-        "wires": [
-            [
-                "shelter_http_response"
-            ]
-        ]
-    },
-    {
-        "id": "shelter_delete_response",
-        "type": "function",
-        "z": "tab_shelters",
-        "d": true,
-        "name": "Format Delete",
-        "func": "msg.statusCode = 204;\nmsg.payload = \"\";\nreturn msg;",
-        "outputs": 1,
-        "x": 780,
-        "y": 380,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 800,
+        "y": 320,
         "wires": [
             [
                 "shelter_http_response"
@@ -408,7 +227,7 @@
         "statusCode": "",
         "headers": {},
         "x": 1000,
-        "y": 220,
+        "y": 260,
         "wires": []
     },
     {
@@ -420,8 +239,8 @@
         "method": "get",
         "upload": false,
         "swaggerDoc": "",
-        "x": 140,
-        "y": 80,
+        "x": 170,
+        "y": 260,
         "wires": [
             [
                 "refugee_get_all_query"
@@ -433,13 +252,48 @@
         "type": "postgresql",
         "z": "tab_refugees",
         "name": "Query All Refugees",
-        "query": "SELECT * FROM refugees ORDER BY id",
+        "query": "SELECT * FROM refugee WHERE assigned_shelter_id IS NULL OR status != 'assigned' ORDER BY id",
         "postgreSQLConfig": "301245f94e1239d9",
         "split": false,
         "rowsPerMsg": "",
         "outputs": 1,
-        "x": 370,
-        "y": 80,
+        "x": 390,
+        "y": 260,
+        "wires": [
+            [
+                "refugee_response"
+            ]
+        ]
+    },
+    {
+        "id": "refugee_get_assigned",
+        "type": "http in",
+        "z": "tab_refugees",
+        "name": "GET /api/refugees/assigned",
+        "url": "/api/refugees/assigned",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 200,
+        "y": 200,
+        "wires": [
+            [
+                "refugee_get_assigned_query"
+            ]
+        ]
+    },
+    {
+        "id": "refugee_get_assigned_query",
+        "type": "postgresql",
+        "z": "tab_refugees",
+        "name": "Query Assigned Refugees",
+        "query": "SELECT r.*, s.name as shelter_name, s.address as shelter_address FROM refugee r LEFT JOIN shelters s ON r.assigned_shelter_id = s.id WHERE r.assigned_shelter_id IS NOT NULL AND r.status = 'assigned' ORDER BY r.updated_at DESC",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": "",
+        "outputs": 1,
+        "x": 470,
+        "y": 200,
         "wires": [
             [
                 "refugee_response"
@@ -455,8 +309,8 @@
         "method": "get",
         "upload": false,
         "swaggerDoc": "",
-        "x": 150,
-        "y": 140,
+        "x": 180,
+        "y": 320,
         "wires": [
             [
                 "refugee_get_by_id_prepare"
@@ -468,15 +322,15 @@
         "type": "function",
         "z": "tab_refugees",
         "name": "Prepare Query",
-        "func": "const data = msg.payload;\n\nmsg.topic = `INSERT INTO refugees (first_name, last_name, age, gender, nationality, languages_spoken, family_id, medical_conditions, has_disability, special_needs, vulnerability_score, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    parseInt(msg.req.params.id)\n];\n\nreturn msg;",
+        "func": "const data = msg.payload;\n\nmsg.query = `INSERT INTO refugee (first_name, last_name, age, gender, nationality, languages_spoken, email, family_id, medical_conditions, has_disability, special_needs, vulnerability_score, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    parseInt(msg.req.params.id)\n];\n\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 380,
-        "y": 140,
+        "x": 400,
+        "y": 320,
         "wires": [
             [
                 "refugee_get_by_id_query"
@@ -488,283 +342,16 @@
         "type": "postgresql",
         "z": "tab_refugees",
         "name": "Query Refugee",
-        "query": "{{msg.topic}}",
+        "query": "",
         "postgreSQLConfig": "301245f94e1239d9",
         "split": false,
         "rowsPerMsg": "",
         "outputs": 1,
-        "x": 580,
-        "y": 140,
+        "x": 600,
+        "y": 320,
         "wires": [
             [
                 "refugee_single_response"
-            ]
-        ]
-    },
-    {
-        "id": "refugee_get_by_family",
-        "type": "http in",
-        "z": "tab_refugees",
-        "d": true,
-        "name": "GET /api/refugees/family/:familyId",
-        "url": "/api/refugees/family/:familyId",
-        "method": "get",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 180,
-        "y": 200,
-        "wires": [
-            [
-                "refugee_get_by_family_prepare"
-            ]
-        ]
-    },
-    {
-        "id": "refugee_get_by_family_prepare",
-        "type": "function",
-        "z": "tab_refugees",
-        "d": true,
-        "name": "Prepare Query",
-        "func": "msg.queryParameters = [parseInt(msg.req.params.familyId)];\nmsg.payload = \"SELECT * FROM refugees WHERE family_id = $1 ORDER BY id\";\nreturn msg;",
-        "outputs": 1,
-        "x": 430,
-        "y": 200,
-        "wires": [
-            [
-                "refugee_get_by_family_query"
-            ]
-        ]
-    },
-    {
-        "id": "refugee_get_by_family_query",
-        "type": "postgresql",
-        "z": "tab_refugees",
-        "d": true,
-        "name": "Query",
-        "query": "",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 630,
-        "y": 200,
-        "wires": [
-            [
-                "refugee_response"
-            ]
-        ]
-    },
-    {
-        "id": "refugee_get_high_vulnerability",
-        "type": "http in",
-        "z": "tab_refugees",
-        "d": true,
-        "name": "GET /api/refugees/high-vulnerability",
-        "url": "/api/refugees/high-vulnerability",
-        "method": "get",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 190,
-        "y": 260,
-        "wires": [
-            [
-                "refugee_get_high_vuln_prepare"
-            ]
-        ]
-    },
-    {
-        "id": "refugee_get_high_vuln_prepare",
-        "type": "function",
-        "z": "tab_refugees",
-        "d": true,
-        "name": "Prepare Query",
-        "func": "const minScore = parseFloat(msg.req.query.minScore) || 7.0;\nmsg.queryParameters = [minScore];\nmsg.payload = \"SELECT * FROM refugees WHERE vulnerability_score >= $1 ORDER BY vulnerability_score DESC\";\nreturn msg;",
-        "outputs": 1,
-        "x": 450,
-        "y": 260,
-        "wires": [
-            [
-                "refugee_get_high_vuln_query"
-            ]
-        ]
-    },
-    {
-        "id": "refugee_get_high_vuln_query",
-        "type": "postgresql",
-        "z": "tab_refugees",
-        "d": true,
-        "name": "Query",
-        "query": "",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 650,
-        "y": 260,
-        "wires": [
-            [
-                "refugee_response"
-            ]
-        ]
-    },
-    {
-        "id": "refugee_post",
-        "type": "http in",
-        "z": "tab_refugees",
-        "name": "POST /api/refugees",
-        "url": "/api/refugees",
-        "method": "post",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 140,
-        "y": 320,
-        "wires": [
-            [
-                "refugee_post_prepare"
-            ]
-        ]
-    },
-    {
-        "id": "refugee_post_prepare",
-        "type": "function",
-        "z": "tab_refugees",
-        "name": "Prepare Insert",
-        "func": "const data = msg.payload;\n\nmsg.topic = `INSERT INTO refugees (first_name, last_name, age, gender, nationality, languages_spoken, family_id, medical_conditions, has_disability, special_needs, vulnerability_score, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    data.first_name, \n    data.last_name, \n    data.age, \n    data.gender,\n    data.nationality, \n    data.languages_spoken, \n    data.family_id,\n    data.medical_conditions,\n    data.has_disability,\n    data.special_needs, \n    data.vulnerability_score || 0\n];\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 370,
-        "y": 320,
-        "wires": [
-            [
-                "refugee_post_query"
-            ]
-        ]
-    },
-    {
-        "id": "refugee_post_query",
-        "type": "postgresql",
-        "z": "tab_refugees",
-        "name": "Insert Refugee",
-        "query": "{{msg.topic}}",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 560,
-        "y": 320,
-        "wires": [
-            [
-                "refugee_created_response"
-            ]
-        ]
-    },
-    {
-        "id": "refugee_put",
-        "type": "http in",
-        "z": "tab_refugees",
-        "d": true,
-        "name": "PUT /api/refugees/:id",
-        "url": "/api/refugees/:id",
-        "method": "put",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 150,
-        "y": 380,
-        "wires": [
-            [
-                "refugee_put_prepare"
-            ]
-        ]
-    },
-    {
-        "id": "refugee_put_prepare",
-        "type": "function",
-        "z": "tab_refugees",
-        "d": true,
-        "name": "Prepare Update",
-        "func": "const data = msg.payload;\nconst id = parseInt(msg.req.params.id);\nmsg.queryParameters = [\n    data.first_name, data.last_name, data.age, data.gender,\n    data.nationality, data.languages_spoken, data.phone_number,\n    data.email, data.family_id, data.medical_conditions,\n    data.special_needs, data.vulnerability_score,\n    data.education_level, data.employment_status, data.registration_date, id\n];\nmsg.payload = `UPDATE refugees SET first_name=$1, last_name=$2, age=$3, gender=$4, nationality=$5, languages_spoken=$6, phone_number=$7, email=$8, family_id=$9, medical_conditions=$10, special_needs=$11, vulnerability_score=$12, education_level=$13, employment_status=$14, registration_date=$15, updated_at=CURRENT_TIMESTAMP WHERE id=$16 RETURNING *`;\nreturn msg;",
-        "outputs": 1,
-        "x": 370,
-        "y": 380,
-        "wires": [
-            [
-                "refugee_put_query"
-            ]
-        ]
-    },
-    {
-        "id": "refugee_put_query",
-        "type": "postgresql",
-        "z": "tab_refugees",
-        "d": true,
-        "name": "Update Refugee",
-        "query": "",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 580,
-        "y": 380,
-        "wires": [
-            [
-                "refugee_single_response"
-            ]
-        ]
-    },
-    {
-        "id": "refugee_delete",
-        "type": "http in",
-        "z": "tab_refugees",
-        "d": true,
-        "name": "DELETE /api/refugees/:id",
-        "url": "/api/refugees/:id",
-        "method": "delete",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 160,
-        "y": 440,
-        "wires": [
-            [
-                "refugee_delete_prepare"
-            ]
-        ]
-    },
-    {
-        "id": "refugee_delete_prepare",
-        "type": "function",
-        "z": "tab_refugees",
-        "d": true,
-        "name": "Prepare Delete",
-        "func": "msg.queryParameters = [parseInt(msg.req.params.id)];\nmsg.payload = \"DELETE FROM refugees WHERE id = $1\";\nreturn msg;",
-        "outputs": 1,
-        "x": 380,
-        "y": 440,
-        "wires": [
-            [
-                "refugee_delete_query"
-            ]
-        ]
-    },
-    {
-        "id": "refugee_delete_query",
-        "type": "postgresql",
-        "z": "tab_refugees",
-        "d": true,
-        "name": "Delete Refugee",
-        "query": "",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 580,
-        "y": 440,
-        "wires": [
-            [
-                "refugee_delete_response"
             ]
         ]
     },
@@ -775,8 +362,13 @@
         "name": "Format Response",
         "func": "msg.statusCode = 200;\nmsg.payload = msg.payload || [];\nreturn msg;",
         "outputs": 1,
-        "x": 790,
-        "y": 80,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 710,
+        "y": 240,
         "wires": [
             [
                 "refugee_http_response"
@@ -790,44 +382,8 @@
         "name": "Format Single",
         "func": "if (msg.payload && msg.payload.length > 0) {\n    msg.statusCode = 200;\n    msg.payload = msg.payload[0];\n} else {\n    msg.statusCode = 404;\n    msg.payload = { error: \"Refugee not found\" };\n}\nreturn msg;",
         "outputs": 1,
-        "x": 780,
-        "y": 140,
-        "wires": [
-            [
-                "refugee_http_response"
-            ]
-        ]
-    },
-    {
-        "id": "refugee_created_response",
-        "type": "function",
-        "z": "tab_refugees",
-        "name": "Format Created",
-        "func": "msg.statusCode = 201;\nmsg.payload = msg.payload[0] || msg.payload; \nreturn msg;",
-        "outputs": 1,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 790,
+        "x": 800,
         "y": 320,
-        "wires": [
-            [
-                "refugee_http_response"
-            ]
-        ]
-    },
-    {
-        "id": "refugee_delete_response",
-        "type": "function",
-        "z": "tab_refugees",
-        "d": true,
-        "name": "Format Delete",
-        "func": "msg.statusCode = 204;\nmsg.payload = \"\";\nreturn msg;",
-        "outputs": 1,
-        "x": 780,
-        "y": 440,
         "wires": [
             [
                 "refugee_http_response"
@@ -841,46 +397,9 @@
         "name": "HTTP Response",
         "statusCode": "",
         "headers": {},
-        "x": 1020,
-        "y": 320,
+        "x": 1000,
+        "y": 360,
         "wires": []
-    },
-    {
-        "id": "assignment_get_all",
-        "type": "http in",
-        "z": "tab_assignments",
-        "d": true,
-        "name": "GET /api/assignments",
-        "url": "/api/assignments",
-        "method": "get",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 150,
-        "y": 80,
-        "wires": [
-            [
-                "assignment_get_all_query"
-            ]
-        ]
-    },
-    {
-        "id": "assignment_get_all_query",
-        "type": "postgresql",
-        "z": "tab_assignments",
-        "d": true,
-        "name": "Query All Assignments",
-        "query": "SELECT * FROM assignments ORDER BY id",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 420,
-        "y": 80,
-        "wires": [
-            [
-                "assignment_response"
-            ]
-        ]
     },
     {
         "id": "assignment_get_by_id",
@@ -891,8 +410,8 @@
         "method": "get",
         "upload": false,
         "swaggerDoc": "",
-        "x": 210,
-        "y": 720,
+        "x": 150,
+        "y": 300,
         "wires": [
             [
                 "assignment_get_by_id_prepare"
@@ -911,8 +430,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 460,
-        "y": 720,
+        "x": 380,
+        "y": 300,
         "wires": [
             [
                 "assignment_get_by_id_query",
@@ -930,8 +449,8 @@
         "split": false,
         "rowsPerMsg": "",
         "outputs": 1,
-        "x": 730,
-        "y": 720,
+        "x": 590,
+        "y": 300,
         "wires": [
             [
                 "5685489b661371a8",
@@ -968,7 +487,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 470,
+        "x": 480,
         "y": 200,
         "wires": [
             [
@@ -986,275 +505,11 @@
         "split": false,
         "rowsPerMsg": "",
         "outputs": 1,
-        "x": 670,
+        "x": 650,
         "y": 200,
         "wires": [
             [
                 "assignment_response"
-            ]
-        ]
-    },
-    {
-        "id": "assignment_get_by_shelter",
-        "type": "http in",
-        "z": "tab_assignments",
-        "d": true,
-        "name": "GET /api/assignments/shelter/:shelterId",
-        "url": "/api/assignments/shelter/:shelterId",
-        "method": "get",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 200,
-        "y": 260,
-        "wires": [
-            [
-                "assignment_get_by_shelter_prepare"
-            ]
-        ]
-    },
-    {
-        "id": "assignment_get_by_shelter_prepare",
-        "type": "function",
-        "z": "tab_assignments",
-        "d": true,
-        "name": "Prepare Query",
-        "func": "msg.queryParameters = [parseInt(msg.req.params.shelterId)];\nmsg.payload = \"SELECT * FROM assignments WHERE shelter_id = $1 ORDER BY id\";\nreturn msg;",
-        "outputs": 1,
-        "x": 470,
-        "y": 260,
-        "wires": [
-            [
-                "assignment_get_by_shelter_query"
-            ]
-        ]
-    },
-    {
-        "id": "assignment_get_by_shelter_query",
-        "type": "postgresql",
-        "z": "tab_assignments",
-        "d": true,
-        "name": "Query",
-        "query": "",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 670,
-        "y": 260,
-        "wires": [
-            [
-                "assignment_response"
-            ]
-        ]
-    },
-    {
-        "id": "assignment_get_by_status",
-        "type": "http in",
-        "z": "tab_assignments",
-        "d": true,
-        "name": "GET /api/assignments/status/:status",
-        "url": "/api/assignments/status/:status",
-        "method": "get",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 190,
-        "y": 320,
-        "wires": [
-            [
-                "assignment_get_by_status_prepare"
-            ]
-        ]
-    },
-    {
-        "id": "assignment_get_by_status_prepare",
-        "type": "function",
-        "z": "tab_assignments",
-        "d": true,
-        "name": "Prepare Query",
-        "func": "msg.queryParameters = [msg.req.params.status];\nmsg.payload = \"SELECT * FROM assignments WHERE status = $1 ORDER BY id\";\nreturn msg;",
-        "outputs": 1,
-        "x": 450,
-        "y": 320,
-        "wires": [
-            [
-                "assignment_get_by_status_query"
-            ]
-        ]
-    },
-    {
-        "id": "assignment_get_by_status_query",
-        "type": "postgresql",
-        "z": "tab_assignments",
-        "d": true,
-        "name": "Query",
-        "query": "",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 670,
-        "y": 320,
-        "wires": [
-            [
-                "assignment_response"
-            ]
-        ]
-    },
-    {
-        "id": "assignment_post",
-        "type": "http in",
-        "z": "tab_assignments",
-        "d": true,
-        "name": "POST /api/assignments",
-        "url": "/api/assignments",
-        "method": "post",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 150,
-        "y": 380,
-        "wires": [
-            [
-                "assignment_post_prepare"
-            ]
-        ]
-    },
-    {
-        "id": "assignment_post_prepare",
-        "type": "function",
-        "z": "tab_assignments",
-        "d": true,
-        "name": "Prepare Insert",
-        "func": "const data = msg.payload;\nmsg.queryParameters = [\n    data.refugee_id, data.shelter_id, data.assignment_date,\n    data.status || 'PENDING', data.priority_score, data.notes\n];\nmsg.payload = `INSERT INTO assignments (refugee_id, shelter_id, assignment_date, status, priority_score, notes, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\nreturn msg;",
-        "outputs": 1,
-        "x": 380,
-        "y": 380,
-        "wires": [
-            [
-                "assignment_post_query"
-            ]
-        ]
-    },
-    {
-        "id": "assignment_post_query",
-        "type": "postgresql",
-        "z": "tab_assignments",
-        "d": true,
-        "name": "Insert Assignment",
-        "query": "",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 590,
-        "y": 380,
-        "wires": [
-            [
-                "assignment_created_response"
-            ]
-        ]
-    },
-    {
-        "id": "assignment_put",
-        "type": "http in",
-        "z": "tab_assignments",
-        "d": true,
-        "name": "PUT /api/assignments/:id",
-        "url": "/api/assignments/:id",
-        "method": "put",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 160,
-        "y": 440,
-        "wires": [
-            [
-                "assignment_put_prepare"
-            ]
-        ]
-    },
-    {
-        "id": "assignment_put_prepare",
-        "type": "function",
-        "z": "tab_assignments",
-        "d": true,
-        "name": "Prepare Update",
-        "func": "const data = msg.payload;\nconst id = parseInt(msg.req.params.id);\nmsg.queryParameters = [\n    data.refugee_id, data.shelter_id, data.assignment_date,\n    data.status, data.priority_score, data.notes, id\n];\nmsg.payload = `UPDATE assignments SET refugee_id=$1, shelter_id=$2, assignment_date=$3, status=$4, priority_score=$5, notes=$6, updated_at=CURRENT_TIMESTAMP WHERE id=$7 RETURNING *`;\nreturn msg;",
-        "outputs": 1,
-        "x": 380,
-        "y": 440,
-        "wires": [
-            [
-                "assignment_put_query"
-            ]
-        ]
-    },
-    {
-        "id": "assignment_put_query",
-        "type": "postgresql",
-        "z": "tab_assignments",
-        "d": true,
-        "name": "Update Assignment",
-        "query": "",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 600,
-        "y": 440,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "assignment_delete",
-        "type": "http in",
-        "z": "tab_assignments",
-        "d": true,
-        "name": "DELETE /api/assignments/:id",
-        "url": "/api/assignments/:id",
-        "method": "delete",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 170,
-        "y": 500,
-        "wires": [
-            [
-                "assignment_delete_prepare"
-            ]
-        ]
-    },
-    {
-        "id": "assignment_delete_prepare",
-        "type": "function",
-        "z": "tab_assignments",
-        "d": true,
-        "name": "Prepare Delete",
-        "func": "msg.queryParameters = [parseInt(msg.req.params.id)];\nmsg.payload = \"DELETE FROM assignments WHERE id = $1\";\nreturn msg;",
-        "outputs": 1,
-        "x": 390,
-        "y": 500,
-        "wires": [
-            [
-                "assignment_delete_query"
-            ]
-        ]
-    },
-    {
-        "id": "assignment_delete_query",
-        "type": "postgresql",
-        "z": "tab_assignments",
-        "d": true,
-        "name": "Delete Assignment",
-        "query": "",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 600,
-        "y": 500,
-        "wires": [
-            [
-                "assignment_delete_response",
-                "435d2f91358fdeb3"
             ]
         ]
     },
@@ -1265,40 +520,8 @@
         "name": "Format Response",
         "func": "msg.statusCode = 200;\nmsg.payload = msg.payload || [];\nreturn msg;",
         "outputs": 1,
-        "x": 810,
-        "y": 80,
-        "wires": [
-            [
-                "assignment_http_response"
-            ]
-        ]
-    },
-    {
-        "id": "assignment_created_response",
-        "type": "function",
-        "z": "tab_assignments",
-        "d": true,
-        "name": "Format Created",
-        "func": "msg.statusCode = 201;\nmsg.payload = msg.payload[0];\nreturn msg;",
-        "outputs": 1,
-        "x": 810,
-        "y": 380,
-        "wires": [
-            [
-                "assignment_http_response"
-            ]
-        ]
-    },
-    {
-        "id": "assignment_delete_response",
-        "type": "function",
-        "z": "tab_assignments",
-        "d": true,
-        "name": "Format Delete",
-        "func": "msg.statusCode = 204;\nmsg.payload = \"\";\nreturn msg;",
-        "outputs": 1,
-        "x": 800,
-        "y": 500,
+        "x": 830,
+        "y": 200,
         "wires": [
             [
                 "assignment_http_response"
@@ -1312,8 +535,8 @@
         "name": "HTTP Response",
         "statusCode": "",
         "headers": {},
-        "x": 1020,
-        "y": 720,
+        "x": 1040,
+        "y": 300,
         "wires": []
     },
     {
@@ -1329,8 +552,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 860,
-        "y": 800,
+        "x": 780,
+        "y": 360,
         "wires": []
     },
     {
@@ -1345,342 +568,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 600,
-        "y": 800,
-        "wires": []
-    },
-    {
-        "id": "435d2f91358fdeb3",
-        "type": "debug",
-        "z": "tab_assignments",
-        "d": true,
-        "name": "debug 1",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 740,
-        "y": 580,
-        "wires": []
-    },
-    {
-        "id": "ai_assign_shelter_endpoint",
-        "type": "http in",
-        "z": "tab_ai_integration",
-        "name": "POST /api/ai/assign-shelter",
-        "url": "/api/ai/assign-shelter",
-        "method": "post",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 170,
-        "y": 100,
-        "wires": [
-            [
-                "ai_prepare_request"
-            ]
-        ]
-    },
-    {
-        "id": "ai_prepare_request",
-        "type": "function",
-        "z": "tab_ai_integration",
-        "name": "Preparar datos para IA",
-        "func": "// Guardar datos originales del refugiado\nconst refugeeData = msg.payload;\n\n// Calcular family_size, has_children, children_count\nlet family_size = 1;\nlet has_children = false;\nlet children_count = 0;\n\nif (refugeeData.family_id) {\n    // TODO: Obtener datos reales de familia si es necesario\n    // Por ahora asumimos familia de 1 (solo el refugiado)\n    family_size = 1;\n}\n\n// Preparar payload para el servicio de IA\nmsg.payload = {\n    first_name: refugeeData.first_name,\n    last_name: refugeeData.last_name,\n    age: refugeeData.age,\n    gender: refugeeData.gender,\n    nationality: refugeeData.nationality,\n    languages_spoken: refugeeData.languages_spoken,\n    medical_conditions: refugeeData.medical_conditions,\n    has_disability: refugeeData.has_disability || false,\n    vulnerability_score: refugeeData.vulnerability_score || 0.0,\n    special_needs: refugeeData.special_needs,\n    family_id: refugeeData.family_id,\n    family_size: family_size,\n    has_children: has_children,\n    children_count: children_count\n};\n\n// Guardar en contexto para usar después\nmsg.refugeeData = refugeeData;\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 430,
-        "y": 100,
-        "wires": [
-            [
-                "ai_call_service"
-            ]
-        ]
-    },
-    {
-        "id": "ai_call_service",
-        "type": "http request",
-        "z": "tab_ai_integration",
-        "name": "Llamar servicio IA",
-        "method": "POST",
-        "ret": "obj",
-        "paytoqs": "ignore",
-        "url": "http://shelterai-ai-service:8000/api/recommend",
-        "tls": "",
-        "persist": false,
-        "proxy": "",
-        "insecureHTTPParser": false,
-        "authType": "",
-        "senderr": false,
-        "headers": [
-            {
-                "keyType": "Content-Type",
-                "keyValue": "",
-                "valueType": "application/json",
-                "valueValue": ""
-            }
-        ],
-        "x": 670,
-        "y": 100,
-        "wires": [
-            [
-                "ai_process_response"
-            ]
-        ]
-    },
-    {
-        "id": "ai_process_response",
-        "type": "function",
-        "z": "tab_ai_integration",
-        "name": "Procesar respuesta IA",
-        "func": "// La nueva respuesta del servicio IA contiene array de recommendations\nconst aiResponse = msg.payload;\n\nif (!aiResponse.recommendations || aiResponse.recommendations.length === 0) {\n    msg.statusCode = 404;\n    msg.payload = { error: \"No se encontraron recomendaciones de refugios\" };\n    return msg;\n}\n\n// Tomar la primera recomendación (mejor match)\nconst topRecommendation = aiResponse.recommendations[0];\n\n// Normalizar confidence_score de 0-100 a 0-1 para Flutter\nconst confidenceNormalized = topRecommendation.confidence_score / 100;\n\n// Formatear alternativas\nconst alternatives = aiResponse.recommendations.slice(1, 4).map(rec => ({\n    shelter_id: rec.shelter_id,\n    shelter_name: rec.shelter_name,\n    confidence_score: rec.confidence_score / 100,  // Normalizar\n    total_score: rec.total_score\n}));\n\n// Formatear respuesta completa\nmsg.payload = {\n    shelter_id: topRecommendation.shelter_id,\n    shelter_name: topRecommendation.shelter_name,\n    confidence_score: confidenceNormalized,\n    priority_score: topRecommendation.total_score,\n    explanation: topRecommendation.explanation,\n    match_details: topRecommendation.match_details,\n    alternative_shelters: alternatives\n};\n\nmsg.statusCode = 200;\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 900,
-        "y": 100,
-        "wires": [
-            [
-                "ai_http_response"
-            ]
-        ]
-    },
-    {
-        "id": "ai_http_response",
-        "type": "http response",
-        "z": "tab_ai_integration",
-        "name": "Respuesta HTTP",
-        "statusCode": "",
-        "headers": {},
-        "x": 1130,
-        "y": 100,
-        "wires": []
-    },
-    {
-        "id": "refugee_post_with_ai",
-        "type": "http in",
-        "z": "tab_ai_integration",
-        "name": "POST /api/refugees-with-assignment",
-        "url": "/api/refugees-with-assignment",
-        "method": "post",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 180,
-        "y": 160,
-        "wires": [
-            [
-                "save_refugee_first"
-            ]
-        ]
-    },
-    {
-        "id": "save_refugee_first",
-        "type": "function",
-        "z": "tab_ai_integration",
-        "name": "Preparar INSERT refugiado",
-        "func": "const data = msg.payload;\n\n// Guardar datos completos para después\nflow.set('tempRefugeeData', data);\n\nmsg.topic = `INSERT INTO refugees (first_name, last_name, age, gender, nationality, languages_spoken, family_id, medical_conditions, has_disability, special_needs, vulnerability_score, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    data.first_name, \n    data.last_name, \n    data.age, \n    data.gender,\n    data.nationality, \n    data.languages_spoken, \n    data.family_id,\n    data.medical_conditions,\n    data.has_disability || false,\n    data.special_needs, \n    data.vulnerability_score || 0\n];\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 480,
-        "y": 160,
-        "wires": [
-            [
-                "insert_refugee_db"
-            ]
-        ]
-    },
-    {
-        "id": "insert_refugee_db",
-        "type": "postgresql",
-        "z": "tab_ai_integration",
-        "name": "Guardar refugiado",
-        "query": "{{msg.topic}}",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 730,
-        "y": 160,
-        "wires": [
-            [
-                "prepare_ai_call"
-            ]
-        ]
-    },
-    {
-        "id": "prepare_ai_call",
-        "type": "function",
-        "z": "tab_ai_integration",
-        "name": "Guardar refugiado para contexto",
-        "func": "// El refugiado ya está guardado en la BD\nconst savedRefugee = msg.payload[0];\n\n// Guardar refugiado para la respuesta final\nflow.set('savedRefugee', savedRefugee);\n\n// IMPORTANTE: Limpiar params para la siguiente consulta\ndelete msg.params;\ndelete msg.topic;\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 1010,
-        "y": 160,
-        "wires": [
-            [
-                "query_available_shelters"
-            ]
-        ]
-    },
-    {
-        "id": "query_available_shelters",
-        "type": "postgresql",
-        "z": "tab_ai_integration",
-        "name": "Obtener refugios disponibles",
-        "query": "SELECT id, name, max_capacity, current_occupancy, has_medical_facilities, has_childcare, has_disability_access, languages_spoken FROM shelters WHERE current_occupancy < max_capacity ORDER BY id",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 160,
-        "y": 240,
-        "wires": [
-            [
-                "prepare_ai_request"
-            ]
-        ]
-    },
-    {
-        "id": "prepare_ai_request",
-        "type": "function",
-        "z": "tab_ai_integration",
-        "name": "Preparar request para IA",
-        "func": "const savedRefugee = flow.get('savedRefugee');\n\n// Calcular family_size, has_children, children_count\nlet family_size = 1;\nlet has_children = false;\nlet children_count = 0;\n\nif (savedRefugee.family_id) {\n    // TODO: Obtener datos reales de familia si es necesario\n    family_size = 1;\n}\n\n// Preparar payload para el servicio de IA (ya no enviamos lista de shelters)\nmsg.payload = {\n    first_name: savedRefugee.first_name,\n    last_name: savedRefugee.last_name,\n    age: savedRefugee.age,\n    gender: savedRefugee.gender,\n    nationality: savedRefugee.nationality,\n    languages_spoken: savedRefugee.languages_spoken,\n    medical_conditions: savedRefugee.medical_conditions,\n    has_disability: savedRefugee.has_disability,\n    vulnerability_score: savedRefugee.vulnerability_score,\n    special_needs: savedRefugee.special_needs,\n    family_id: savedRefugee.family_id,\n    family_size: family_size,\n    has_children: has_children,\n    children_count: children_count\n};\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 450,
-        "y": 240,
-        "wires": [
-            [
-                "call_ai_for_assignment"
-            ]
-        ]
-    },
-    {
-        "id": "call_ai_for_assignment",
-        "type": "http request",
-        "z": "tab_ai_integration",
-        "name": "Obtener asignación IA",
-        "method": "POST",
-        "ret": "obj",
-        "paytoqs": "ignore",
-        "url": "http://shelterai-ai-service:8000/api/recommend",
-        "tls": "",
-        "persist": false,
-        "proxy": "",
-        "insecureHTTPParser": false,
-        "authType": "",
-        "senderr": false,
-        "headers": [
-            {
-                "keyType": "Content-Type",
-                "keyValue": "",
-                "valueType": "application/json",
-                "valueValue": ""
-            }
-        ],
-        "x": 700,
-        "y": 240,
-        "wires": [
-            [
-                "create_assignment"
-            ]
-        ]
-    },
-    {
-        "id": "create_assignment",
-        "type": "function",
-        "z": "tab_ai_integration",
-        "name": "Crear asignación en BD",
-        "func": "const aiResponse = msg.payload;\nconst savedRefugee = flow.get('savedRefugee');\n\n// Validar que la respuesta tiene el formato correcto\nif (!aiResponse.recommendations || aiResponse.recommendations.length === 0) {\n    msg.statusCode = 404;\n    msg.payload = { error: \"No se encontraron recomendaciones de refugios\" };\n    return [null, msg];  // Enviar por output de error\n}\n\n// Tomar la mejor recomendación\nconst topRec = aiResponse.recommendations[0];\n\n// Verificar que tiene shelter_id\nif (!topRec.shelter_id) {\n    msg.statusCode = 500;\n    msg.payload = { error: \"Respuesta de IA inválida: falta shelter_id\" };\n    return [null, msg];  // Enviar por output de error\n}\n\n// Preparar INSERT de la asignación\nmsg.topic = `INSERT INTO assignments (refugee_id, shelter_id, assigned_at, status, priority_score, explanation, assigned_by, created_at, updated_at) VALUES ($1, $2, CURRENT_TIMESTAMP, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    savedRefugee.id,\n    topRec.shelter_id,\n    'pending',\n    topRec.total_score,\n    topRec.explanation,\n    'AI-System'\n];\n\n// Guardar respuesta IA completa para después\nflow.set('aiResponse', aiResponse);\n\nreturn [msg, null];  // Enviar por output normal",
-        "outputs": 2,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 190,
-        "y": 340,
-        "wires": [
-            [
-                "insert_assignment_db"
-            ],
-            [
-                "final_http_response"
-            ]
-        ]
-    },
-    {
-        "id": "insert_assignment_db",
-        "type": "postgresql",
-        "z": "tab_ai_integration",
-        "name": "Guardar asignación",
-        "query": "{{msg.topic}}",
-        "postgreSQLConfig": "301245f94e1239d9",
-        "split": false,
-        "rowsPerMsg": "",
-        "outputs": 1,
-        "x": 510,
-        "y": 340,
-        "wires": [
-            [
-                "format_final_response"
-            ]
-        ]
-    },
-    {
-        "id": "format_final_response",
-        "type": "function",
-        "z": "tab_ai_integration",
-        "name": "Formatear respuesta final",
-        "func": "const savedRefugee = flow.get('savedRefugee');\nconst aiResponse = flow.get('aiResponse');\nconst assignment = msg.payload[0];\n\n// Obtener la mejor recomendación\nconst topRec = aiResponse.recommendations[0];\n\n// Normalizar confidence_score de 0-100 a 0-1 para Flutter\nconst confidenceNormalized = topRec.confidence_score / 100;\n\n// Formatear alternativas\nconst alternatives = aiResponse.recommendations.slice(1, 4).map(rec => ({\n    shelter_id: rec.shelter_id,\n    shelter_name: rec.shelter_name,\n    confidence_score: rec.confidence_score / 100,  // Normalizar\n    total_score: rec.total_score,\n    explanation: rec.explanation\n}));\n\n// Respuesta completa\nmsg.payload = {\n    refugee: savedRefugee,\n    assignment: {\n        id: assignment.id,\n        shelter_id: topRec.shelter_id,\n        shelter_name: topRec.shelter_name,\n        priority_score: topRec.total_score,\n        confidence_score: confidenceNormalized,\n        explanation: topRec.explanation,\n        match_details: topRec.match_details,\n        status: assignment.status,\n        assigned_at: assignment.assigned_at,\n        alternative_shelters: alternatives\n    }\n};\n\nmsg.statusCode = 201;\n\n// Limpiar variables de flujo\nflow.set('tempRefugeeData', null);\nflow.set('savedRefugee', null);\nflow.set('aiResponse', null);\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 770,
-        "y": 340,
-        "wires": [
-            [
-                "final_http_response",
-                "41aa3f26b3b03799"
-            ]
-        ]
-    },
-    {
-        "id": "final_http_response",
-        "type": "http response",
-        "z": "tab_ai_integration",
-        "name": "Respuesta HTTP",
-        "statusCode": "",
-        "headers": {},
-        "x": 1010,
-        "y": 340,
+        "x": 560,
+        "y": 360,
         "wires": []
     },
     {
@@ -1692,8 +581,8 @@
         "method": "get",
         "upload": false,
         "swaggerDoc": "",
-        "x": 170,
-        "y": 420,
+        "x": 180,
+        "y": 60,
         "wires": [
             [
                 "prepare_refugee_query"
@@ -1712,8 +601,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 380,
-        "y": 420,
+        "x": 440,
+        "y": 60,
         "wires": [
             [
                 "fetch_refugee_for_recommendation"
@@ -1730,8 +619,8 @@
         "split": false,
         "rowsPerMsg": "",
         "outputs": 1,
-        "x": 590,
-        "y": 420,
+        "x": 650,
+        "y": 60,
         "wires": [
             [
                 "check_refugee_exists"
@@ -1744,19 +633,18 @@
         "z": "tab_ai_integration",
         "name": "Verificar refugiado",
         "func": "if (!msg.payload || msg.payload.length === 0) {\n    msg.statusCode = 404;\n    msg.payload = { error: 'Refugiado no encontrado' };\n    return [null, msg];\n}\n\nconst refugee = msg.payload[0];\n\n// Calcular family_size, has_children, children_count\nlet family_size = 1;\nlet has_children = false;\nlet children_count = 0;\n\nif (refugee.family_id) {\n    family_size = 1;\n}\n\n// Preparar payload para el servicio de IA\nmsg.payload = {\n    first_name: refugee.first_name,\n    last_name: refugee.last_name,\n    age: refugee.age,\n    gender: refugee.gender,\n    nationality: refugee.nationality,\n    languages_spoken: refugee.languages_spoken,\n    medical_conditions: refugee.medical_conditions,\n    has_disability: refugee.has_disability,\n    vulnerability_score: refugee.vulnerability_score,\n    special_needs: refugee.special_needs,\n    family_id: refugee.family_id,\n    family_size: family_size,\n    has_children: has_children,\n    children_count: children_count\n};\n\n// Guardar refugee original para la respuesta\nflow.set('originalRefugee', refugee);\n\nreturn [msg, null];",
-        "outputs": 2,
+        "outputs": 1,
         "timeout": "",
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 800,
-        "y": 420,
+        "x": 870,
+        "y": 60,
         "wires": [
             [
                 "call_ai_for_recommendation"
-            ],
-            []
+            ]
         ]
     },
     {
@@ -1782,8 +670,8 @@
                 "valueValue": ""
             }
         ],
-        "x": 1050,
-        "y": 420,
+        "x": 1120,
+        "y": 60,
         "wires": [
             [
                 "format_recommendation_response"
@@ -1795,15 +683,15 @@
         "type": "function",
         "z": "tab_ai_integration",
         "name": "Formatear respuesta",
-        "func": "// Obtener los datos del refugiado original\nconst originalRefugee = flow.get('originalRefugee');\nconst aiResponse = msg.payload;\n\nif (!aiResponse || !aiResponse.recommendations || aiResponse.recommendations.length === 0) {\n    msg.statusCode = 404;\n    msg.payload = { error: 'No se encontraron recomendaciones de refugios' };\n    return msg;\n}\n\n// Tomar la mejor recomendación\nconst topRecommendation = aiResponse.recommendations[0];\n\n// Formatear respuesta en el formato que espera Flutter (RefugeeAssignmentResponse)\nmsg.payload = {\n    refugee: {\n        id: originalRefugee.id,\n        first_name: originalRefugee.first_name,\n        last_name: originalRefugee.last_name,\n        age: originalRefugee.age,\n        gender: originalRefugee.gender,\n        nationality: originalRefugee.nationality,\n        languages_spoken: originalRefugee.languages_spoken,\n        medical_conditions: originalRefugee.medical_conditions,\n        has_disability: originalRefugee.has_disability,\n        vulnerability_score: originalRefugee.vulnerability_score,\n        special_needs: originalRefugee.special_needs\n    },\n    assignment: {\n        shelter_id: topRecommendation.shelter_id,\n        shelter_name: topRecommendation.shelter_name,\n        confidence_score: topRecommendation.compatibility_score / 100,\n        compatibility_score: topRecommendation.compatibility_score,\n        available_space: topRecommendation.available_space,\n        explanation: topRecommendation.explanation,\n        matching_reasons: topRecommendation.matching_reasons,\n        vulnerability_level: aiResponse.vulnerability_level,\n        cluster_id: aiResponse.cluster_id,\n        alternative_shelters: aiResponse.recommendations.slice(1).map(rec => ({\n            shelter_id: rec.shelter_id,\n            shelter_name: rec.shelter_name,\n            compatibility_score: rec.compatibility_score,\n            available_space: rec.available_space\n        }))\n    }\n};\n\nmsg.statusCode = 200;\n\nreturn msg;",
+        "func": "// Obtener los datos del refugiado original\nconst originalRefugee = flow.get('originalRefugee');\nconst aiResponse = msg.payload;\n\nif (!aiResponse || !aiResponse.recommendations || aiResponse.recommendations.length === 0) {\n    msg.statusCode = 404;\n    msg.payload = { error: 'No se encontraron recomendaciones de refugios' };\n    return msg;\n}\n\n// Formatear respuesta en el formato que espera Flutter (RecommendationResponse)\nconst recommendations = aiResponse.recommendations.map(rec => ({\n    shelter_id: rec.shelter_id,\n    shelter_name: rec.shelter_name,\n    address: rec.address || '',\n    compatibility_score: rec.compatibility_score || 0,\n    priority_score: rec.total_score || 0,\n    max_capacity: rec.max_capacity || 0,\n    current_occupancy: rec.current_occupancy || 0,\n    available_space: rec.available_space || 0,\n    occupancy_rate: rec.occupancy_rate || 0,\n    has_medical_facilities: rec.has_medical_facilities === true,\n    has_childcare: rec.has_childcare === true,\n    has_disability_access: rec.has_disability_access === true,\n    languages_spoken: rec.languages_spoken || '',\n    shelter_type: rec.shelter_type || '',\n    services_offered: rec.services_offered || '',\n    explanation: rec.explanation || ''\n}));\n\nmsg.payload = {\n    refugee_name: (originalRefugee.first_name || '') + ' ' + (originalRefugee.last_name || ''),\n    refugee_age: originalRefugee.age || 0,\n    refugee_nationality: originalRefugee.nationality || '',\n    refugee_family_size: 1,\n    refugee_gender: originalRefugee.gender || '',\n    recommendations: recommendations,\n    cluster_id: aiResponse.cluster_id || 0,\n    cluster_label: aiResponse.cluster_label || 'No etiqueta',\n    vulnerability_level: aiResponse.vulnerability_level || 'unknown',\n    total_shelters_analyzed: aiResponse.total_shelters_analyzed || 0,\n    ml_model_version: aiResponse.model_version || '1.0'\n};\n\nmsg.statusCode = 200;\n\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1300,
-        "y": 420,
+        "x": 520,
+        "y": 140,
         "wires": [
             [
                 "send_recommendation_response"
@@ -1817,24 +705,163 @@
         "name": "Enviar respuesta",
         "statusCode": "",
         "headers": {},
-        "x": 1540,
-        "y": 420,
+        "x": 810,
+        "y": 140,
         "wires": []
+    },
+    {
+        "id": "assign_shelter_http_in",
+        "type": "http in",
+        "z": "tab_ai_integration",
+        "name": "POST /api/ai/assign-shelter",
+        "url": "/api/ai/assign-shelter",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 150,
+        "y": 340,
+        "wires": [
+            [
+                "assign_shelter_prepare"
+            ]
+        ]
+    },
+    {
+        "id": "assign_shelter_http_response",
+        "type": "http response",
+        "z": "tab_ai_integration",
+        "name": "Success Response",
+        "statusCode": "200",
+        "headers": {},
+        "x": 1450,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "assign_shelter_prepare",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Prepare Update",
+        "func": "let body = msg.payload;\nif (typeof body === 'string') {\n  try { body = JSON.parse(body); } catch (e) { body = {}; }\n}\n\nconst rawRefugeeId = body.refugee_id;\nconst rawShelterId = body.shelter_id;\n\nconst refugee_id = Number(rawRefugeeId);\nconst shelter_id = Number(rawShelterId);\n\nif (!Number.isInteger(refugee_id) || !Number.isInteger(shelter_id) || refugee_id <= 0 || shelter_id <= 0) {\n    msg.statusCode = 400;\n    msg.payload = { error: 'refugee_id y shelter_id deben ser enteros > 0' };\n    return [null, msg];\n}\n\n// Preparar query para actualizar refugiado\nmsg.query = `UPDATE refugee \n             SET assigned_shelter_id = $1, \n                 status = 'assigned',\n                 updated_at = NOW()\n             WHERE id = $2\n             RETURNING id, assigned_shelter_id, status`;\n\nmsg.params = [shelter_id, refugee_id];\nmsg.payload = null;\n\nconsole.log('[ASSIGN] Updating refugee', refugee_id, 'with shelter', shelter_id);\n\nreturn [msg, null];",
+        "outputs": 2,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 380,
+        "y": 340,
+        "wires": [
+            [
+                "assign_shelter_query"
+            ],
+            [
+                "assign_shelter_error"
+            ]
+        ]
+    },
+    {
+        "id": "assign_shelter_query",
+        "type": "postgresql",
+        "z": "tab_ai_integration",
+        "name": "Update Refugee",
+        "query": "",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": "",
+        "outputs": 1,
+        "x": 580,
+        "y": 300,
+        "wires": [
+            [
+                "assign_shelter_response"
+            ]
+        ]
+    },
+    {
+        "id": "assign_shelter_response",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Format Response",
+        "func": "// 1. Validar que la asignación del refugiado funcionó (viene del nodo anterior)\nif (!msg.payload || msg.payload.length === 0) {\n    msg.statusCode = 404;\n    msg.payload = { error: 'Error: No se encontró el refugiado para actualizar.' };\n    return [null, msg]; // Salida de error\n}\n\nconst result = msg.payload[0];\nconst shelterId = result.assigned_shelter_id;\n\n// 2. GUARDAR DATOS EN LA \"MALETA\"\n// Como vamos a ejecutar otra query ahora, el msg.payload se va a borrar.\n// Guardamos los datos del refugiado aquí para usarlos al final del todo.\nmsg.datosRefugiado = {\n    refugee_id: result.id,\n    assigned_shelter_id: shelterId,\n    status: result.status\n};\n\n// 3. Preparar la Query para RESTAR AFORO (Update Shelter)\n// Restamos 1 al espacio disponible\nmsg.query = `\n    UPDATE shelters \n    SET available_space = available_space - 1,\n        updated_at = NOW()\n    WHERE id = $1\n`;\n\nmsg.params = [shelterId];\n\n// Limpiamos payload para el siguiente nodo SQL\nmsg.payload = null;\n\nconsole.log(`[LOGIC] Preparando resta de aforo para Shelter ID: ${shelterId}`);\n\n// Pasamos al siguiente nodo (Postgres)\nreturn [msg, null];",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 790,
+        "y": 300,
+        "wires": [
+            [
+                "95cffb18972600be"
+            ]
+        ]
+    },
+    {
+        "id": "assign_shelter_error",
+        "type": "http response",
+        "z": "tab_ai_integration",
+        "name": "Error Response",
+        "statusCode": "",
+        "x": 580,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "95cffb18972600be",
+        "type": "postgresql",
+        "z": "tab_ai_integration",
+        "name": "",
+        "query": "",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 990,
+        "y": 300,
+        "wires": [
+            [
+                "aca51ab62bc08951"
+            ]
+        ]
+    },
+    {
+        "id": "aca51ab62bc08951",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Format Final Response",
+        "func": "// Recuperamos los datos que guardamos en la \"maleta\" en el Paso A\nconst datos = msg.datosRefugiado;\n\n// Preparamos la respuesta final bonita para Flutter\nmsg.statusCode = 200;\nmsg.payload = {\n    success: true,\n    refugee_id: datos.refugee_id,\n    assigned_shelter_id: datos.assigned_shelter_id,\n    status: datos.status,\n    message: 'Proceso completo: Refugiado asignado y aforo del refugio actualizado.'\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1210,
+        "y": 300,
+        "wires": [
+            [
+                "assign_shelter_http_response",
+                "5e96ea5e7035a231"
+            ]
+        ]
     },
     {
         "id": "41aa3f26b3b03799",
         "type": "function",
         "z": "tab_ai_integration",
         "name": "Preparar Correo",
-        "func": "// 1. Extraemos los datos que generó el nodo anterior\n// Usamos \"|| {}\" para evitar errores si algo viene vacío\nconst data = msg.payload || {};\nconst refugee = data.refugee || {};\nconst assignment = data.assignment || {};\n\n// 2. Extraemos el email del refugiado\nconst emailDestino = refugee.email;\n\n// SEGURIDAD: Si el refugiado no tiene email, cortamos aquí.\n// Usamos 'return null' para que el flujo NO siga hacia el nodo de Gmail y no dé error.\nif (!emailDestino) {\n  node.warn(\"Asignación completada, pero no se envió email (Falta correo del refugiado)\");\n  return null;\n}\n\n// 3. Preparamos variables para que el texto quede bonito\n// Usamos .trim() para quitar espacios sobrantes en el nombre\nconst nombreCompleto = `${refugee.first_name || ''} ${refugee.last_name || ''}`.trim() || 'Refugiado';\nconst nombreRefugio = assignment.shelter_name || 'Centro asignado';\nconst explicacion = assignment.explanation || 'Asignación basada en disponibilidad y necesidades.';\nconst fecha = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });\n\n// 4. Configuración para el nodo de Email (node-red-node-email)\nmsg.to = emailDestino;\nmsg.topic = `✅ Asignación Confirmada: ${nombreRefugio} - ShelterAI`;\n\n// 5. Cuerpo en Texto Plano (Por si el móvil del usuario no lee HTML)\nmsg.payload = `Hola ${nombreCompleto},\n\nTe confirmamos que el sistema ShelterAI te ha asignado plaza en: ${nombreRefugio}.\n\nMotivo de la selección: ${explicacion}\n\nPor favor, acude lo antes posible.\nFecha: ${fecha}\n\nAtentamente,\nEquipo ShelterAI`;\n\n// 6. Cuerpo en HTML (Diseño profesional con colores y tarjetas)\nmsg.html = `\n<div style=\"font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1);\">\n    \n    <div style=\"background-color: #2E7D32; padding: 20px; text-align: center;\">\n        <h2 style=\"color: white; margin: 0; font-size: 24px;\">¡Asignación Confirmada!</h2>\n    </div>\n\n    <div style=\"padding: 30px; background-color: #ffffff;\">\n        <p style=\"font-size: 16px; color: #333;\">Hola <strong>${nombreCompleto}</strong>,</p>\n        \n        <p style=\"font-size: 16px; color: #555;\">Hemos encontrado el refugio que mejor se adapta a tus necesidades actuales.</p>\n\n        <div style=\"background-color: #f1f8e9; border-left: 5px solid #2E7D32; padding: 20px; margin: 25px 0; border-radius: 4px;\">\n            <h3 style=\"margin-top: 0; color: #1B5E20; font-size: 20px;\">📍 ${nombreRefugio}</h3>\n            \n            <p style=\"margin-bottom: 5px;\"><strong>¿Por qué este refugio?</strong></p>\n            <p style=\"margin-top: 0; color: #444; font-style: italic;\">\"${explicacion}\"</p>\n            \n            <hr style=\"border: 0; border-top: 1px solid #dcedc8; margin: 15px 0;\">\n            \n            <p style=\"margin: 0; font-size: 14px; color: #555;\"><strong>Fecha de asignación:</strong> ${fecha}</p>\n        </div>\n\n        <p style=\"font-size: 14px; color: #777;\">Por favor, presenta este correo al llegar al centro para agilizar tu entrada.</p>\n    </div>\n\n    <div style=\"background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #999;\">\n        © 2026 ShelterAI Project - Ayuda Humanitaria Inteligente\n    </div>\n</div>\n`;\n\nreturn msg;",
+        "func": "// 1. Recuperamos los DATOS PERSONALES (Vienen del nodo Postgres que acabamos de poner)\nvar filas = msg.payload;\nif (!filas || filas.length === 0) {\n    node.warn(\"No se encontró el refugiado en la BD para enviar email.\");\n    return null; \n}\nconst datosPersonales = filas[0]; // Aquí está first_name, email...\n\n// 2. Recuperamos los DATOS DE ASIGNACIÓN (Que guardamos en la \"mochila\")\nconst datosAsignacion = msg.assignmentContext || {};\n\n// 3. Extraemos el email\nconst emailDestino = datosPersonales.email;\n\n// SEGURIDAD: Si no hay email, cortamos.\nif (!emailDestino) {\n    node.warn(`El refugiado ${datosPersonales.first_name} no tiene email registrado. No se envía correo.`);\n    return null;\n}\n\n// 4. Preparamos variables para el texto\nconst nombreCompleto = `${datosPersonales.first_name || ''} ${datosPersonales.last_name || ''}`.trim() || 'Refugiado';\n\n// Truco: Si no tenemos el nombre del refugio (porque solo tenemos el ID), ponemos un genérico o el ID.\nconst nombreRefugio = datosAsignacion.shelter_name || `Refugio #${datosAsignacion.shelter_id}`;\nconst explicacion = datosAsignacion.explanation || 'Asignación automática basada en disponibilidad.';\nconst fecha = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });\n\n// 5. Configuración para el nodo de Email\nmsg.to = emailDestino;\nmsg.topic = `✅ Asignación Confirmada - ShelterAI`;\n\n// 6. Cuerpo en Texto Plano\nmsg.payload = `Hola ${nombreCompleto},\n\nTe confirmamos que el sistema ShelterAI te ha asignado plaza en: ${nombreRefugio}.\nMotivo: ${explicacion}\n\nPor favor, acude lo antes posible.\nFecha: ${fecha}`;\n\n// 7. Cuerpo en HTML (Tu diseño bonito)\nmsg.html = `\n<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px;\">\n    <div style=\"background-color: #2E7D32; padding: 20px; text-align: center;\">\n        <h2 style=\"color: white; margin: 0;\">¡Asignación Confirmada!</h2>\n    </div>\n    <div style=\"padding: 30px;\">\n        <p>Hola <strong>${nombreCompleto}</strong>,</p>\n        <p>Hemos asignado tu plaza exitosamente.</p>\n        \n        <div style=\"background-color: #f1f8e9; border-left: 5px solid #2E7D32; padding: 15px; margin: 20px 0;\">\n            <h3 style=\"margin: 0; color: #1B5E20;\">📍 ${nombreRefugio}</h3>\n            <p style=\"margin-top: 10px; font-style: italic;\">\"${explicacion}\"</p>\n        </div>\n        \n        <p style=\"font-size: 12px; color: #777;\">Fecha: ${fecha}</p>\n    </div>\n</div>\n`;\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 980,
-        "y": 280,
+        "x": 1840,
+        "y": 220,
         "wires": [
             [
                 "ad8e96e2588a39af"
@@ -1854,16 +881,141 @@
         "tls": true,
         "name": "",
         "dname": "",
-        "x": 1190,
-        "y": 280,
+        "x": 2010,
+        "y": 220,
         "wires": []
+    },
+    {
+        "id": "f7d9550979f67a08",
+        "type": "http in",
+        "z": "tab_ai_integration",
+        "name": "POST /api/refugees-with-assignment",
+        "url": "/api/refugees-with-assignment",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 480,
+        "wires": [
+            [
+                "83baf60cae5aa497"
+            ]
+        ]
+    },
+    {
+        "id": "83baf60cae5aa497",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Preparar INSERT refugiado",
+        "func": "const data = msg.payload;\n\nmsg.query = `INSERT INTO refugee (first_name, last_name, age, gender, nationality, languages_spoken, email, medical_conditions, has_disability, special_needs, vulnerability_score, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    data.first_name, \n    data.last_name, \n    data.age, \n    data.gender,\n    data.nationality, \n    data.languages_spoken, \n    data.email,\n    data.medical_conditions,\n    data.has_disability,\n    data.special_needs, \n    data.vulnerability_score || 0\n];\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 480,
+        "wires": [
+            [
+                "c663a95531a34404"
+            ]
+        ]
+    },
+    {
+        "id": "c663a95531a34404",
+        "type": "postgresql",
+        "z": "tab_ai_integration",
+        "name": "Guardar refugiado",
+        "query": "",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": "",
+        "outputs": 1,
+        "x": 730,
+        "y": 480,
+        "wires": [
+            [
+                "f3ba1097f96e6329"
+            ]
+        ]
+    },
+    {
+        "id": "b0dcf0fe6b4aa77b",
+        "type": "http response",
+        "z": "tab_ai_integration",
+        "name": "Respuesta HTTP",
+        "statusCode": "200",
+        "headers": {},
+        "x": 1170,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "f3ba1097f96e6329",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Format Response",
+        "func": "// 1. Recuperamos el resultado de la base de datos\nvar rows = msg.payload;\n\n// 2. Verificación de seguridad (Blindaje)\n// Si el array está vacío, significa que el INSERT falló silenciosamente.\nif (!rows || rows.length === 0) {\n    var errorMsg = \"Error: La base de datos no devolvió el refugiado creado.\";\n    \n    // Forzamos el error para que salte al nodo CATCH (si lo tienes)\n    node.error(new Error(errorMsg), msg);\n    \n    // O preparamos una respuesta de error manual si no usas Catch\n    msg.statusCode = 500;\n    msg.payload = { \n        success: false, \n        error: errorMsg \n    };\n    return msg;\n}\n\n// 3. Extraemos el objeto creado (siempre es el primero del array)\nvar newRefugee = rows[0];\n\n// 4. Construimos la respuesta HTTP (Estándar REST)\nmsg.statusCode = 201; // Código 201 significa \"Created\" (Creado exitosamente)\nmsg.payload = {\n    success: true,\n    message: \"Refugiado registrado correctamente\",\n    // Devolvemos el objeto completo. Es muy útil para que Flutter \n    // pueda actualizar la lista local sin tener que recargar internet.\n    data: newRefugee \n};\n\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 950,
+        "y": 480,
+        "wires": [
+            [
+                "b0dcf0fe6b4aa77b"
+            ]
+        ]
+    },
+    {
+        "id": "5e96ea5e7035a231",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Format GET refugee",
+        "func": "// 1. Recuperamos la info de la asignación (del nodo anterior)\n// Asumimos que msg.payload es el resultado del UPDATE o el objeto que creaste\nvar asignacion = msg.payload;\n\n// Si viene de un nodo Postgres puro, suele ser un array, cogemos el primero\nif (Array.isArray(asignacion)) {\n    asignacion = asignacion[0];\n}\n\n// 2. GUARDAR CONTEXTO (¡Importante!)\n// Guardamos la info de la asignación en una propiedad aparte 'msg.assignmentContext'\n// para que sobreviva a la siguiente consulta SQL.\nmsg.assignmentContext = {\n    refugee_id: asignacion.refugee_id || msg.refugee_id, // Asegura tener el ID\n    shelter_id: asignacion.assigned_shelter_id,\n    shelter_name: asignacion.shelter_name, // Si lo tienes. Si no, saldrá undefined.\n    explanation: \"Asignación prioritaria por vulnerabilidad\" // O el dato real si lo tienes\n};\n\n// 3. Preparar la Query para obtener EMAIL y NOMBRE\n// Usamos el refugee_id para buscar sus datos personales en la tabla 'refugee'\nmsg.query = \"SELECT first_name, last_name, email FROM refugee WHERE id = $1\";\nmsg.params = [msg.assignmentContext.refugee_id];\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1440,
+        "y": 220,
+        "wires": [
+            [
+                "ac43cf5439c90925"
+            ]
+        ]
+    },
+    {
+        "id": "ac43cf5439c90925",
+        "type": "postgresql",
+        "z": "tab_ai_integration",
+        "name": "",
+        "query": "",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 1650,
+        "y": 220,
+        "wires": [
+            [
+                "41aa3f26b3b03799"
+            ]
+        ]
     },
     {
         "id": "login_validation",
         "type": "function",
         "z": "tab_login",
         "name": "Validar y Preparar",
-        "func": "// Validar entrada\nif (!msg.payload || typeof msg.payload !== 'object') {\n  msg.statusCode = 400;\n  msg.payload = {\n    success: false,\n    message: 'Datos inválidos'\n  };\n  return msg;\n}\n\nconst identifier = msg.payload.identifier || msg.payload.email || msg.payload.username;\nconst password = msg.payload.password;\n\n// Validación básica\nif (!identifier || !password || typeof password !== 'string' || password.length === 0) {\n  msg.statusCode = 400;\n  msg.payload = {\n    success: false,\n    message: 'Email/usuario y contraseña son requeridos'\n  };\n  return msg;\n}\n\n// Guardamos password en msg para verificarlo después\nmsg.passwordToVerify = password;\n\n// Buscar por email O username\nmsg.query = 'SELECT id, email, username, password, full_name, role FROM users WHERE email = $1 OR username = $1';\nmsg.params = [identifier];\n\nmsg.payload = null;\n\nreturn msg;\n",
+        "func": "// Function: Validar y Preparar Login\n\n// 1. Validar que llegue algo\nif (!msg.payload || typeof msg.payload !== 'object') {\n  // Usamos node.error para activar el nodo Catch si lo tienes configurado\n  // O devolvemos el error directo si vas al HTTP Response.\n  msg.statusCode = 400;\n  msg.payload = { success: false, message: 'Datos inválidos' };\n  \n  // OPCIÓN A: Si usas Catch, descomenta la siguiente línea y pon return null\n  // node.error(\"Datos inválidos\", msg); return null; \n  \n  // OPCIÓN B (La actual): Devolver msg PERO asegúrate de no conectarlo al nodo Postgres\n  return msg; \n}\n\n// 2. Extracción Inteligente + LIMPIEZA (.trim())\n// Esto elimina espacios en blanco al inicio o final (súper común en móviles)\nlet identifier = msg.payload.identifier || msg.payload.email || msg.payload.username || msg.payload.phone_number;\n\nif (typeof identifier === 'string') {\n    identifier = identifier.trim();\n}\n\nconst password = msg.payload.password;\n\n// 3. Validación de campos requeridos\nif (!identifier || !password || typeof password !== 'string' || password.length === 0) {\n  msg.statusCode = 400;\n  msg.payload = {\n    success: false,\n    message: 'Error: Debes introducir usuario/email/teléfono y contraseña.'\n  };\n  \n  // Si validación falla, cortamos aquí.\n  // IMPORTANTE: Conecta una salida de este nodo directa al HTTP Response para estos casos,\n  // o usa node.error() como vimos antes.\n  return msg;\n}\n\n// 4. Guardar password para verificar después (Bcrypt)\nmsg.passwordToVerify = password;\n\n// 5. Query Multiuso\n// Buscamos coincidencia en CUALQUIERA de las 3 columnas\nmsg.query = 'SELECT id, email, username, password, first_name, last_name, role FROM users WHERE email = $1 OR username = $1 OR phone_number = $1';\nmsg.params = [identifier];\n\n// 6. Limpieza para seguridad\nmsg.payload = null;\n\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -1901,7 +1053,7 @@
         "type": "function",
         "z": "tab_login",
         "name": "Verificar y Responder",
-        "func": "try {\n  const result = msg.payload;\n  const passwordFromRequest = msg.passwordToVerify;\n  \n  // Verificar si el usuario existe\n  if (!Array.isArray(result) || result.length === 0) {\n    msg.statusCode = 401;\n    msg.payload = {\n      success: false,\n      message: 'Email o contraseña incorrectos'\n    };\n    return msg;\n  }\n  \n  const user = result[0];\n  \n  // Comparar contraseña (en prototipo es comparación directa)\n  // En producción: usar bcrypt.compare()\n  if (user.password !== passwordFromRequest) {\n    msg.statusCode = 401;\n    msg.payload = {\n      success: false,\n      message: 'Email o contraseña incorrectos'\n    };\n    return msg;\n  }\n  \n  // ÉXITO: Credentials válidas, devolver role\n  msg.statusCode = 200;\n  msg.payload = {\n    success: true,\n    user_id: user.id,\n    name: user.full_name,\n    email: user.email, // Necesario para notificación de login\n    role: user.role, // 'worker' o 'refugee'\n    token: 'simulated_token_' + Date.now() // Token simulado\n  };\n  \n  // Limpiar datos sensibles\n  delete msg.passwordToVerify;\n  \n  return msg;\n  \n} catch (err) {\n  msg.statusCode = 500;\n  msg.payload = {\n    success: false,\n    message: 'Error procesando login'\n  };\n  return msg;\n}",
+        "func": "// El nodo PostgreSQL devuelve un array con las filas insertadas\nvar filas = msg.payload;\n\ntry {\n  if (filas && filas.length > 0) {\n    var usuarioNuevo = filas[0];\n\n    // ÉXITO: Construimos la respuesta 201\n    msg.statusCode = 201;\n    msg.payload = {\n      \"success\": true,\n      \"user_id\": usuarioNuevo.id,\n      \"first_name\": usuarioNuevo.first_name,\n      \"last_name\": usuarioNuevo.last_name,\n      \"username\": usuarioNuevo.username,\n      \"email\": usuarioNuevo.email,\n      \"role\": usuarioNuevo.role,\n      \"token\": \"simulated_token_\" + Date.now()\n    };\n\n    // Devolvemos el mensaje por la salida normal\n    return msg;\n\n  } else {\n    // ERROR: No hay filas. \n    // Aquí es donde FORZAMOS la llamada al nodo Catch.\n\n    var errorMsg = \"No se pudo recuperar el usuario creado (la base de datos no devolvió filas)\";\n\n    // 1. Preparamos el mensaje de error para el Catch\n    // (El nodo Catch recibirá esto en msg.error)\n    var err = new Error(errorMsg);\n\n    // 2. Avisamos a Node-RED de que ha habido un error.\n    // El segundo parámetro 'msg' se pasa al nodo Catch para que no pierdas los datos.\n    node.error(err, msg);\n\n    // 3. Devolvemos null para CORTAR el flujo normal.\n    // Así no sigue hacia el nodo HTTP Response de éxito, sino que salta al Catch.\n    return null;\n  }\n} catch (e) {\n  // Si hay un error de código imprevisto (ej: variable undefined), también lo mandamos al Catch\n  node.error(e, msg);\n  return null;\n}// El nodo PostgreSQL devuelve un array con las filas insertadas\n// gracias al \"RETURNING\" que pusimos en la query.\nvar filas = msg.payload;\n\nif (filas && filas.length > 0) {\n  var usuarioNuevo = filas[0];\n\n  // Construimos la respuesta EXACTAMENTE igual que en el Login\n  // Así el frontend puede guardar el token y entrar directamente.\n  msg.statusCode = 201; // 201 Created (es lo correcto para registros)\n  msg.payload = {\n    \"success\": true,\n    \"user_id\": usuarioNuevo.id,\n    \"first_name\": usuarioNuevo.first_name,\n    \"last_name\": usuarioNuevo.last_name,\n    \"username\": usuarioNuevo.username,\n    \"email\": usuarioNuevo.email,\n    \"role\": usuarioNuevo.role, // Será 'refugee'\n    \"token\": \"simulated_token_\" + Date.now() // Token para que entre directo\n  };\n} else {\n  // Si por lo que sea no devuelve filas (raro si no dio error antes)\n  msg.statusCode = 500;\n  msg.payload = { \"error\": \"No se pudo recuperar el usuario creado\" };\n}\n\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -1912,7 +1064,8 @@
         "y": 100,
         "wires": [
             [
-                "login_http_response"
+                "login_http_response",
+                "63d32f953f6537d2"
             ]
         ]
     },
@@ -1931,13 +1084,13 @@
         "id": "22c0c426bf478142",
         "type": "http in",
         "z": "tab_login",
-        "name": "POST /api/register",
+        "name": "POST /api/register (worker)",
         "url": "/api/register",
         "method": "post",
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 160,
+        "x": 150,
         "y": 300,
         "wires": [
             [
@@ -1950,7 +1103,7 @@
         "type": "function",
         "z": "tab_login",
         "name": "Validar y Preparar",
-        "func": "// 1. Extraemos los datos que vienen del formulario (Frontend)\nvar nombre = msg.payload.name;\nvar email = msg.payload.email;\nvar password = msg.payload.password;\n\n// 2. Validación básica de seguridad (por si acaso falla el frontend)\nif (!email || !password || !nombre) {\n    msg.statusCode = 400;\n    msg.payload = { error: \"Faltan datos: nombre, email o contraseña\" };\n    return msg;\n}\n\n// 3. Preparamos la Query SQL (INSERT)\n// Fíjate que ponemos el rol 'refugee' fijo, porque es un auto-registro.\nmsg.query = \"INSERT INTO users (full_name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, full_name, email, role\";\n\n// 4. Preparamos los parámetros (Array)\n// Usamos 'refugee' como cuarto parámetro para cumplir con el CHECK de la base de datos\nmsg.params = [nombre, email, password, 'refugee'];\n\n// 5. Limpiamos el payload para que no moleste al nodo de Postgres\nmsg.payload = null;\n\nreturn msg;",
+        "func": "// 1. Extraemos los datos del Frontend\n// Flutter envía: { name: \"Juan Pérez\", email: \"...\", password: \"...\" }\nvar payload = msg.payload || {};\n\nvar rawName = payload.name || \"\";\nvar email = payload.email;\nvar password = payload.password;\n\n// 2. Validación de seguridad básica\nif (!email || !password || !rawName) {\n    msg.statusCode = 400;\n    msg.payload = { error: \"Faltan datos obligatorios: Nombre, Email y Contraseña\" };\n    // Cortamos el flujo para no intentar insertar nada\n    return [null, msg];\n}\n\n// 3. TRANSFORMACIÓN DE DATOS (Adaptación a tu Base de Datos)\n\n// A) Generar Username Automático\n// La tabla pide 'username' UNIQUE, pero el form de trabajador no lo pide.\n// Lo creamos usando la parte anterior al @ del email.\n// Ej: juan@ong.org -> username: juan\nvar autoUsername = email.split('@')[0];\n\n// B) Separar Nombre y Apellido\n// La tabla tiene 'first_name' y 'last_name', pero Flutter envía 'name' junto.\nvar parts = rawName.trim().split(\" \");\nvar firstName = parts[0]; // La primera palabra\nvar lastName = parts.slice(1).join(\" \") || \"\"; // El resto, o vacío si no tiene apellido\n\n// 4. Query SQL\n// Insertamos en: first_name, last_name, username, email, password, role.\n// role lo fijamos a 'worker'.\nmsg.query = `\n    INSERT INTO users (\n        first_name, \n        last_name, \n        username, \n        email, \n        password, \n        role,\n        phone_number\n    ) \n    VALUES ($1, $2, $3, $4, $5, 'worker', NULL) \n    RETURNING id, username, email, role, first_name, last_name\n`;\n\n// 5. Parámetros (En el orden exacto de los $1, $2...)\nmsg.params = [\n    firstName,     // $1\n    lastName,      // $2\n    autoUsername,  // $3 (Generado)\n    email,         // $4\n    password,      // $5\n];\n\n// 6. Limpieza\nmsg.payload = {};\n\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -1988,7 +1141,7 @@
         "type": "function",
         "z": "tab_login",
         "name": "Verificar y Responder",
-        "func": "// El nodo PostgreSQL devuelve un array con las filas insertadas\n// gracias al \"RETURNING\" que pusimos en la query.\nvar filas = msg.payload;\n\nif (filas && filas.length > 0) {\n    var usuarioNuevo = filas[0];\n\n    // Construimos la respuesta EXACTAMENTE igual que en el Login\n    // Así el frontend puede guardar el token y entrar directamente.\n    msg.statusCode = 201; // 201 Created (es lo correcto para registros)\n    msg.payload = {\n        \"success\": true,\n        \"user_id\": usuarioNuevo.id,\n        \"name\": usuarioNuevo.full_name,\n        \"email\": usuarioNuevo.email,\n        \"role\": usuarioNuevo.role, // Será 'refugee'\n        \"token\": \"simulated_token_\" + Date.now() // Token para que entre directo\n    };\n} else {\n    // Si por lo que sea no devuelve filas (raro si no dio error antes)\n    msg.statusCode = 500;\n    msg.payload = { \"error\": \"No se pudo recuperar el usuario creado\" };\n}\n\nreturn msg;",
+        "func": "// El nodo PostgreSQL devuelve un array con las filas insertadas\nvar filas = msg.payload;\n\ntry {\n    if (filas && filas.length > 0) {\n        var usuarioNuevo = filas[0];\n\n        // ÉXITO: Construimos la respuesta 201\n        msg.statusCode = 201;\n        msg.payload = {\n            \"success\": true,\n            \"user_id\": usuarioNuevo.id,\n            \"name\": usuarioNuevo.full_name,\n            \"email\": usuarioNuevo.email,\n            \"role\": usuarioNuevo.role,\n            \"token\": \"simulated_token_\" + Date.now()\n        };\n\n        // Devolvemos el mensaje por la salida normal\n        return msg;\n\n    } else {\n        // ERROR: No hay filas. \n        // Aquí es donde FORZAMOS la llamada al nodo Catch.\n\n        var errorMsg = \"No se pudo recuperar el usuario creado (la base de datos no devolvió filas)\";\n\n        // 1. Preparamos el mensaje de error para el Catch\n        // (El nodo Catch recibirá esto en msg.error)\n        var err = new Error(errorMsg);\n\n        // 2. Avisamos a Node-RED de que ha habido un error.\n        // El segundo parámetro 'msg' se pasa al nodo Catch para que no pierdas los datos.\n        node.error(err, msg);\n\n        // 3. Devolvemos null para CORTAR el flujo normal.\n        // Así no sigue hacia el nodo HTTP Response de éxito, sino que salta al Catch.\n        return null;\n    }\n} catch (e) {\n    // Si hay un error de código imprevisto (ej: variable undefined), también lo mandamos al Catch\n    node.error(e, msg);\n    return null;\n}",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -2092,7 +1245,7 @@
         "type": "function",
         "z": "tab_login",
         "name": "Validar y Preparar",
-        "func": "// 1. Extraemos los datos que vienen del formulario (Frontend)\nvar nombre = msg.payload.first_name;\nvar apellido = msg.payload.last_name;\nvar username = msg.payload.username;\nvar email = msg.payload.email;\nvar password = msg.payload.password;\nvar phone = msg.payload.phone_number;\nvar address = msg.payload.address;\nvar age = msg.payload.age;\nvar gender = msg.payload.gender;\n\n// 2. Validación básica de seguridad (por si acaso falla el frontend)\nif (!username || !password || !nombre || !address || !age) {\n    msg.statusCode = 400;\n    msg.payload = { error: \"Faltan datos: nombre, email o contraseña\" };\n    return msg;\n}\n\n// 3. Preparamos la Query SQL (INSERT)\n// Fíjate que ponemos el rol 'refugee' fijo, porque es un auto-registro.\nmsg.query = \"INSERT INTO users (first_name, last_name, username, email, password, phone_number, address, age, gender, role) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, first_name, last_name, username, email, password, phone_number, address, age, gender, role\";\n// 4. Preparamos los parámetros (Array)\n// Usamos 'refugee' como cuarto parámetro para cumplir con el CHECK de la base de datos\nmsg.params = [nombre, apellido, username, email, password, phone, address, age, gender, 'refugee'];\n\n// 5. Limpiamos el payload para que no moleste al nodo de Postgres\nmsg.payload = null;\n\nreturn msg;",
+        "func": "// 1. Extraemos y limpiamos los datos\nvar payload = msg.payload || {};\n\n// Campos obligatorios (según tu lógica de negocio)\nvar firstName = payload.first_name;\nvar lastName = payload.last_name || \"\"; // Puede estar vacío\nvar username = payload.username;\nvar password = payload.password;\n\n// Generamos full_name automáticamente para que la BD esté ordenada\nvar fullName = (firstName + \" \" + lastName).trim();\n\n// Campos Opcionales (convertimos vacíos a null para Postgres)\nvar email = payload.email || null;\nvar phone = payload.phone_number || null;\nvar address = payload.address || null;\n\n// Convertir edad a entero (seguridad)\nvar age = (payload.age && !isNaN(payload.age)) ? parseInt(payload.age) : null;\nvar gender = payload.gender || null;\n\n// 2. Validación de Seguridad (Solo lo estrictamente obligatorio)\n// Quitamos address y age de aquí porque en el formulario eran opcionales\nif (!username || !password || !firstName) {\n    msg.statusCode = 400;\n    msg.payload = { \n        success: false,\n        error: \"Faltan datos obligatorios: Usuario, Contraseña o Nombre.\" \n    };\n    // Importante: Usamos node.error o return null para no activar el nodo SQL\n    return [null, msg]; \n}\n\n// 3. Query SQL (Solo columnas que existen en tabla users)\nmsg.query = `\n    INSERT INTO users (\n        first_name, last_name, \n        username, email, password, \n        phone_number, \n        role\n    ) \n    VALUES ($1, $2, $3, $4, $5, $6, 'refugee') \n    RETURNING id, first_name, last_name, username, email, role\n`;\n\n// 4. Parámetros (6 valores)\nmsg.params = [\n    firstName,  // $1\n    lastName,   // $2\n    username,   // $3\n    email,      // $4\n    password,   // $5\n    phone       // $6\n];\n\n// 5. Limpieza\nmsg.payload = null;\n\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -2124,5 +1277,37 @@
                 "5e41704bfdb79d59"
             ]
         ]
+    },
+    {
+        "id": "69a2ff37382fd8d7",
+        "type": "catch",
+        "z": "tab_login",
+        "name": "",
+        "scope": null,
+        "uncaught": false,
+        "x": 1060,
+        "y": 640,
+        "wires": [
+            [
+                "30cff48a648b2fb3"
+            ]
+        ]
+    },
+    {
+        "id": "30cff48a648b2fb3",
+        "type": "debug",
+        "z": "tab_login",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1240,
+        "y": 640,
+        "wires": []
     }
 ]

@@ -32,7 +32,7 @@ class _QrScanScreenState extends State<QrScanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan QR')),
+      appBar: AppBar(title: const Text('Scan QR Code')),
       body: _isScannerSupported
           ? Stack(
               children: [
@@ -43,7 +43,7 @@ class _QrScanScreenState extends State<QrScanScreen> {
                     padding: const EdgeInsets.all(12),
                     color: Colors.black54,
                     child: const Text(
-                      'Point to the refugee\'s QR code',
+                      'Point the camera at the refugee\'s QR code',
                       style: TextStyle(color: Colors.white),
                     ),
                   ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/custom_snackbar.dart';
 import 'package:shelter_ai/providers/auth_state.dart';
 import 'package:shelter_ai/services/auth_service.dart';
 
@@ -26,8 +27,9 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _passwordCtrl.text.trim();
 
     if (identifier.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email, teléfono, usuario y contraseña requeridos')),
+      CustomSnackBar.showWarning(
+        context,
+        'Email, phone, username and password required',
       );
       return;
     }
@@ -108,20 +110,20 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Text(
-                    'Acceso de trabajador',
+                    'Worker Access',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Recibe, asigna y prioriza de forma segura.',
+                    'Receive, assign and prioritize securely.',
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
                   TextField(
                     controller: _identifierCtrl,
                     decoration: InputDecoration(
-                      labelText: 'Email, teléfono o usuario',
+                      labelText: 'Email, phone or username',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -134,7 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextField(
                     controller: _passwordCtrl,
                     decoration: InputDecoration(
-                      labelText: 'Contraseña',
+                      labelText: 'Password',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -157,7 +159,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                             : const Icon(Icons.login),
-                    label: Text(_isLoading ? 'Iniciando sesión...' : 'Iniciar sesión'),
+                    label: Text(_isLoading ? 'Signing in...' : 'Sign in'),
                   ),
                   TextButton(
                     onPressed: _isLoading
@@ -167,7 +169,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               '/register',
                             ),
                     child: Text(
-                      '¿Primera vez? Crear cuenta',
+                      'First time? Create account',
                       style: TextStyle(color: color.primary),
                     ),
                   ),
@@ -178,7 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               context,
                               '/welcome',
                             ),
-                    child: const Text('Volver al inicio'),
+                    child: const Text('Back to home'),
                   ),
                 ],
               ),
