@@ -7,36 +7,33 @@ This is a ToDo where i will be writting down what does our project's ai service 
 - [ ] Better data analisys
 - [ ] Preprocessing
     - [ ] More advanced preprocessing?
-- [ ] Modeling
+- [X] Modeling
     - [X] Introduction
-        - [ ] Change PRACTICAL CONSTRAINTS according to the final answer
-    - [ ] Explain each model
-        - [ ] K-Means
+        - [X] Change PRACTICAL CONSTRAINTS according to the final answer
+    - [X] Explain each model
+        - [X] K-Means
             - [X] Model-specific interpretation
             - [X] Internal evaluation metrics
             - [X] Interpretability
-        - [ ] Hierarchical
+        - [X] Hierarchical
             - [X] Model-specific interpretation
             - [X] Internal evaluation metrics
             - [X] Interpretability
-        - [ ] DBSCAN
+        - [X] DBSCAN
             - [X] Model-specific interpretation
             - [X] Internal evaluation metrics
             - [X] Interpretability
-        - [ ] HDBSCAN
+        - [X] HDBSCAN
             - [X] Model-specific interpretation
             - [X] Internal evaluation metrics
             - [X] Interpretability
-        - [ ] GMM
-            - [ ] Model-specific interpretation
-            - [ ] Internal evaluation metrics
-            - [ ] Interpretability
+        - [X] GMM
+            - [X] Model-specific interpretation
+            - [X] Internal evaluation metrics
+            - [X] Interpretability
     - [X] Write scalable algorithms at the start of the section to use with different models when needed. For fair comparissons
-    - [ ] **Next action:** update the interpretability score with a *dominance penalty* (e.g., penalize solutions where the largest cluster exceeds a target share such as 60–70%). After that, we will re-rank DBSCAN candidates and select a configuration that produces **multiple balanced, usable need profiles**.
-    - [ ] interpretability algorithm: Explain why is a good idea. Write a code summary to explain better how does that works.
-    - [ ] interpretability algorithm: Change explanation.
-    - [ ] Use GMM model????
-    - [-] Choose the best model configurations according to the defined metrics in the introduction
+    - [X] interpretability algorithm: Explain why is a good idea. Write a code summary to explain better how does that works.
+    - [X] Choose the best model configurations according to the defined metrics in the introduction
     - [ ] Explain better the choosen model output, and interpretation
     - [ ] Configure final model deployment
     - [ ] Fix / change final model's output system
