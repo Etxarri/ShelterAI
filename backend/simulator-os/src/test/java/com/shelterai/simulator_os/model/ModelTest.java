@@ -9,11 +9,13 @@ class ModelTest {
 
     @Test
     void testPriorityLevelFromString() {
-        assertEquals(PriorityLevel.ELDERLY, PriorityLevel.fromString("ANCIANO"));
+        assertEquals(PriorityLevel.ELDERLY, PriorityLevel.fromString("ELDERLY"));
         assertEquals(PriorityLevel.ELDERLY, PriorityLevel.fromString("elderly"));
         
-        assertEquals(PriorityLevel.PREGNANT, PriorityLevel.fromString("EMBARAZADA"));
-        assertEquals(PriorityLevel.CHILD, PriorityLevel.fromString("NIÑO"));
+        assertEquals(PriorityLevel.PREGNANT, PriorityLevel.fromString("PREGNANT"));
+        assertEquals(PriorityLevel.PREGNANT, PriorityLevel.fromString("pregnant"));
+        
+        assertEquals(PriorityLevel.CHILD, PriorityLevel.fromString("CHILD"));
         assertEquals(PriorityLevel.CHILD, PriorityLevel.fromString("child"));
         
         // Caso por defecto

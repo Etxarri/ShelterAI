@@ -64,22 +64,20 @@ class ClientHandlerTest {
         handler.run();
 
         verify(shelterManager, never()).addRefugeeToGlobalQueue(any());
-        assertTrue(outContent.toString().contains("\"message\":\"Formato incorrecto\""));
+        assertTrue(outContent.toString().contains("\"message\":\"Incorrect format\""));
     }
 
-    // TEST 3: STATUS
+    // TEST 3: Comando vacío después de ADD exitoso
     @Test
-    void testHandleStatusCommand() throws IOException {
-        String input = "STATUS\n";
+    void testMultipleCommands() throws IOException {
+        String input = "ADD:Maria:ELDER\n";
         setupInput(input);
-        
-        when(shelterManager.getAllStatuses()).thenReturn("{\"mock\":\"json\"}");
 
         ClientHandler handler = new ClientHandler(socket, shelterManager);
         handler.run();
 
-        verify(shelterManager, times(1)).getAllStatuses();
-        assertTrue(outContent.toString().contains("{\"mock\":\"json\"}"));
+        verify(shelterManager, times(1)).addRefugeeToGlobalQueue(any(Refugee.class));
+        assertTrue(outContent.toString().contains("\"status\":\"OK\""));
     }
 
     // TEST 4: SET_CAPACITY
@@ -104,7 +102,7 @@ class ClientHandlerTest {
         ClientHandler handler = new ClientHandler(socket, shelterManager);
         handler.run();
 
-        assertTrue(outContent.toString().contains("\"message\":\"Comando desconocido\""));
+        assertTrue(outContent.toString().contains("\"message\":\"Unknown command\""));
     }
 
     // TEST 6: Línea vacía
