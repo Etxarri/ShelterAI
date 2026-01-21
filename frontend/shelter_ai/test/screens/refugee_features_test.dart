@@ -90,31 +90,20 @@ void main() {
 
         final response = RecommendationResponse(
           refugeeName: "Refu",
-          refugeeAge: 25,
-          refugeeNationality: "Test",
-          refugeeFamilySize: 1,
-          refugeeGender: "Male",
           clusterId: 1,
           clusterLabel: "A",
           vulnerabilityLevel: "High",
-          totalSheltersAnalyzed: 10,
-          mlModelVersion: "1.0",
+          message: "Refugios encontrados",
           recommendations: [
             Recommendation(
               shelterId: 101,
               shelterName: "Shelter One",
               address: "Street 1",
               compatibilityScore: 90.0,
-              priorityScore: 80,
-              maxCapacity: 100,
-              currentOccupancy: 50,
               availableSpace: 50,
-              occupancyRate: 0.5,
               hasMedicalFacilities: true,
-              hasChildcare: false,
               hasDisabilityAccess: true,
               explanation: "Good fit",
-              matchingReasons: ["Space"],
             ),
           ],
         );

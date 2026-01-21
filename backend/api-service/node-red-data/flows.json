@@ -260,7 +260,7 @@
         "type": "postgresql",
         "z": "tab_refugees",
         "name": "Query All Refugees",
-        "query": "SELECT * FROM refugee WHERE assigned_shelter_id IS NULL OR status != 'assigned' ORDER BY id",
+        "query": "SELECT * FROM refugees WHERE assigned_shelter_id IS NULL OR status != 'assigned' ORDER BY id",
         "postgreSQLConfig": "301245f94e1239d9",
         "split": false,
         "rowsPerMsg": "",
@@ -295,7 +295,7 @@
         "type": "postgresql",
         "z": "tab_refugees",
         "name": "Query Assigned Refugees",
-        "query": "SELECT r.*, s.name as shelter_name, s.address as shelter_address FROM refugee r LEFT JOIN shelters s ON r.assigned_shelter_id = s.id WHERE r.assigned_shelter_id IS NOT NULL AND r.status = 'assigned' ORDER BY r.updated_at DESC",
+        "query": "SELECT r.*, s.name as shelter_name, s.address as shelter_address FROM refugees r LEFT JOIN shelters s ON r.assigned_shelter_id = s.id WHERE r.assigned_shelter_id IS NOT NULL AND r.status = 'assigned' ORDER BY r.updated_at DESC",
         "postgreSQLConfig": "301245f94e1239d9",
         "split": false,
         "rowsPerMsg": "",
@@ -330,7 +330,7 @@
         "type": "function",
         "z": "tab_refugees",
         "name": "Prepare Query",
-        "func": "const data = msg.payload;\n\nmsg.query = `INSERT INTO refugee (first_name, last_name, age, gender, nationality, languages_spoken, email, family_id, medical_conditions, has_disability, special_needs, vulnerability_score, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    parseInt(msg.req.params.id)\n];\n\nreturn msg;",
+        "func": "const data = msg.payload;\n\nmsg.query = `INSERT INTO refugees (first_name, last_name, age, gender, nationality, languages_spoken, email, family_size, has_children, children_count, medical_conditions, requires_medical_facilities, has_disability, special_needs, vulnerability_score, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, 'new', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    data.first_name, \n    data.last_name, \n    data.age, \n    data.gender,\n    data.nationality, \n    data.languages_spoken || null, \n    data.email || null,\n    data.family_size || 1,\n    data.has_children || false,\n    data.children_count || 0,\n    data.medical_conditions || null,\n    data.requires_medical_facilities || false,\n    data.has_disability || false,\n    data.special_needs || null, \n    data.vulnerability_score || 0\n];\n\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -442,8 +442,7 @@
         "y": 300,
         "wires": [
             [
-                "assignment_get_by_id_query",
-                "9aafc1cfb84bc8c1"
+                "assignment_get_by_id_query"
             ]
         ]
     },
@@ -461,7 +460,6 @@
         "y": 300,
         "wires": [
             [
-                "5685489b661371a8",
                 "assignment_http_response"
             ]
         ]
@@ -545,39 +543,6 @@
         "headers": {},
         "x": 1040,
         "y": 300,
-        "wires": []
-    },
-    {
-        "id": "5685489b661371a8",
-        "type": "debug",
-        "z": "tab_assignments",
-        "name": "debug 4",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 780,
-        "y": 360,
-        "wires": []
-    },
-    {
-        "id": "9aafc1cfb84bc8c1",
-        "type": "debug",
-        "z": "tab_assignments",
-        "name": "debug 5",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 560,
-        "y": 360,
         "wires": []
     },
     {
@@ -758,7 +723,7 @@
         "type": "function",
         "z": "tab_ai_integration",
         "name": "Prepare Update",
-        "func": "let body = msg.payload;\nif (typeof body === 'string') {\n  try { body = JSON.parse(body); } catch (e) { body = {}; }\n}\n\nconst rawRefugeeId = body.refugee_id;\nconst rawShelterId = body.shelter_id;\n\nconst refugee_id = Number(rawRefugeeId);\nconst shelter_id = Number(rawShelterId);\n\nif (!Number.isInteger(refugee_id) || !Number.isInteger(shelter_id) || refugee_id <= 0 || shelter_id <= 0) {\n    msg.statusCode = 400;\n    msg.payload = { error: 'refugee_id y shelter_id deben ser enteros > 0' };\n    return [null, msg];\n}\n\n// Preparar query para actualizar refugiado\nmsg.query = `UPDATE refugee \n             SET assigned_shelter_id = $1, \n                 status = 'assigned',\n                 updated_at = NOW()\n             WHERE id = $2\n             RETURNING id, assigned_shelter_id, status`;\n\nmsg.params = [shelter_id, refugee_id];\nmsg.payload = null;\n\nconsole.log('[ASSIGN] Updating refugee', refugee_id, 'with shelter', shelter_id);\n\nreturn [msg, null];",
+        "func": "let body = msg.payload;\nif (typeof body === 'string') {\n  try { body = JSON.parse(body); } catch (e) { body = {}; }\n}\n\nconst rawRefugeeId = body.refugee_id;\nconst rawShelterId = body.shelter_id;\n\nconst refugee_id = Number(rawRefugeeId);\nconst shelter_id = Number(rawShelterId);\n\nif (!Number.isInteger(refugee_id) || !Number.isInteger(shelter_id) || refugee_id <= 0 || shelter_id <= 0) {\n    msg.statusCode = 400;\n    msg.payload = { error: 'refugee_id y shelter_id deben ser enteros > 0' };\n    return [null, msg];\n}\n\n// Preparar query para actualizar refugiado\nmsg.query = `UPDATE refugees \n             SET assigned_shelter_id = $1, \n                 status = 'assigned',\n                 updated_at = NOW()\n             WHERE id = $2\n             RETURNING id, assigned_shelter_id, status`;\n\nmsg.params = [shelter_id, refugee_id];\nmsg.payload = null;\n\nconsole.log('[ASSIGN] Updating refugee', refugee_id, 'with shelter', shelter_id);\n\nreturn [msg, null];",
         "outputs": 2,
         "timeout": "",
         "noerr": 0,
@@ -923,7 +888,7 @@
         "type": "function",
         "z": "tab_ai_integration",
         "name": "Preparar INSERT refugiado",
-        "func": "const data = msg.payload;\n\nmsg.query = `INSERT INTO refugee (first_name, last_name, age, gender, nationality, languages_spoken, email, medical_conditions, has_disability, special_needs, vulnerability_score, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    data.first_name, \n    data.last_name, \n    data.age, \n    data.gender,\n    data.nationality, \n    data.languages_spoken, \n    data.email,\n    data.medical_conditions,\n    data.has_disability,\n    data.special_needs, \n    data.vulnerability_score || 0\n];\n\nreturn msg;",
+        "func": "const data = msg.payload;\n\nmsg.query = `INSERT INTO refugees (first_name, last_name, age, gender, nationality, languages_spoken, email, family_size, has_children, children_count, medical_conditions, requires_medical_facilities, has_disability, special_needs, vulnerability_score, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, 'new', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    data.first_name, \n    data.last_name, \n    data.age, \n    data.gender,\n    data.nationality, \n    data.languages_spoken || null, \n    data.email || null,\n    data.family_size || 1,\n    data.has_children || false,\n    data.children_count || 0,\n    data.medical_conditions || null,\n    data.requires_medical_facilities || false,\n    data.has_disability || false,\n    data.special_needs || null, \n    data.vulnerability_score || 0\n];\n\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -992,7 +957,7 @@
         "type": "function",
         "z": "tab_ai_integration",
         "name": "Format GET refugee",
-        "func": "// 1. Recuperamos la info de la asignación (del nodo anterior)\n// Asumimos que msg.payload es el resultado del UPDATE o el objeto que creaste\nvar asignacion = msg.payload;\n\n// Si viene de un nodo Postgres puro, suele ser un array, cogemos el primero\nif (Array.isArray(asignacion)) {\n    asignacion = asignacion[0];\n}\n\n// 2. GUARDAR CONTEXTO (¡Importante!)\n// Guardamos la info de la asignación en una propiedad aparte 'msg.assignmentContext'\n// para que sobreviva a la siguiente consulta SQL.\nmsg.assignmentContext = {\n    refugee_id: asignacion.refugee_id || msg.refugee_id, // Asegura tener el ID\n    shelter_id: asignacion.assigned_shelter_id,\n    shelter_name: asignacion.shelter_name, // Si lo tienes. Si no, saldrá undefined.\n    explanation: \"Asignación prioritaria por vulnerabilidad\" // O el dato real si lo tienes\n};\n\n// 3. Preparar la Query para obtener EMAIL y NOMBRE\n// Usamos el refugee_id para buscar sus datos personales en la tabla 'refugee'\nmsg.query = \"SELECT first_name, last_name, email FROM refugee WHERE id = $1\";\nmsg.params = [msg.assignmentContext.refugee_id];\n\nreturn msg;",
+        "func": "// 1. Recuperamos la info de la asignación (del nodo anterior)\n// Asumimos que msg.payload es el resultado del UPDATE o el objeto que creaste\nvar asignacion = msg.payload;\n\n// Si viene de un nodo Postgres puro, suele ser un array, cogemos el primero\nif (Array.isArray(asignacion)) {\n    asignacion = asignacion[0];\n}\n\n// 2. GUARDAR CONTEXTO (¡Importante!)\n// Guardamos la info de la asignación en una propiedad aparte 'msg.assignmentContext'\n// para que sobreviva a la siguiente consulta SQL.\nmsg.assignmentContext = {\n    refugee_id: asignacion.refugee_id || msg.refugee_id, // Asegura tener el ID\n    shelter_id: asignacion.assigned_shelter_id,\n    shelter_name: asignacion.shelter_name, // Si lo tienes. Si no, saldrá undefined.\n    explanation: \"Asignación prioritaria por vulnerabilidad\" // O el dato real si lo tienes\n};\n\n// 3. Preparar la Query para obtener EMAIL y NOMBRE\n// Usamos el refugee_id para buscar sus datos personales en la tabla 'refugees'\nmsg.query = \"SELECT first_name, last_name, email FROM refugees WHERE id = $1\";\nmsg.params = [msg.assignmentContext.refugee_id];\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -1033,6 +998,7 @@
         "url": "/api/ai/recommend/:refugeeId",
         "method": "get",
         "upload": false,
+        "skipBodyParsing": false,
         "swaggerDoc": "",
         "x": 260,
         "y": 240,
@@ -1164,6 +1130,7 @@
         "split": false,
         "rowsPerMsg": "",
         "outputs": 1,
+        "outputType": "query",
         "x": 700,
         "y": 360,
         "wires": [

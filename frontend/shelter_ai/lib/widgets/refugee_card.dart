@@ -239,6 +239,9 @@ class RefugeeCard extends StatelessWidget {
         );
       } else {
         // No assignment, get AI recommendation
+        print('📡 Requesting AI recommendation for refugeeId: $refugeeId (Type: ${refugeeId.runtimeType})');
+        print('📡 URL will be: http://localhost:1880/api/ai/recommend/$refugeeId');
+        
         final recommendationJson = await ApiService.getAIRecommendation(refugeeId.toString());
         
         if (!context.mounted) return;

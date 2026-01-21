@@ -71,8 +71,8 @@ class _RecommendationSelectionScreenState
     final response = widget.recommendationResponse;
     final recommendations = response.recommendations;
     final refugeeName = response.refugeeName;
-    final refugeeAge = response.refugeeAge;
-    final refugeeNationality = response.refugeeNationality;
+    final clusterLabel = response.clusterLabel;
+    final vulnerabilityLevel = response.vulnerabilityLevel;
 
     final auth = AuthScope.of(context);
     final isRefugee = auth.role == UserRole.refugee;
@@ -118,7 +118,7 @@ class _RecommendationSelectionScreenState
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '$refugeeAge years • $refugeeNationality',
+                      '$clusterLabel • $vulnerabilityLevel',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey.shade700,
@@ -361,9 +361,8 @@ class _RecommendationSelectionScreenState
                                 Expanded(
                                   child: _buildInfoChip(
                                     icon: Icons.group,
-                                    label: 'Capacity',
-                                    value:
-                                        '${recommendation.availableSpace}/${recommendation.maxCapacity}',
+                                    label: 'Available',
+                                    value: '${recommendation.availableSpace}',
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -383,11 +382,12 @@ class _RecommendationSelectionScreenState
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: _buildInfoChip(
-                                    icon: Icons.child_care,
-                                    label: 'Childcare',
-                                    value:
-                                        recommendation.hasChildcare ? '✓' : '✗',
-                                    valueColor: recommendation.hasChildcare
+                                    icon: Icons.accessibility,
+                                    label: 'Accessible',
+                                    value: recommendation.hasDisabilityAccess
+                                        ? '✓'
+                                        : '✗',
+                                    valueColor: recommendation.hasDisabilityAccess
                                         ? Colors.green
                                         : Colors.grey,
                                   ),
@@ -419,38 +419,6 @@ class _RecommendationSelectionScreenState
                                     height: 1.5,
                                   ),
                                 ),
-                                if (recommendation
-                                    .matchingReasons.isNotEmpty) ...[
-                                  const SizedBox(height: 12),
-                                  ...recommendation.matchingReasons
-                                      .map((reason) {
-                                    return Padding(
-                                      padding: const EdgeInsets.only(bottom: 8),
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Icon(
-                                            Icons.check_circle,
-                                            color: Colors.green.shade700,
-                                            size: 16,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              reason.replaceFirst('✓ ', ''),
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey.shade700,
-                                                height: 1.4,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  }).toList(),
-                                ],
                               ],
                             ),
 

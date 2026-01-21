@@ -1,141 +1,144 @@
 import 'package:flutter_test/flutter_test.dart';
-// Asegúrate de que este import apunte a donde tienes tu archivo recommendation.dart
-// Si lo tienes separado en dos archivos, importa ambos.
 import 'package:shelter_ai/models/recommendation.dart'; 
 import 'package:shelter_ai/models/recommendation_response.dart'; 
-// NOTA: Si en tu proyecto RecommendationResponse y Recommendation están en el mismo archivo, 
-// solo necesitas un import.
 
 void main() {
   group('RecommendationResponse Tests', () {
     
-    // CASO 1: Formato Nuevo (Lista de recomendaciones explícita)
-    test('fromJson parsea correctamente el formato nuevo con lista de recomendaciones', () {
+    test('fromJson parsea correctamente el formato nuevo', () {
       final json = {
-        'refugee_info': {
-          'name': 'Aiman',
-          'age': 25,
-          'nationality': 'Spanish',
-          'family_size': 1,
-          'gender': 'Male'
-        },
-        'cluster_id': 1,
-        'cluster_label': 'High Priority',
-        'vulnerability_level': 'high',
+        'refugee_name': 'Carlos Pérez',
+        'cluster_id': 5,
+        'cluster_label': 'Estándar',
+        'vulnerability_level': 'Standard',
+        'message': 'Refugios encontrados',
         'recommendations': [
           {
-            'shelter_id': 101,
-            'shelter_name': 'Refugio Centro',
-            'compatibility_score': 95.5,
-            'explanation': 'Buen match'
+            'shelter_id': 1,
+            'shelter_name': 'Refugio Central Madrid',
+            'address': 'Calle Atocha 12',
+            'compatibility_score': 95,
+            'available_space': 50,
+            'has_medical_facilities': false,
+            'has_disability_access': false,
+            'explanation': 'Asignación por disponibilidad general'
           },
           {
-            'shelter_id': 102,
-            'shelter_name': 'Refugio Norte',
-            'compatibility_score': 80.0
+            'shelter_id': 2,
+            'shelter_name': 'Centro Sanitario Cruz Roja',
+            'address': 'Av. Reina Victoria 45',
+            'compatibility_score': 95,
+            'available_space': 10,
+            'has_medical_facilities': true,
+            'has_disability_access': true,
+            'explanation': 'Asignación por disponibilidad general'
           }
         ]
       };
 
       final response = RecommendationResponse.fromJson(json);
 
-      expect(response.refugeeName, 'Aiman');
-      expect(response.clusterLabel, 'High Priority');
+      expect(response.refugeeName, 'Carlos Pérez');
+      expect(response.clusterId, 5);
+      expect(response.clusterLabel, 'Estándar');
+      expect(response.vulnerabilityLevel, 'Standard');
+      expect(response.message, 'Refugios encontrados');
       expect(response.recommendations.length, 2);
-      expect(response.recommendations.first.shelterName, 'Refugio Centro');
+      expect(response.recommendations.first.shelterName, 'Refugio Central Madrid');
+      expect(response.recommendations.first.compatibilityScore, 95);
     });
 
-    // CASO 2: Formato Node-RED (Assignment + Alternatives dentro)
-    test('fromJson parsea formato Node-RED (assignment + alternative_shelters)', () {
-      final json = {
-        'refugee': {'first_name': 'Maria', 'age': 30}, // Usa 'refugee' y 'first_name'
-        'assignment': {
-          'shelter_id': 200,
-          'shelter_name': 'Refugio Principal',
-          'compatibility_score': 90.0,
-          'alternative_shelters': [
-            {'shelter_id': 201, 'shelter_name': 'Alternativa 1'}
-          ]
-        }
-      };
-
-      final response = RecommendationResponse.fromJson(json);
-
-      expect(response.refugeeName, 'Maria');
-      // Debe haber 2: 1 del assignment principal + 1 de alternativas
-      expect(response.recommendations.length, 2); 
-      expect(response.recommendations[0].shelterName, 'Refugio Principal');
-      expect(response.recommendations[1].shelterName, 'Alternativa 1');
-    });
-
-    // CASO 3: Formato Node-RED (Alternatives en la raíz)
-    test('fromJson parsea alternatives en la raíz del JSON', () {
-      final json = {
-        'assignment': {'shelter_id': 300, 'shelter_name': 'Main'},
-        'alternative_shelters': [ // <-- En la raíz
-          {'shelter_id': 301, 'shelter_name': 'Root Alt'}
-        ]
-      };
-
-      final response = RecommendationResponse.fromJson(json);
-
-      expect(response.recommendations.length, 2);
-      expect(response.recommendations[1].shelterName, 'Root Alt');
-    });
-
-    // CASO 4: Valores por defecto y nulos
     test('Maneja valores nulos y aplica defaults correctamente', () {
       final json = <String, dynamic>{}; // JSON vacío
 
       final response = RecommendationResponse.fromJson(json);
 
       expect(response.refugeeName, 'Unknown');
-      expect(response.refugeeAge, 0);
+      expect(response.clusterId, 0);
+      expect(response.clusterLabel, 'Unknown');
+      expect(response.vulnerabilityLevel, 'Standard');
+      expect(response.message, 'Refugios encontrados');
       expect(response.recommendations, isEmpty);
-      expect(response.mlModelVersion, '1.0');
+    });
+
+    test('Parsea recomendaciones con diferentes compatibilityScores', () {
+      final json = {
+        'refugee_name': 'Test User',
+        'cluster_id': 1,
+        'cluster_label': 'Test',
+        'vulnerability_level': 'High',
+        'recommendations': [
+          {
+            'shelter_id': 100,
+            'shelter_name': 'Shelter A',
+            'address': 'Address A',
+            'compatibility_score': '92.5', // String
+            'available_space': 30,
+            'has_medical_facilities': 'true', // String
+            'has_disability_access': false,
+            'explanation': 'Good match'
+          }
+        ]
+      };
+
+      final response = RecommendationResponse.fromJson(json);
+      final rec = response.recommendations.first;
+
+      expect(rec.shelterId, 100);
+      expect(rec.compatibilityScore, 92.5); // Convertido de String
+      expect(rec.hasMedicalFacilities, true); // Convertido de String
+      expect(rec.availableSpace, 30);
     });
   });
 
-  group('Recommendation Model Logic Tests', () {
+  group('Recommendation Model Tests', () {
     
-    // CASO 5: Conversión de Tipos (_parseInt y _parseDouble)
-    // Probamos que el modelo sea robusto si la API devuelve Strings en vez de Números
-    test('Parsea tipos mixtos (String/Int/Double) correctamente', () {
+    test('fromJson parsea correctamente los campos simplificados', () {
       final json = {
-        'shelter_id': '500',          // String numérico
-        'max_capacity': 50.0,         // Double donde espera int
-        'compatibility_score': '88.5',// String double
-        'priority_score': 10,         // Int donde espera double
-        'has_medical_facilities': 'true', // String boolean
-        'has_childcare': true,        // Boolean real
-        'explanation': null,
-        'matching_reasons': ['Reason 1', 123] // Lista mixta
+        'shelter_id': '101',
+        'shelter_name': 'Test Shelter',
+        'address': 'Test Address',
+        'compatibility_score': '85.5',
+        'available_space': 45,
+        'has_medical_facilities': true,
+        'has_disability_access': false,
+        'explanation': 'Perfect match'
       };
 
       final rec = Recommendation.fromJson(json);
 
-      expect(rec.shelterId, 500); // String -> Int
-      expect(rec.maxCapacity, 50); // Double -> Int
-      expect(rec.compatibilityScore, 88.5); // String -> Double
-      expect(rec.priorityScore, 10.0); // Int -> Double
-      expect(rec.hasMedicalFacilities, true); // String 'true' -> true
-      expect(rec.hasChildcare, true); // Boolean true -> true
-      expect(rec.explanation, 'Refugio recomendado'); // Default
-      expect(rec.matchingReasons.length, 2);
-      expect(rec.matchingReasons.last, '123'); // Convertido a string
+      expect(rec.shelterId, 101);
+      expect(rec.shelterName, 'Test Shelter');
+      expect(rec.address, 'Test Address');
+      expect(rec.compatibilityScore, 85.5);
+      expect(rec.availableSpace, 45);
+      expect(rec.hasMedicalFacilities, true);
+      expect(rec.hasDisabilityAccess, false);
+      expect(rec.explanation, 'Perfect match');
     });
     
-    // CASO 6: Helper _parseInt y _parseDouble con nulls
-    test('Maneja nulls en campos numéricos devolviendo 0', () {
+    test('Maneja valores nulos con defaults', () {
       final json = {
         'shelter_id': null,
+        'shelter_name': null,
+        'address': null,
         'compatibility_score': null,
+        'available_space': null,
+        'has_medical_facilities': null,
+        'has_disability_access': null,
+        'explanation': null,
       };
       
       final rec = Recommendation.fromJson(json);
       
       expect(rec.shelterId, 0);
+      expect(rec.shelterName, '');
+      expect(rec.address, '');
       expect(rec.compatibilityScore, 0.0);
+      expect(rec.availableSpace, 0);
+      expect(rec.hasMedicalFacilities, false);
+      expect(rec.hasDisabilityAccess, false);
+      expect(rec.explanation, 'Refugio recomendado');
     });
   });
 }
