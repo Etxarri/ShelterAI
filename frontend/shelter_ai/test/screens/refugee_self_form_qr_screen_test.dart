@@ -18,6 +18,7 @@ void main() {
     return MaterialApp(
       routes: {
         '/login': (_) => const Scaffold(body: Text('LOGIN_SCREEN')),
+        '/refugee-login': (_) => const Scaffold(body: Text('LOGIN_SCREEN')),
       },
       home: AuthScope(
         state: AuthState(),
@@ -74,7 +75,7 @@ void main() {
       expect(_logoutButton(), findsOneWidget);
       expect(_generateButton(), findsOneWidget);
 
-      expect(find.text('Your basic data'), findsOneWidget);
+      expect(find.text('Basic Data'), findsOneWidget);
       expect(find.text('Language and nationality'), findsOneWidget);
       expect(find.text('Care and companions'), findsOneWidget);
     });

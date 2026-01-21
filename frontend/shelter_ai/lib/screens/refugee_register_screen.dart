@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shelter_ai/providers/auth_state.dart';
 import 'package:shelter_ai/services/auth_service.dart';
+import 'package:shelter_ai/widgets/form_card_container.dart';
+import 'package:shelter_ai/widgets/auth_button.dart';
+import 'package:shelter_ai/utils/auth_helper.dart';
+import 'package:shelter_ai/utils/form_validators.dart';
+import 'package:shelter_ai/mixins/auth_form_mixin.dart';
 
 class RefugeeRegisterScreen extends StatefulWidget {
   const RefugeeRegisterScreen({super.key});
@@ -9,7 +14,8 @@ class RefugeeRegisterScreen extends StatefulWidget {
   State<RefugeeRegisterScreen> createState() => _RefugeeRegisterScreenState();
 }
 
-class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
+class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen>
+    with AuthFormMixin {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _firstNameCtrl = TextEditingController();
   final TextEditingController _lastNameCtrl = TextEditingController();
@@ -21,7 +27,6 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
   final TextEditingController _passwordCtrl = TextEditingController();
   final TextEditingController _confirmCtrl = TextEditingController();
   String _gender = 'Male';
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -40,75 +45,28 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+    final refugeeData = {
+      'firstName': _firstNameCtrl.text.trim(),
+      'lastName': _lastNameCtrl.text.trim(),
+      'username': _usernameCtrl.text.trim(),
+      'email': _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
+      'password': _passwordCtrl.text.trim(),
+      'phoneNumber':
+          _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
+      'address':
+          _addressCtrl.text.trim().isEmpty ? null : _addressCtrl.text.trim(),
+      'age': _ageCtrl.text.trim().isEmpty
+          ? null
+          : int.tryParse(_ageCtrl.text.trim()),
+      'gender': _gender,
+    };
 
-    try {
-      final response = await AuthService.registerRefugee(
-        firstName: _firstNameCtrl.text.trim(),
-        lastName: _lastNameCtrl.text.trim(),
-        username: _usernameCtrl.text.trim(),
-        email: _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
-        password: _passwordCtrl.text.trim(),
-        phoneNumber: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
-        address: _addressCtrl.text.trim().isEmpty ? null : _addressCtrl.text.trim(),
-        age: _ageCtrl.text.trim().isEmpty ? null : int.tryParse(_ageCtrl.text.trim()),
-        gender: _gender,
-      );
-
-      if (!mounted) return;
-
-      final auth = AuthScope.of(context);
-      final roleEnum =
-          response.role == 'worker' ? UserRole.worker : UserRole.refugee;
-
-      auth.login(
-        roleEnum,
-        userId: response.userId,
-        token: response.token,
-        userName: response.name,
-        firstName: _firstNameCtrl.text.trim(),
-        lastName: _lastNameCtrl.text.trim(),
-        email: _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
-        phoneNumber: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
-        address: _addressCtrl.text.trim().isEmpty ? null : _addressCtrl.text.trim(),
-        age: _ageCtrl.text.trim().isEmpty ? null : int.tryParse(_ageCtrl.text.trim()),
-        gender: _gender,
-      );
-
-      if (response.role == 'worker') {
-        Navigator.pushReplacementNamed(context, '/worker-dashboard');
-      } else {
-        Navigator.pushReplacementNamed(context, '/refugee-self-form-qr');
-      }
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Registration error: $e')),
-      );
-    }
-  }
-
-  String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
-      return null; // Email is optional
-    }
-    final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
-    if (!emailRegex.hasMatch(value.trim())) {
-      return 'Email no válido';
-    }
-    return null;
-  }
-
-  String? _validatePhone(String? value) {
-    if (value == null || value.isEmpty) {
-      return null; // Teléfono es opcional
-    }
-    // Validación básica de teléfono
-    if (value.trim().length < 6) {
-      return 'Teléfono debe tener al menos 6 dígitos';
-    }
-    return null;
+    await AuthHelper.handleRefugeeRegister(
+      context: context,
+      refugeeData: refugeeData,
+      onLoadingStart: startLoading,
+      onLoadingEnd: stopLoading,
+    );
   }
 
   @override
@@ -119,27 +77,16 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
         title: const Text('Register as Refugee'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: _isLoading
+          onPressed: isLoading
               ? null
-              : () => Navigator.pushReplacementNamed(context, '/refugee-landing'),
+              : () =>
+                  Navigator.pushReplacementNamed(context, '/refugee-landing'),
         ),
       ),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x15000000),
-                  blurRadius: 18,
-                  offset: Offset(0, 10),
-                ),
-              ],
-            ),
+          child: FormCardContainer(
             child: Form(
               key: _formKey,
               child: Column(
@@ -169,9 +116,8 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
                       prefixIcon: Icon(Icons.person),
                       border: OutlineInputBorder(),
                     ),
-                    validator: (v) =>
-                        (v == null || v.trim().isEmpty) ? 'Requerido' : null,
-                    enabled: !_isLoading,
+                    validator: FormValidators.requerido,
+                    enabled: !isLoading,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -181,9 +127,8 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
                       prefixIcon: Icon(Icons.person_outline),
                       border: OutlineInputBorder(),
                     ),
-                    validator: (v) =>
-                        (v == null || v.trim().isEmpty) ? 'Requerido' : null,
-                    enabled: !_isLoading,
+                    validator: FormValidators.requerido,
+                    enabled: !isLoading,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -194,16 +139,8 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.number,
-                    validator: (v) {
-                      if (v != null && v.trim().isNotEmpty) {
-                        final age = int.tryParse(v.trim());
-                        if (age == null || age < 0 || age > 150) {
-                          return 'Edad no válida';
-                        }
-                      }
-                      return null;
-                    },
-                    enabled: !_isLoading,
+                    validator: FormValidators.ageEs,
+                    enabled: !isLoading,
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
@@ -213,7 +150,9 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
                       DropdownMenuItem(value: 'Female', child: Text('Female')),
                       DropdownMenuItem(value: 'Other', child: Text('Other')),
                     ],
-                    onChanged: _isLoading ? null : (v) => setState(() => _gender = v ?? 'Male'),
+                    onChanged: isLoading
+                        ? null
+                        : (v) => setState(() => _gender = v ?? 'Male'),
                     decoration: const InputDecoration(
                       labelText: 'Gender',
                       prefixIcon: Icon(Icons.wc),
@@ -234,8 +173,8 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.emailAddress,
-                    validator: _validateEmail,
-                    enabled: !_isLoading,
+                    validator: FormValidators.emailEs,
+                    enabled: !isLoading,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -247,8 +186,8 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
                       hintText: 'e.g: +34 123456789',
                     ),
                     keyboardType: TextInputType.phone,
-                    validator: _validatePhone,
-                    enabled: !_isLoading,
+                    validator: FormValidators.phoneEs,
+                    enabled: !isLoading,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -258,7 +197,7 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
                       prefixIcon: Icon(Icons.location_on),
                       border: OutlineInputBorder(),
                     ),
-                    enabled: !_isLoading,
+                    enabled: !isLoading,
                   ),
                   const SizedBox(height: 20),
                   const Text(
@@ -273,9 +212,8 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
                       prefixIcon: Icon(Icons.badge),
                       border: OutlineInputBorder(),
                     ),
-                    validator: (v) =>
-                        (v == null || v.trim().isEmpty) ? 'Requerido' : null,
-                    enabled: !_isLoading,
+                    validator: FormValidators.requerido,
+                    enabled: !isLoading,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -286,11 +224,8 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
                       border: OutlineInputBorder(),
                     ),
                     obscureText: true,
-                    validator: (v) =>
-                        (v == null || v.length < 6)
-                            ? 'Mínimo 6 caracteres'
-                            : null,
-                    enabled: !_isLoading,
+                    validator: FormValidators.passwordEs,
+                    enabled: !isLoading,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -302,18 +237,16 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
                     ),
                     obscureText: true,
                     validator: (v) =>
-                        (v == null || v != _passwordCtrl.text)
-                            ? 'Las contraseñas no coinciden'
-                            : null,
-                    enabled: !_isLoading,
+                        FormValidators.confirmPasswordEs(v, _passwordCtrl.text),
+                    enabled: !isLoading,
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
-                    onPressed: _isLoading ? null : _handleRegister,
+                    onPressed: isLoading ? null : _handleRegister,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    icon: _isLoading
+                    icon: isLoading
                         ? const SizedBox(
                             width: 20,
                             height: 20,
@@ -321,11 +254,11 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen> {
                           )
                         : const Icon(Icons.person_add),
                     label: Text(
-                      _isLoading ? 'Registering...' : 'Register',
+                      isLoading ? 'Registering...' : 'Register',
                     ),
                   ),
                   TextButton(
-                    onPressed: _isLoading
+                    onPressed: isLoading
                         ? null
                         : () => Navigator.pushReplacementNamed(
                               context,

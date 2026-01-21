@@ -4,6 +4,7 @@ import 'package:shelter_ai/screens/qr_scan_screen.dart';
 import 'package:shelter_ai/services/api_service.dart';
 import 'package:shelter_ai/widgets/refugee_card.dart';
 import 'package:shelter_ai/widgets/shelter_card.dart';
+import 'package:shelter_ai/widgets/common_widgets.dart';
 import 'dart:convert';
 
 class WorkerDashboardScreen extends StatefulWidget {
@@ -13,19 +14,14 @@ class WorkerDashboardScreen extends StatefulWidget {
   State<WorkerDashboardScreen> createState() => _WorkerDashboardScreenState();
 }
 
-class _WorkerDashboardScreenState extends State<WorkerDashboardScreen> {
+class _WorkerDashboardScreenState extends State<WorkerDashboardScreen>
+    with LogoutMixin {
   int _refreshKey = 0;
 
   void _refresh() {
     setState(() {
       _refreshKey++;
     });
-  }
-
-  void _logout() {
-    final auth = AuthScope.of(context);
-    auth.logout();
-    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
   }
 
   @override
@@ -39,7 +35,7 @@ class _WorkerDashboardScreenState extends State<WorkerDashboardScreen> {
         actions: [
           IconButton(
             tooltip: 'Logout',
-            onPressed: _logout,
+            onPressed: logoutWorker,
             icon: const Icon(Icons.logout),
           ),
         ],

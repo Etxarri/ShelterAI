@@ -92,9 +92,9 @@ void main() {
       await tester.tap(find.text('Sign in'));
       await tester.pump(); // muestra snackbar
 
-      // El texto exacto que mandas a CustomSnackBar.showWarning
+      // El texto exacto que mandas a SnackBar
       expect(
-        find.text('Email, phone, username and password required'),
+        find.text('Email, phone or username and password required'),
         findsOneWidget,
       );
     });

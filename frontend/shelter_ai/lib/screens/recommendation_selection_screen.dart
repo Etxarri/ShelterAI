@@ -35,7 +35,7 @@ class _RecommendationSelectionScreenState
         shelterId,
       );
 
-      if (!context.mounted) return;
+      if (!mounted) return;
 
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
@@ -49,15 +49,14 @@ class _RecommendationSelectionScreenState
       // Wait a moment for the user to see the message
       await Future.delayed(const Duration(seconds: 1));
 
-      if (!context.mounted) return;
+      if (!mounted) return;
 
       // Return to previous screen with successful result
       Navigator.of(context).pop(true);
-
     } catch (e) {
-      if (!context.mounted) return;
+      if (!mounted) return;
       setState(() => _isLoading = false);
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error assigning shelter: $e'),
@@ -74,7 +73,7 @@ class _RecommendationSelectionScreenState
     final refugeeName = response.refugeeName;
     final refugeeAge = response.refugeeAge;
     final refugeeNationality = response.refugeeNationality;
-    
+
     final auth = AuthScope.of(context);
     final isRefugee = auth.role == UserRole.refugee;
     final canSelect = true; // Both refugees and workers can select
@@ -134,10 +133,13 @@ class _RecommendationSelectionScreenState
                 margin: const EdgeInsets.all(16),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: canSelect ? Colors.blue.shade100 : Colors.orange.shade100,
+                  color:
+                      canSelect ? Colors.blue.shade100 : Colors.orange.shade100,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: canSelect ? Colors.blue.shade300 : Colors.orange.shade300,
+                    color: canSelect
+                        ? Colors.blue.shade300
+                        : Colors.orange.shade300,
                   ),
                 ),
                 child: Row(
@@ -213,10 +215,12 @@ class _RecommendationSelectionScreenState
               ...recommendations.asMap().entries.map((entry) {
                 int index = entry.key;
                 final recommendation = entry.value;
-                final isSelected = _selectedShelterId == recommendation.shelterId;
+                final isSelected =
+                    _selectedShelterId == recommendation.shelterId;
 
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Card(
                     elevation: isSelected ? 4 : 1,
                     shape: RoundedRectangleBorder(
@@ -381,9 +385,8 @@ class _RecommendationSelectionScreenState
                                   child: _buildInfoChip(
                                     icon: Icons.child_care,
                                     label: 'Childcare',
-                                    value: recommendation.hasChildcare
-                                        ? '✓'
-                                        : '✗',
+                                    value:
+                                        recommendation.hasChildcare ? '✓' : '✗',
                                     valueColor: recommendation.hasChildcare
                                         ? Colors.green
                                         : Colors.grey,
@@ -416,14 +419,13 @@ class _RecommendationSelectionScreenState
                                     height: 1.5,
                                   ),
                                 ),
-                                if (recommendation.matchingReasons
-                                    .isNotEmpty) ...[
+                                if (recommendation
+                                    .matchingReasons.isNotEmpty) ...[
                                   const SizedBox(height: 12),
                                   ...recommendation.matchingReasons
                                       .map((reason) {
                                     return Padding(
-                                      padding:
-                                          const EdgeInsets.only(bottom: 8),
+                                      padding: const EdgeInsets.only(bottom: 8),
                                       child: Row(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
@@ -454,7 +456,8 @@ class _RecommendationSelectionScreenState
 
                             // Selection button or loading indicator
                             const SizedBox(height: 8),
-                            if (canSelect && _selectedShelterId == recommendation.shelterId)
+                            if (canSelect &&
+                                _selectedShelterId == recommendation.shelterId)
                               Center(
                                 child: _isLoading
                                     ? const SizedBox(
@@ -472,7 +475,7 @@ class _RecommendationSelectionScreenState
                                               color: Colors.green.shade700),
                                           const SizedBox(width: 8),
                                           Text(
-                                                'Assigning...',
+                                            'Assigning...',
                                             style: TextStyle(
                                               color: Colors.green.shade700,
                                               fontWeight: FontWeight.w600,
@@ -493,7 +496,8 @@ class _RecommendationSelectionScreenState
                                   decoration: BoxDecoration(
                                     color: Colors.blue.shade50,
                                     borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: Colors.blue.shade200),
+                                    border:
+                                        Border.all(color: Colors.blue.shade200),
                                   ),
                                   child: Text(
                                     '⭐ Best option',

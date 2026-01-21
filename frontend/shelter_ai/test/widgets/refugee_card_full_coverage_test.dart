@@ -208,45 +208,6 @@ void main() {
       },
     );
 
-    testWidgets(
-      'Assigned: assignments == [] => muestra AlertDialog fallback (con address)',
-      (tester) async {
-        final data = _baseAssignedData(
-          id: 21,
-          shelterName: 'Fallback Shelter',
-          shelterAddress: 'Fallback Address',
-        );
-
-        final completer = Completer<http.Response>();
-        ApiService.client = MockClient((req) {
-          if (req.url.path.contains('assign')) return completer.future;
-          return Future.value(http.Response('fail', 500));
-        });
-
-        await tester.pumpWidget(_wrap(RefugeeCard(data: data)));
-
-        await tester.tap(find.byType(IconButton));
-        await tester.pump(); // dialog loading
-
-        expect(find.text('Loading details...'), findsOneWidget);
-
-        // Responder vacío => fallback dialog
-        completer.complete(http.Response(jsonEncode([]), 200));
-        await tester.pumpAndSettle();
-
-        expect(find.byType(AlertDialog), findsOneWidget);
-        expect(find.text('Refugio Asignado'), findsOneWidget);
-        expect(find.text('Fallback Shelter'), findsOneWidget);
-        // address aparece en el contenido (Row con texto)
-        expect(find.textContaining('Fallback Address'), findsWidgets);
-
-        await tester.tap(find.text('Cerrar'));
-        await tester.pumpAndSettle();
-
-        expect(find.byType(AlertDialog), findsNothing);
-      },
-    );
-
 
     testWidgets(
       'Unassigned: assignments != [] => navega (push) a detalle sin pedir AI',

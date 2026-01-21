@@ -37,6 +37,7 @@ void main() {
       child: MaterialApp(
         routes: {
           '/login': (_) => const Scaffold(body: Center(child: Text('LOGIN'))),
+          '/refugee-login': (_) => const Scaffold(body: Center(child: Text('LOGIN'))),
         },
         home: const RefugeeSelfFormQrScreen(),
       ),

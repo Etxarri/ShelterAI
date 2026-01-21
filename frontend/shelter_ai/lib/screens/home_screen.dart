@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shelter_ai/providers/auth_state.dart';
+import 'package:shelter_ai/widgets/common_widgets.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -69,7 +70,8 @@ class HomeScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 textStyle: const TextStyle(fontSize: 18),
               ),
-              onPressed: () => Navigator.pushNamed(context, '/refugee-self-form-qr'),
+              onPressed: () =>
+                  Navigator.pushNamed(context, '/refugee-self-form-qr'),
               icon: const Icon(Icons.qr_code_2, size: 26),
               label: const Text('Register and generate my QR'),
             ),
@@ -98,22 +100,23 @@ class HomeScreen extends StatelessWidget {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 12),
-            _InfoCard(
+            const InfoTile(
               icon: Icons.volunteer_activism,
               title: 'We care for you from the first step',
               body:
                   'By registering, you help us assign you a safe space and take care of your medical needs.',
             ),
-            _InfoCard(
+            const InfoTile(
               icon: Icons.family_restroom,
               title: 'If you come with family',
               body:
                   'Indicate if you travel with minors or people with reduced mobility to keep them together.',
             ),
-            _InfoCard(
+            const InfoTile(
               icon: Icons.lock_outline,
               title: 'Your data, in confidence',
-              body: 'We only use them for your protection and assignment. You can leave and return; your QR remains valid.',
+              body:
+                  'We only use them for your protection and assignment. You can leave and return; your QR remains valid.',
             ),
           ],
         ),
@@ -138,9 +141,9 @@ class HomeScreen extends StatelessWidget {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 12),
-            _StepRow(label: 'Show your QR to the worker'),
-            _StepRow(label: 'Confirm your name and come with us'),
-            _StepRow(label: 'You will receive your place and a brief guide'),
+            StepItem(text: 'Show your QR to the worker'),
+            StepItem(text: 'Confirm your name and come with us'),
+            StepItem(text: 'You will receive your place and a brief guide'),
             SizedBox(height: 12),
             Text(
               'If you are in pain, with minors, or need mobility support, let us know immediately.',
@@ -164,82 +167,6 @@ class HomeScreen extends StatelessWidget {
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Understood'),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String body;
-
-  const _InfoCard({
-    required this.icon,
-    required this.title,
-    required this.body,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.primary.withOpacity(0.12)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 6,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color.primary, size: 28),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(body),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StepRow extends StatelessWidget {
-  final String label;
-
-  const _StepRow({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          const Icon(Icons.check_circle, color: Colors.teal),
-          const SizedBox(width: 8),
-          Expanded(child: Text(label)),
         ],
       ),
     );

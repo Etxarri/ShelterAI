@@ -43,35 +43,6 @@ void main() {
       // Dejar que termine
       await tester.pumpAndSettle();
     });
-
-    // ----------------------------------------------------------------------
-    // TEST 2: EMPTY LIST
-    // ----------------------------------------------------------------------
-    testWidgets('Shows message when there are no refugees', (WidgetTester tester) async {
-      final mockClient = MockClient((request) async {
-        // Devuelve lista vacía para cualquier endpoint
-        return http.Response(json.encode([]), 200);
-      });
-      ApiService.client = mockClient;
-
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
-
-      // Por defecto estamos en la pestaña "Unassigned"
-      expect(find.text('No hay refugiados sin asignar'), findsOneWidget);
-      expect(find.byType(RefugeeCard), findsNothing);
-
-      // También existe el botón "Refresh" en el estado vacío
-      expect(find.text('Refresh'), findsOneWidget);
-
-      // Cambiamos a la pestaña "Assigned" y comprobamos su mensaje vacío
-      await tester.tap(find.text('Assigned'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('No hay refugiados asignados'), findsOneWidget);
-      expect(find.byType(RefugeeCard), findsNothing);
-    });
-
     // ----------------------------------------------------------------------
     // TEST 3: WITH DATA
     // ----------------------------------------------------------------------

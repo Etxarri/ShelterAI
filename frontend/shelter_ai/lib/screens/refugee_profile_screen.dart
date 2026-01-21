@@ -4,6 +4,7 @@ import 'package:shelter_ai/providers/auth_state.dart';
 import 'package:shelter_ai/services/api_service.dart';
 import 'package:shelter_ai/models/recommendation_response.dart';
 import 'package:shelter_ai/screens/recommendation_selection_screen.dart';
+import 'package:shelter_ai/widgets/common_widgets.dart';
 
 class RefugeeProfileScreen extends StatefulWidget {
   const RefugeeProfileScreen({super.key});
@@ -12,13 +13,8 @@ class RefugeeProfileScreen extends StatefulWidget {
   State<RefugeeProfileScreen> createState() => _RefugeeProfileScreenState();
 }
 
-class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
-  void _logout() {
-    final auth = AuthScope.of(context);
-    auth.logout();
-    Navigator.pushNamedAndRemoveUntil(context, '/refugee-login', (route) => false);
-  }
-
+class _RefugeeProfileScreenState extends State<RefugeeProfileScreen>
+    with LogoutMixin {
   Future<void> _handleCheckAssignment() async {
     final auth = AuthScope.of(context);
     final refugeeId = auth.userId;
@@ -33,7 +29,8 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
 
     try {
       // Primero verificar si el backend indica que hay asignación generada
-      final assignmentData = await ApiService.getRefugeeAssignment(refugeeId.toString());
+      final assignmentData =
+          await ApiService.getRefugeeAssignment(refugeeId.toString());
       final hasAssignment = assignmentData['has_assignment'] as bool? ?? false;
 
       if (!hasAssignment) {
@@ -46,8 +43,10 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
       }
 
       // Si hay asignación generada, obtenemos las 3 opciones y abrimos la pantalla de selección
-      final recommendationData = await ApiService.getAIRecommendation(refugeeId.toString());
-      final recommendations = RecommendationResponse.fromJson(recommendationData);
+      final recommendationData =
+          await ApiService.getAIRecommendation(refugeeId.toString());
+      final recommendations =
+          RecommendationResponse.fromJson(recommendationData);
 
       if (!mounted) return;
 
@@ -90,7 +89,7 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
         actions: [
           IconButton(
             tooltip: 'Logout',
-            onPressed: _logout,
+            onPressed: logoutRefugee,
             icon: const Icon(Icons.logout),
           ),
         ],
@@ -100,13 +99,9 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: color.primaryContainer.withOpacity(0.4),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: color.primary.withOpacity(0.2)),
-              ),
+            InfoCard(
+              color: color.primaryContainer,
+              border: Border.all(color: color.primary.withOpacity(0.2)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -119,7 +114,9 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
                     children: [
                       const Icon(Icons.person, size: 20),
                       const SizedBox(width: 8),
-                      Text(auth.userName.isEmpty ? 'Registered refugee' : auth.userName),
+                      Text(auth.userName.isEmpty
+                          ? 'Registered refugee'
+                          : auth.userName),
                     ],
                   ),
                   const SizedBox(height: 6),
@@ -150,7 +147,8 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
             ElevatedButton.icon(
               icon: const Icon(Icons.qr_code),
               label: const Text('View or generate my QR'),
-              onPressed: () => Navigator.pushNamed(context, '/refugee-self-form-qr'),
+              onPressed: () =>
+                  Navigator.pushNamed(context, '/refugee-self-form-qr'),
             ),
             const SizedBox(height: 10),
             OutlinedButton.icon(
@@ -170,20 +168,23 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            const _TipTile(
+            const TipTile(
               icon: Icons.family_restroom,
               title: 'If you are with family',
-              subtitle: 'Keep minors with you and show one QR per family when possible.',
+              subtitle:
+                  'Keep minors with you and show one QR per family when possible.',
             ),
-            const _TipTile(
+            const TipTile(
               icon: Icons.medical_information,
               title: 'Health first',
-              subtitle: 'Pain, pregnancy, allergies or reduced mobility: let us know to prioritize your care.',
+              subtitle:
+                  'Pain, pregnancy, allergies or reduced mobility: let us know to prioritize your care.',
             ),
-            const _TipTile(
+            const TipTile(
               icon: Icons.lock_outline,
               title: 'Your data is protected',
-              subtitle: 'We only use them to locate and care for you. You can log out whenever you want.',
+              subtitle:
+                  'We only use them to locate and care for you. You can log out whenever you want.',
             ),
           ],
         ),
@@ -208,9 +209,10 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 12),
-            _StepItem(text: 'Show your QR or your name.'),
-            _StepItem(text: 'We will assign you a safe place.'),
-            _StepItem(text: 'If you need medical attention, say so immediately.'),
+            StepItem(text: 'Show your QR or your name.'),
+            StepItem(text: 'We will assign you a safe place.'),
+            StepItem(
+                text: 'If you need medical attention, say so immediately.'),
           ],
         ),
       ),
@@ -230,47 +232,6 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Understood'),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TipTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-
-  const _TipTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.teal),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-      subtitle: Text(subtitle),
-    );
-  }
-}
-
-class _StepItem extends StatelessWidget {
-  final String text;
-
-  const _StepItem({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          const Icon(Icons.check_circle, color: Colors.teal),
-          const SizedBox(width: 8),
-          Expanded(child: Text(text)),
         ],
       ),
     );
