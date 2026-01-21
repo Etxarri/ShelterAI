@@ -119,6 +119,15 @@ async def list_expected_features(request: Request):
         "timestamp": datetime.now().isoformat(),
     }
 
+@app.post("/api/recommend", tags=["Decision Support"])
+async def recommend_alias(
+    request: Request,
+    payload: Dict[str, Any] = Body(..., description="Alias for /api/cluster (raw features)"),
+):
+    # Backwards compatible alias
+    return await assign_cluster(request=request, payload=payload)
+
+
 
 @app.post("/api/cluster", tags=["Decision Support"])
 async def assign_cluster(
