@@ -35,6 +35,14 @@
         "info": "API para autenticación y login"
     },
     {
+        "id": "be426f9addef674a",
+        "type": "tab",
+        "label": "Flow 2",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
         "id": "301245f94e1239d9",
         "type": "postgreSQLConfig",
         "name": "ShelterAI DB",
@@ -576,6 +584,7 @@
         "id": "get_ai_recommendation",
         "type": "http in",
         "z": "tab_ai_integration",
+        "d": true,
         "name": "GET /api/ai/recommend/:refugeeId",
         "url": "/api/ai/recommend/:refugeeId",
         "method": "get",
@@ -593,6 +602,7 @@
         "id": "prepare_refugee_query",
         "type": "function",
         "z": "tab_ai_integration",
+        "d": true,
         "name": "Preparar query",
         "func": "const refugeeId = msg.req.params.refugeeId;\nmsg.params = [refugeeId];\nreturn msg;",
         "outputs": 1,
@@ -613,6 +623,7 @@
         "id": "fetch_refugee_for_recommendation",
         "type": "postgresql",
         "z": "tab_ai_integration",
+        "d": true,
         "name": "Obtener refugiado",
         "query": "SELECT * FROM refugees WHERE id = $1",
         "postgreSQLConfig": "301245f94e1239d9",
@@ -631,6 +642,7 @@
         "id": "check_refugee_exists",
         "type": "function",
         "z": "tab_ai_integration",
+        "d": true,
         "name": "Verificar refugiado",
         "func": "if (!msg.payload || msg.payload.length === 0) {\n    msg.statusCode = 404;\n    msg.payload = { error: 'Refugiado no encontrado' };\n    return [null, msg];\n}\n\nconst refugee = msg.payload[0];\n\n// Calcular family_size, has_children, children_count\nlet family_size = 1;\nlet has_children = false;\nlet children_count = 0;\n\nif (refugee.family_id) {\n    family_size = 1;\n}\n\n// Preparar payload para el servicio de IA\nmsg.payload = {\n    first_name: refugee.first_name,\n    last_name: refugee.last_name,\n    age: refugee.age,\n    gender: refugee.gender,\n    nationality: refugee.nationality,\n    languages_spoken: refugee.languages_spoken,\n    medical_conditions: refugee.medical_conditions,\n    has_disability: refugee.has_disability,\n    vulnerability_score: refugee.vulnerability_score,\n    special_needs: refugee.special_needs,\n    family_id: refugee.family_id,\n    family_size: family_size,\n    has_children: has_children,\n    children_count: children_count\n};\n\n// Guardar refugee original para la respuesta\nflow.set('originalRefugee', refugee);\n\nreturn [msg, null];",
         "outputs": 1,
@@ -651,6 +663,7 @@
         "id": "call_ai_for_recommendation",
         "type": "http request",
         "z": "tab_ai_integration",
+        "d": true,
         "name": "Obtener recomendación IA",
         "method": "POST",
         "ret": "obj",
@@ -682,6 +695,7 @@
         "id": "format_recommendation_response",
         "type": "function",
         "z": "tab_ai_integration",
+        "d": true,
         "name": "Formatear respuesta",
         "func": "// Obtener los datos del refugiado original\nconst originalRefugee = flow.get('originalRefugee');\nconst aiResponse = msg.payload;\n\nif (!aiResponse || !aiResponse.recommendations || aiResponse.recommendations.length === 0) {\n    msg.statusCode = 404;\n    msg.payload = { error: 'No se encontraron recomendaciones de refugios' };\n    return msg;\n}\n\n// Formatear respuesta en el formato que espera Flutter (RecommendationResponse)\nconst recommendations = aiResponse.recommendations.map(rec => ({\n    shelter_id: rec.shelter_id,\n    shelter_name: rec.shelter_name,\n    address: rec.address || '',\n    compatibility_score: rec.compatibility_score || 0,\n    priority_score: rec.total_score || 0,\n    max_capacity: rec.max_capacity || 0,\n    current_occupancy: rec.current_occupancy || 0,\n    available_space: rec.available_space || 0,\n    occupancy_rate: rec.occupancy_rate || 0,\n    has_medical_facilities: rec.has_medical_facilities === true,\n    has_childcare: rec.has_childcare === true,\n    has_disability_access: rec.has_disability_access === true,\n    languages_spoken: rec.languages_spoken || '',\n    shelter_type: rec.shelter_type || '',\n    services_offered: rec.services_offered || '',\n    explanation: rec.explanation || ''\n}));\n\nmsg.payload = {\n    refugee_name: (originalRefugee.first_name || '') + ' ' + (originalRefugee.last_name || ''),\n    refugee_age: originalRefugee.age || 0,\n    refugee_nationality: originalRefugee.nationality || '',\n    refugee_family_size: 1,\n    refugee_gender: originalRefugee.gender || '',\n    recommendations: recommendations,\n    cluster_id: aiResponse.cluster_id || 0,\n    cluster_label: aiResponse.cluster_label || 'No etiqueta',\n    vulnerability_level: aiResponse.vulnerability_level || 'unknown',\n    total_shelters_analyzed: aiResponse.total_shelters_analyzed || 0,\n    ml_model_version: aiResponse.model_version || '1.0'\n};\n\nmsg.statusCode = 200;\n\nreturn msg;",
         "outputs": 1,
@@ -702,6 +716,7 @@
         "id": "send_recommendation_response",
         "type": "http response",
         "z": "tab_ai_integration",
+        "d": true,
         "name": "Enviar respuesta",
         "statusCode": "",
         "headers": {},
@@ -719,8 +734,8 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 150,
-        "y": 340,
+        "x": 190,
+        "y": 560,
         "wires": [
             [
                 "assign_shelter_prepare"
@@ -734,8 +749,8 @@
         "name": "Success Response",
         "statusCode": "200",
         "headers": {},
-        "x": 1450,
-        "y": 300,
+        "x": 1490,
+        "y": 520,
         "wires": []
     },
     {
@@ -750,8 +765,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 380,
-        "y": 340,
+        "x": 420,
+        "y": 560,
         "wires": [
             [
                 "assign_shelter_query"
@@ -771,8 +786,8 @@
         "split": false,
         "rowsPerMsg": "",
         "outputs": 1,
-        "x": 580,
-        "y": 300,
+        "x": 620,
+        "y": 520,
         "wires": [
             [
                 "assign_shelter_response"
@@ -791,8 +806,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 790,
-        "y": 300,
+        "x": 830,
+        "y": 520,
         "wires": [
             [
                 "95cffb18972600be"
@@ -805,8 +820,8 @@
         "z": "tab_ai_integration",
         "name": "Error Response",
         "statusCode": "",
-        "x": 580,
-        "y": 380,
+        "x": 620,
+        "y": 600,
         "wires": []
     },
     {
@@ -819,8 +834,8 @@
         "split": false,
         "rowsPerMsg": 1,
         "outputs": 1,
-        "x": 990,
-        "y": 300,
+        "x": 1030,
+        "y": 520,
         "wires": [
             [
                 "aca51ab62bc08951"
@@ -839,8 +854,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1210,
-        "y": 300,
+        "x": 1250,
+        "y": 520,
         "wires": [
             [
                 "assign_shelter_http_response",
@@ -860,8 +875,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1840,
-        "y": 220,
+        "x": 1880,
+        "y": 440,
         "wires": [
             [
                 "ad8e96e2588a39af"
@@ -881,8 +896,8 @@
         "tls": true,
         "name": "",
         "dname": "",
-        "x": 2010,
-        "y": 220,
+        "x": 2050,
+        "y": 440,
         "wires": []
     },
     {
@@ -895,8 +910,8 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 180,
-        "y": 480,
+        "x": 220,
+        "y": 700,
         "wires": [
             [
                 "83baf60cae5aa497"
@@ -915,8 +930,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 480,
-        "y": 480,
+        "x": 520,
+        "y": 700,
         "wires": [
             [
                 "c663a95531a34404"
@@ -933,8 +948,8 @@
         "split": false,
         "rowsPerMsg": "",
         "outputs": 1,
-        "x": 730,
-        "y": 480,
+        "x": 770,
+        "y": 700,
         "wires": [
             [
                 "f3ba1097f96e6329"
@@ -946,10 +961,10 @@
         "type": "http response",
         "z": "tab_ai_integration",
         "name": "Respuesta HTTP",
-        "statusCode": "200",
+        "statusCode": "",
         "headers": {},
-        "x": 1170,
-        "y": 480,
+        "x": 1210,
+        "y": 700,
         "wires": []
     },
     {
@@ -964,8 +979,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 950,
-        "y": 480,
+        "x": 990,
+        "y": 700,
         "wires": [
             [
                 "b0dcf0fe6b4aa77b"
@@ -984,8 +999,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1440,
-        "y": 220,
+        "x": 1480,
+        "y": 440,
         "wires": [
             [
                 "ac43cf5439c90925"
@@ -1002,13 +1017,191 @@
         "split": false,
         "rowsPerMsg": 1,
         "outputs": 1,
-        "x": 1650,
-        "y": 220,
+        "x": 1690,
+        "y": 440,
         "wires": [
             [
                 "41aa3f26b3b03799"
             ]
         ]
+    },
+    {
+        "id": "3487802549c54a73",
+        "type": "http in",
+        "z": "tab_ai_integration",
+        "name": "GET /api/ai/recommend/:refugeeId",
+        "url": "/api/ai/recommend/:refugeeId",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 260,
+        "y": 240,
+        "wires": [
+            [
+                "a0f919fb54ea63ae"
+            ]
+        ]
+    },
+    {
+        "id": "a0f919fb54ea63ae",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Preparar ID",
+        "func": "const refugeeId = msg.req.params.refugeeId;\nmsg.params = [refugeeId];\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 490,
+        "y": 240,
+        "wires": [
+            [
+                "14b75a1e37d6e733"
+            ]
+        ]
+    },
+    {
+        "id": "14b75a1e37d6e733",
+        "type": "postgresql",
+        "z": "tab_ai_integration",
+        "name": "Get Refugee DB",
+        "query": "SELECT * FROM refugees WHERE id = $1",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": "",
+        "outputs": 1,
+        "x": 680,
+        "y": 240,
+        "wires": [
+            [
+                "ab9b2f97ef6f4fdc"
+            ]
+        ]
+    },
+    {
+        "id": "ab9b2f97ef6f4fdc",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Preparar Payload IA",
+        "func": "if (!msg.payload || msg.payload.length === 0) {\n    msg.statusCode = 404;\n    msg.payload = { error: 'Refugiado no encontrado' };\n    return [null, msg];\n}\n\nconst refugee = msg.payload[0];\n// Guardamos el refugiado original para usar su nombre al final\nflow.set('tempRefugeeInfo', refugee);\n\n// AQUI ADAPTAMOS LOS DATOS A LO QUE ESPERA EL MODELO NUEVO\n// El modelo espera un JSON con features. Le enviamos los datos raw\n// y dejamos que la API de Python los procese.\nmsg.payload = {\n    person_id: refugee.id,\n    age: refugee.age,\n    gender: refugee.gender,\n    nationality: refugee.nationality,\n    medical_conditions: refugee.medical_conditions,\n    has_disability: refugee.has_disability,\n    special_needs: refugee.special_needs,\n    // Añadimos campos clave para el clustering si existen\n    vulnerability_score: refugee.vulnerability_score || 0\n};\n\nreturn [msg, null];",
+        "outputs": 2,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 900,
+        "y": 240,
+        "wires": [
+            [
+                "f329200600f357ec"
+            ],
+            [
+                "2123731b476fc94e"
+            ]
+        ]
+    },
+    {
+        "id": "f329200600f357ec",
+        "type": "http request",
+        "z": "tab_ai_integration",
+        "name": "POST /api/cluster",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://ai-service:8000/api/cluster",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [
+            {
+                "keyType": "Content-Type",
+                "keyValue": "",
+                "valueType": "application/json",
+                "valueValue": ""
+            }
+        ],
+        "x": 1130,
+        "y": 240,
+        "wires": [
+            [
+                "d2fe4496af634b12"
+            ]
+        ]
+    },
+    {
+        "id": "d2fe4496af634b12",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "TRADUCTOR (IA -> SQL)",
+        "func": "// 1. Recibimos el Cluster ID\nvar aiResponse = msg.payload;\nvar clusterId = aiResponse.cluster.cluster_id;\n\n// 2. Definimos las reglas\nconst CLUSTER_RULES = {\n    \"5\":  [\"FAMILY\"], // <--- ¡NUEVO! Añadido tras ver tu prueba\n    \"6\":  [\"ACCESSIBLE\", \"ELDERLY_CARE\"],\n    \"17\": [\"FAMILY\", \"ACCESSIBLE\", \"ELDERLY_CARE\"],\n    \"16\": [\"FAMILY\"],\n    \"24\": [\"FAMILY\", \"ELDERLY_CARE\"],\n    \"1\":  [\"LEGAL_SUPPORT\"],\n    \"3\":  [\"MEDICAL\"],\n    \"12\": [\"ELDERLY_CARE\"]\n};\n\nvar needs = CLUSTER_RULES[clusterId] || [];\nvar explanation = [];\n\n// 3. Construimos la Query SQL Dinámica\nvar sql = \"SELECT * FROM shelters WHERE available_space > 0\";\n\nif (needs.includes(\"ACCESSIBLE\")) {\n    sql += \" AND has_disability_access = true\";\n    explanation.push(\"Accesibilidad requerida\");\n}\nif (needs.includes(\"FAMILY\")) {\n    sql += \" AND (type = 'family' OR has_childcare = true)\"; \n    explanation.push(\"Unidad familiar\");\n}\nif (needs.includes(\"MEDICAL\")) {\n    sql += \" AND has_medical_facilities = true\";\n    explanation.push(\"Atención médica\");\n}\n\nsql += \" ORDER BY available_space DESC LIMIT 3\";\n\nmsg.query = sql;\n\n// Guardamos contexto\nmsg.aiContext = {\n    cluster_id: clusterId,\n    needs: needs,\n    explanation: explanation.join(\", \") || \"Asignación por disponibilidad general\"\n};\n\n// --- ¡ESTA ES LA LÍNEA MÁGICA QUE ARREGLA EL ERROR! ---\nmsg.params = []; \n// Borramos los parámetros viejos para que PostgreSQL no se confunda\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 490,
+        "y": 360,
+        "wires": [
+            [
+                "fd491f2c5c499e5e"
+            ]
+        ]
+    },
+    {
+        "id": "fd491f2c5c499e5e",
+        "type": "postgresql",
+        "z": "tab_ai_integration",
+        "name": "Buscar Refugios",
+        "query": "",
+        "postgreSQLConfig": "301245f94e1239d9",
+        "split": false,
+        "rowsPerMsg": "",
+        "outputs": 1,
+        "x": 700,
+        "y": 360,
+        "wires": [
+            [
+                "0943016d52547831"
+            ]
+        ]
+    },
+    {
+        "id": "0943016d52547831",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Formatear para Flutter",
+        "func": "// Recuperamos datos\nconst shelters = msg.payload || [];\nconst originalRefugee = flow.get('tempRefugeeInfo') || {};\nconst context = msg.aiContext || {};\n\n// Mapeamos los refugios encontrados al formato RecommendationResponse\nconst recommendations = shelters.map(s => ({\n    shelter_id: s.id,\n    shelter_name: s.name,\n    address: s.address || \"Ubicación confidencial\",\n    // Simulamos score ya que ahora es por lógica estricta\n    compatibility_score: 95, \n    available_space: s.available_space,\n    max_capacity: s.capacity,\n    has_medical_facilities: s.has_medical_facilities,\n    has_disability_access: s.has_disability_access,\n    explanation: context.explanation\n}));\n\n// Respuesta Final JSON\nmsg.payload = {\n    refugee_name: `${originalRefugee.first_name} ${originalRefugee.last_name}`,\n    cluster_id: context.cluster_id,\n    cluster_label: context.needs.join(\", \") || \"Estándar\",\n    vulnerability_level: context.needs.length > 0 ? \"High\" : \"Standard\",\n    recommendations: recommendations,\n    message: recommendations.length > 0 ? \"Refugios encontrados\" : \"Sin disponibilidad\"\n};\n\nmsg.statusCode = 200;\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 920,
+        "y": 360,
+        "wires": [
+            [
+                "2123731b476fc94e"
+            ]
+        ]
+    },
+    {
+        "id": "2123731b476fc94e",
+        "type": "http response",
+        "z": "tab_ai_integration",
+        "name": "Responder",
+        "statusCode": "",
+        "headers": {},
+        "x": 1130,
+        "y": 360,
+        "wires": []
     },
     {
         "id": "login_validation",
@@ -1309,5 +1502,201 @@
         "x": 1240,
         "y": 640,
         "wires": []
+    },
+    {
+        "id": "0c79f87c814aab65",
+        "type": "inject",
+        "z": "be426f9addef674a",
+        "name": "Iniciar Análisis",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 160,
+        "y": 240,
+        "wires": [
+            [
+                "8d9f8c24fb9afaf2"
+            ]
+        ]
+    },
+    {
+        "id": "8d9f8c24fb9afaf2",
+        "type": "http request",
+        "z": "be426f9addef674a",
+        "name": "GET /clusters",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://ai-service:8000/api/clusters",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 360,
+        "y": 240,
+        "wires": [
+            [
+                "47e27f4074a5b3b9"
+            ]
+        ]
+    },
+    {
+        "id": "47e27f4074a5b3b9",
+        "type": "change",
+        "z": "be426f9addef674a",
+        "name": "Extraer Lista IDs",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.clusters",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 570,
+        "y": 240,
+        "wires": [
+            [
+                "dd71eddf2bdbe5e1"
+            ]
+        ]
+    },
+    {
+        "id": "dd71eddf2bdbe5e1",
+        "type": "split",
+        "z": "be426f9addef674a",
+        "name": "Iterar Clústeres",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "property": "payload",
+        "x": 780,
+        "y": 240,
+        "wires": [
+            [
+                "eed589fd08505511"
+            ]
+        ]
+    },
+    {
+        "id": "f844740d53a33187",
+        "type": "template",
+        "z": "be426f9addef674a",
+        "name": "Construir URL",
+        "field": "url",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "http://ai-service:8000/api/clusters/{{payload}}",
+        "output": "str",
+        "x": 580,
+        "y": 520,
+        "wires": [
+            [
+                "a212fc4dc33b2e8d"
+            ]
+        ]
+    },
+    {
+        "id": "a212fc4dc33b2e8d",
+        "type": "http request",
+        "z": "be426f9addef674a",
+        "name": "GET Detalle",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": false,
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 770,
+        "y": 520,
+        "wires": [
+            [
+                "b80b391f3e2b799c"
+            ]
+        ]
+    },
+    {
+        "id": "b80b391f3e2b799c",
+        "type": "function",
+        "z": "be426f9addef674a",
+        "name": "Analizar Perfil",
+        "func": "var data = msg.payload;\n\n// 1. DETECCIÓN DE ERROR DE API (FastAPI)\nif (data.detail) {\n    // Esto imprimirá el mensaje de error exacto en color naranja en tu pestaña Debug\n    node.warn(\"❌ LA API DEVOLVIÓ UN ERROR: \" + JSON.stringify(data.detail));\n\n    // Devolvemos el error para verlo también en el debug normal\n    msg.payload = { ERROR_CRITICO: data.detail };\n    return msg;\n}\n\n// 2. Extracción normal (si no hay error)\nif (typeof data === 'string') {\n    try { data = JSON.parse(data); } catch (e) { }\n}\n\nvar clusterId = data.cluster_id;\nvar profile = data.profile || {};\nvar topFeatures = profile.top_positive || [];\n\n// 3. Lógica de Etiquetas\nvar tags = [];\ntopFeatures.forEach(f => {\n    var name = (f.feature || \"\").toLowerCase();\n    if (name.includes('disability') || name.includes('mobility')) tags.push('ACCESSIBLE');\n    if (name.includes('elder') || name.includes('age')) tags.push('ELDERLY_CARE');\n    if (name.includes('family') || name.includes('child')) tags.push('FAMILY');\n    if (name.includes('medical') || name.includes('health')) tags.push('MEDICAL');\n    if (name.includes('documentation') || name.includes('legal')) tags.push('LEGAL_SUPPORT');\n});\n\nmsg.payload = {\n    id: clusterId,\n    needs: [...new Set(tags)]\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 960,
+        "y": 520,
+        "wires": [
+            [
+                "1c7ff12fbf8501be"
+            ]
+        ]
+    },
+    {
+        "id": "1c7ff12fbf8501be",
+        "type": "debug",
+        "z": "be426f9addef674a",
+        "name": "Resultados",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1150,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "eed589fd08505511",
+        "type": "function",
+        "z": "be426f9addef674a",
+        "name": "function 1",
+        "func": "// El nodo anterior nos da un item de la lista.\n// A veces es un número simple (6), a veces un objeto ({cluster_id: 6}).\n\nvar item = msg.payload;\n\n// CASO 1: Si ya es un número, todo perfecto.\nif (typeof item === 'number') {\n    return msg;\n}\n\n// CASO 2: Si es un objeto, buscamos el número dentro.\nif (typeof item === 'object') {\n    // Intentamos encontrar la clave correcta (probamos las más habituales)\n    if (item.cluster_id !== undefined) {\n        msg.payload = item.cluster_id;\n    } else if (item.id !== undefined) {\n        msg.payload = item.id;\n    } else {\n        // Si no encontramos el número, avisamos por consola para verlo\n        node.warn(\"⚠️ Recibí un objeto pero no encuentro el ID. Contenido: \" + JSON.stringify(item));\n    }\n}\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 680,
+        "y": 360,
+        "wires": [
+            [
+                "f844740d53a33187"
+            ]
+        ]
     }
 ]

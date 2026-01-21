@@ -1,6 +1,8 @@
+DROP TABLE IF EXISTS refugees CASCADE;
+DROP TABLE IF EXISTS shelters CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
 
-
--- 1. TABLA USERS (Sin cambios, solo aseguramos plural si quieres consistencia)
+-- 1. TABLA USERS
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   email VARCHAR(255) UNIQUE,
@@ -12,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
   phone_number VARCHAR(20)
 );
 
--- 2. TABLA REFUGEES (Cambio a Plural)
+-- 2. TABLA REFUGEES
 CREATE TABLE IF NOT EXISTS refugees (
   id SERIAL PRIMARY KEY,
   first_name VARCHAR(255),
@@ -30,13 +32,13 @@ CREATE TABLE IF NOT EXISTS refugees (
   vulnerability_score FLOAT,
   special_needs TEXT,
   has_disability BOOLEAN DEFAULT FALSE,
-  assigned_shelter_id INT, -- Podrías añadir REFERENCES shelters(id)
+  assigned_shelter_id INT,
   status VARCHAR(50) DEFAULT 'new',
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- 3. TABLA SHELTERS (Plural + Columnas Nuevas para la IA)
+-- 3. TABLA SHELTERS
 CREATE TABLE IF NOT EXISTS shelters (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255),
@@ -44,13 +46,10 @@ CREATE TABLE IF NOT EXISTS shelters (
   city VARCHAR(100),
   max_capacity INT,
   available_space INT,
-  
-  -- Columnas CRÍTICAS para el mapeo de IA:
   has_medical_facilities BOOLEAN DEFAULT FALSE,
   has_childcare BOOLEAN DEFAULT FALSE,
-  has_disability_access BOOLEAN DEFAULT FALSE, -- ¡Nueva! Para Clúster 6
-  type VARCHAR(50) DEFAULT 'general',          -- ¡Nueva! Para Clúster Familia (valores: 'family', 'women', 'general')
-  
+  has_disability_access BOOLEAN DEFAULT FALSE,
+  type VARCHAR(50) DEFAULT 'general',
   phone VARCHAR(20),
   email VARCHAR(255),
   status VARCHAR(50) DEFAULT 'active',
@@ -58,41 +57,22 @@ CREATE TABLE IF NOT EXISTS shelters (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
-
-TRUNCATE TABLE refugees RESTART IDENTITY CASCADE;
-TRUNCATE TABLE shelters RESTART IDENTITY CASCADE;
-TRUNCATE TABLE users RESTART IDENTITY CASCADE;
-
+-- Insertar refugios
 INSERT INTO shelters (name, address, city, max_capacity, available_space, has_medical_facilities, has_childcare, has_disability_access, type, status) VALUES
--- 1. Refugio General (Para los que no tienen necesidades especiales)
 ('Refugio Central Madrid', 'Calle Atocha 12', 'Madrid', 100, 50, FALSE, FALSE, FALSE, 'general', 'active'),
-
--- 2. Refugio Médico (Para Clúster 3 y 14)
 ('Centro Sanitario Cruz Roja', 'Av. Reina Victoria 45', 'Madrid', 40, 10, TRUE, FALSE, TRUE, 'special_care', 'active'),
-
--- 3. Refugio Familiar (Para Clúster 16, 17, 24 - Familias)
 ('Casa Familiar La Paz', 'Calle de los Niños 8', 'Madrid', 60, 20, TRUE, TRUE, FALSE, 'family', 'active'),
-
--- 4. Refugio Accesible (Para Clúster 6, 20 - Silla de ruedas/Ancianos)
 ('Residencia Sin Barreras', 'Paseo de la Castellana 200', 'Madrid', 30, 5, TRUE, FALSE, TRUE, 'special_care', 'active');
 
-
+-- Insertar refugiados
 INSERT INTO refugees (first_name, last_name, age, gender, nationality, family_size, has_children, children_count, has_disability, medical_conditions, vulnerability_score, status) VALUES
--- CASO A: Refugiado Estándar (Debería ir al Refugio Central)
 ('Carlos', 'Pérez', 25, 'Male', 'Venezuela', 1, FALSE, 0, FALSE, 'None', 2.0, 'new'),
-
--- CASO B: Familia Vulnerable (Debería ir a "Casa Familiar La Paz")
--- Perfil: Mujer, con niños, familia de 4
 ('Fatima', 'Al-Sayed', 34, 'Female', 'Syria', 4, TRUE, 3, FALSE, 'None', 8.5, 'new'),
-
--- CASO C: Discapacidad/Anciano (Debería ir a "Residencia Sin Barreras")
--- Perfil: Hombre mayor, con discapacidad física
 ('Ivan', 'Popov', 68, 'Male', 'Ukraine', 1, FALSE, 0, TRUE, 'Mobility issues', 9.0, 'new'),
-
--- CASO D: Necesidad Médica (Debería ir a "Centro Sanitario")
--- Perfil: Necesita diálisis o tratamiento constante
 ('Luis', 'Gomez', 40, 'Male', 'Colombia', 1, FALSE, 0, FALSE, 'Chronic Kidney Disease', 7.0, 'new');
 
-
+-- Insertar usuario
 INSERT INTO users (email, username, password, first_name, last_name, role) VALUES
 ('trabajador@test.com', 'admin', 'admin123', 'Super', 'Admin', 'admin');
+
+SELECT 'Base de datos actualizada correctamente' AS mensaje;

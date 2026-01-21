@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # --- BASE DE DATOS ---
   postgres:
     image: postgres:16-alpine
     container_name: shelterai-postgres
@@ -20,15 +21,19 @@ services:
     networks:
       - shelterai-network
 
+  # --- MODELO DE INTELIGENCIA ARTIFICIAL ---
   ai-service:
+    # Ajusta la ruta '../ai-service' si tu carpeta está en otro sitio
     build:
       context: ../ai-service
       dockerfile: Dockerfile
     image: shelterai-ai-service:latest
     container_name: shelterai-ai-service
     environment:
+      # Conexión a BD usando el nombre del contenedor de postgres
       DATABASE_URL: postgresql://root:root@shelterai-postgres:5432/shelterai
       MODEL_PATH: /app/models/shelter_model.pkl
+      # ¡IMPORTANTE! Esto permite conexiones externas (desde Node-RED)
       API_HOST: 0.0.0.0
       API_PORT: 8000
     ports:
@@ -39,6 +44,7 @@ services:
     networks:
       - shelterai-network
 
+  # --- NODE-RED (BACKEND & ORQUESTADOR) ---
   nodered:
     build: .
     image: shelterai-nodered:local
@@ -49,7 +55,6 @@ services:
       - ./node-red-data:/data
     environment:
       - TZ=Europe/Madrid
-      - FLOWS=flows.json
     depends_on:
       postgres:
         condition: service_healthy
@@ -61,10 +66,7 @@ services:
 volumes:
   postgres-data:
 
-# --- CONFIGURACIÓN DE RED ---
 networks:
   shelterai-network:
     name: shelterai-network
     driver: bridge
-
-# docker-compose up -d
