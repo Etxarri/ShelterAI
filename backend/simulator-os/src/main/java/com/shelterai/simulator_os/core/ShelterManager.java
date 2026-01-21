@@ -16,8 +16,8 @@ public class ShelterManager {
 
     public ShelterManager() {
         // Pasamos la cola global a los refugios
-        createShelter("Norte", 3);
-        createShelter("Sur", 3);
+        createShelter("North", 3);
+        createShelter("South", 3);
     }
 
     public void createShelter(String id, int capacity) {

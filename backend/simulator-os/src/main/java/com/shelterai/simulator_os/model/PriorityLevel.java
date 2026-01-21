@@ -13,9 +13,9 @@ public enum PriorityLevel {
     public static PriorityLevel fromString(String text) {
         if (text == null) return ADULT;
         switch (text.toUpperCase().trim()) {
-            case "ANCIANO": case "ELDERLY": return ELDERLY;
-            case "EMBARAZADA": case "PREGNANT": return PREGNANT;
-            case "NINO": case "NIÑO": case "CHILD": return CHILD;
+            case "ELDERLY": return ELDERLY;
+            case "PREGNANT": return PREGNANT;
+            case "CHILD": return CHILD;
             default: return ADULT;
         }
     }

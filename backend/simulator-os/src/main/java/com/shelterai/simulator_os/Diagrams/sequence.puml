@@ -1,0 +1,66 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+actor Client
+
+participant "ClientHandler\n(Thread)" as CH
+participant "ShelterManager" as SM
+participant "GlobalQueue\n(BlockingQueue)" as GQ
+
+participant "Shelter Norte\n(Thread)" as SN
+participant "Shelter Sur\n(Thread)" as SS
+
+participant "ProcessStay\n(Thread)" as PS
+
+' =========================
+'  REGISTRO DEL REFUGIADO
+' =========================
+group Network Thread
+    Client -> CH : ADD:name:priority
+    activate CH
+
+    CH -> SM : addRefugeeToGlobalQueue(refugee)
+    activate SM
+
+    SM -> GQ : add(refugee)
+    deactivate SM
+
+    CH --> Client : JSON OK
+    deactivate CH
+end
+
+' =========================
+'  CONSUMO POR REFUGIOS
+' =========================
+par Shelter Threads
+    group Shelter Norte
+        activate SN
+        SN -> SN : beds.acquire()
+        SN -> GQ : take()
+        GQ --> SN : refugee
+        SN -> PS : start processStay(refugee)
+        deactivate SN
+    end
+
+    group Shelter Sur
+        activate SS
+        SS -> SS : beds.acquire()
+        SS -> GQ : take()
+        GQ --> SS : refugee
+        SS -> PS : start processStay(refugee)
+        deactivate SS
+    end
+end
+
+' =========================
+'  PROCESAMIENTO INTERNO
+' =========================
+group Processing Thread
+    activate PS
+    PS -> PS : sleep(processingTime)
+    PS -> SN : beds.release()
+    deactivate PS
+end
+
+@enduml

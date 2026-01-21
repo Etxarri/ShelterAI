@@ -1,0 +1,110 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+' =======================
+'      CORE
+' =======================
+package "core" {
+    class ShelterManager {
+        - globalQueue : BlockingQueue
+        - shelters : Map
+        + createShelter(id : String, capacity : int)
+        + addRefugeeToGlobalQueue(refugee : Refugee)
+        + updateCapacity(shelterId : String, capacity : int)
+        + getAllStatuses() : String
+    }
+
+    class Shelter <<Runnable>> {
+        - shelterId : String
+        - sharedQueue : BlockingQueue
+        - beds : Semaphore
+        - totalCapacity : AtomicInteger
+        - running : boolean
+        + run()
+        - processStay(refugee : Refugee)
+        + setCapacity(newCapacity : int)
+        + getStatusJson() : String
+    }
+}
+
+' =======================
+'      MODEL
+' =======================
+package "model" {
+    class Refugee <<Comparable>> {
+        - id : String
+        - priority : PriorityLevel
+        - arrivalTime : long
+        - processingTimeMs : int
+        + getId() : String
+        + getPriority() : PriorityLevel
+        + getProcessingTimeMs() : int
+        + compareTo(other : Refugee) : int
+    }
+
+    enum PriorityLevel {
+        ELDERLY
+        PREGNANT
+        CHILD
+        ADULT
+    }
+}
+
+' =======================
+'      NETWORK
+' =======================
+package "network" {
+    class ClientHandler <<Runnable>> {
+        - clientSocket : Socket
+        - manager : ShelterManager
+        + run()
+    }
+
+    class ServerListener {
+        - port : int
+        - shelterManager : ShelterManager
+        + start()
+    }
+}
+
+' =======================
+'      APP
+' =======================
+package "app" {
+    class SimulatorOsApplication <<SpringBootApplication, CommandLineRunner>> {
+        + main(args : String[])
+        + run(args : String[])
+    }
+}
+
+' =======================
+'   EXTERNAL / UTILS
+' =======================
+class BlockingQueue
+class Semaphore
+class AtomicInteger
+class Socket
+class Map
+
+' =======================
+'     RELACIONES
+' =======================
+ShelterManager "1" *-- "0..*" Shelter : manages
+ShelterManager "1" *-- "1" BlockingQueue : globalQueue\n<Refugee>
+
+Shelter --> Refugee : processes
+Shelter --> Semaphore
+Shelter --> AtomicInteger
+Shelter --> BlockingQueue : sharedQueue\n<Refugee>
+
+Refugee --> PriorityLevel
+
+ClientHandler --> ShelterManager
+ClientHandler --> Refugee
+
+ServerListener *-- ShelterManager
+ServerListener --> ClientHandler
+
+SimulatorOsApplication --> ServerListener
+
+@enduml

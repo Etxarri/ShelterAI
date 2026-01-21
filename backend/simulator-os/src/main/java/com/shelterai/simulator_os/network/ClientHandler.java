@@ -48,13 +48,13 @@ public class ClientHandler implements Runnable {
                             // --- CAMBIO CLAVE: RESPUESTA EN JSON PARA NODE-RED ---
                             // Esto permite que Node-RED lea los datos y mande el Telegram/Email
                             String jsonResponse = String.format(
-                                "{\"status\":\"OK\", \"event\":\"REGISTERED\", \"refugee\":\"%s\", \"priority\":\"%s\", \"message\":\"Ingresado en cola global correctamente\"}", 
+                                "{\"status\":\"OK\", \"event\":\"REGISTERED\", \"refugee\":\"%s\", \"priority\":\"%s\", \"message\":\"Registered in the global queue succesfully\"}", 
                                 name, prioStr
                             );
                             out.println(jsonResponse);
 
                         } else {
-                            out.println("{\"status\":\"ERROR\", \"message\":\"Formato incorrecto\"}");
+                            out.println("{\"status\":\"ERROR\", \"message\":\"Incorrect format\"}");
                         }
                         break;
 
@@ -70,7 +70,7 @@ public class ClientHandler implements Runnable {
                         }
                         break;
                     default:
-                        out.println("{\"status\":\"ERROR\", \"message\":\"Comando desconocido\"}");
+                        out.println("{\"status\":\"ERROR\", \"message\":\"Unknown command\"}");
                 }
             }
         } catch (Exception e) {
