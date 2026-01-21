@@ -52,9 +52,10 @@ async def startup_event():
         app.state.predictor = ShelterPredictor(settings.MODEL_PATH)
         print("✅ ML model loaded successfully")
 
+        display_host = "localhost" if settings.API_HOST == "0.0.0.0" else settings.API_HOST
         print("=" * 60)
-        print(f"API:  http://{settings.API_HOST}:{settings.API_PORT}")
-        print(f"Docs: http://{settings.API_HOST}:{settings.API_PORT}/docs")
+        print(f"API:  http://{display_host}:{settings.API_PORT}")
+        print(f"Docs: http://{display_host}:{settings.API_PORT}/docs")
         print("=" * 60 + "\n")
     except Exception as e:
         print(f"❌ Startup error: {e}")
