@@ -62,18 +62,6 @@ class _RefugeeLandingScreenState extends State<RefugeeLandingScreen> {
                       ),
                       actionLabel: 'Sign in',
                     ),
-                    _ActionCard(
-                      title: 'Without account',
-                      description:
-                          'Complete a quick form and generate your QR right now.',
-                      icon: Icons.qr_code,
-                      color: Colors.orange,
-                      onTap: () => Navigator.pushReplacementNamed(
-                        context,
-                        '/refugee-self-form-qr',
-                      ),
-                      actionLabel: 'Generate QR',
-                    ),
                   ],
                 ),
               ),

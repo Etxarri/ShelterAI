@@ -16,7 +16,7 @@ class _RefugeeProfileScreenState extends State<RefugeeProfileScreen> {
   void _logout() {
     final auth = AuthScope.of(context);
     auth.logout();
-    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+    Navigator.pushNamedAndRemoveUntil(context, '/refugee-login', (route) => false);
   }
 
   Future<void> _handleCheckAssignment() async {
