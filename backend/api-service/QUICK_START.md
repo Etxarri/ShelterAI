@@ -1,115 +1,110 @@
-# 🚀 INICIO RÁPIDO - ShelterAI Backend
+# 🚀 QUICK START - ShelterAI Backend
 
-## Requisitos Previos
+## Prerequisites
 
-- Docker Desktop instalado y corriendo
-- Modelo de IA entrenado (ver `backend/ai-service/README_MODEL_TRAINING.md`)
+- Docker Desktop installed and running
+- Trained clustering model (see `backend/ai-service/README_MODEL_TRAINING.md`)
 
 ---
 
-## Paso 1: Construir Imagen del AI Service
+## Step 1: Build AI Service Image
 
-```bash
+```powershell
 cd backend/ai-service
-docker compose build --no-cache
+docker build -t shelterai-ai-service:latest .
 ```
 
-Esto crea la imagen `shelterai-ai-service:latest` con FastAPI + HDBSCAN.
+This creates the `shelterai-ai-service:latest` image with FastAPI + HDBSCAN clustering for vulnerability classification.
 
 ---
 
-## Paso 2: Levantar Todos los Servicios
+## Step 2: Start All Services
 
-```bash
+```powershell
 cd ../api-service
 docker compose up -d
 ```
 
-Esto inicia:
-- **PostgreSQL** (puerto 5432)
-- **AI Service** (puerto 8000)
-- **Node-RED** (puerto 1880)
+This starts:
+- **PostgreSQL** (port 5432)
+- **AI Service** (port 8000) - Cluster Decision Support API
+- **Node-RED** (port 1880)
 
-Verificar que estén corriendo:
-```bash
+Verify they are running:
+```powershell
 docker ps
 ```
 
-Deberías ver 3 contenedores:
+You should see 3 containers:
 - `shelterai-postgres`
 - `shelterai-ai-service`
 - `shelterai-nodered`
 
 ---
 
-## Paso 3: Verificar Servicios
+## Step 3: Verify Services
 
 ### AI Service
-```bash
+```powershell
 curl http://localhost:8000/health
 ```
 
-Respuesta esperada:
+Expected response:
 ```json
 {
   "status": "healthy",
-  "model_loaded": true,
-  "database_connected": true
+  "ml_model_loaded": true,
+  "timestamp": "2026-01-22T10:30:00"
 }
 ```
 
 ### Node-RED
-Abre en tu navegador: **http://localhost:1880**
+Open in your browser: **http://localhost:1880**
 
 ### PostgreSQL
-```bash
+```powershell
 docker exec -it shelterai-postgres psql -U root -d shelterai -c "\dt"
 ```
 
-Deberías ver las tablas: `shelters`, `refugees`, `families`, `assignments`
+You should see the tables: `shelters`, `refugees`, `families`, `assignments`
 
 ---
 
-## Paso 4: Importar Flows de IA (Si es necesario)
+## Step 4: Verify Node-RED Flows
 
-Si los flows de IA no están activos en Node-RED:
-
-1. Abre **http://localhost:1880**
-2. Click en el menú **☰** → **Import**
-3. Selecciona el archivo: `node-red-data/ai-integration-flows.json`
-4. Click **Import**
-5. Click en **Deploy**
+1. Open **http://localhost:1880**
+2. Verify that flows are deployed (green button in the upper right corner)
+3. Flows are automatically loaded from `node-red-data/flows.json`
+4. If you need to reimport:
+   - Menu **☰** → **Import**
+   - Select `node-red-data/integration-flows.json` or `ai-integration-flows.json`
+   - Click **Deploy**
 
 ---
 
-## ✅ Probar la Integración
+## ✅ Test the Integration
 
-### Test 1: Recomendación de refugio directa
+### Test 1: Verify expected features list
 
 ```powershell
-$body = @{
-    first_name = "Ahmed"
-    last_name = "Al-Hassan"
-    age = 42
-    gender = "M"
-    nationality = "Syrian"
-    family_size = 1
-    has_children = $false
-    children_count = 0
-    medical_conditions = "none"
-    requires_medical_facilities = $false
-    has_disability = $false
-    languages_spoken = "Arabic,English"
-    vulnerability_score = 0
-} | ConvertTo-Json
-
-Invoke-RestMethod -Uri "http://localhost:8000/api/recommend" `
-    -Method Post `
-    -Body $body `
-    -ContentType "application/json"
+curl http://localhost:8000/api/features
 ```
 
-### Test 2: A través de Node-RED
+This returns the 555 features the model expects (after one-hot encoding).
+
+### Test 2: Assign vulnerability cluster (direct)
+
+```powershell
+# This example requires sending the 555 one-hot encoded features
+# See model documentation for complete format
+curl -X POST http://localhost:8000/api/cluster `
+  -H "Content-Type: application/json" `
+  -d '{"person_id": "TEST001", ... }'
+```
+
+**Note**: The `/api/cluster` endpoint requires transformed features (one-hot encoded). To use raw data, use Node-RED endpoints.
+
+### Test 3: Through Node-RED (recommended)
 
 ```powershell
 $body = @{
@@ -121,65 +116,93 @@ $body = @{
     languages_spoken = "Arabic,English"
     medical_conditions = "none"
     has_disability = $false
-    vulnerability_score = 0
 } | ConvertTo-Json
 
-Invoke-RestMethod -Uri "http://localhost:1880/api/ai/assign-shelter" `
+Invoke-RestMethod -Uri "http://localhost:1880/api/refugees" `
     -Method Post `
     -Body $body `
     -ContentType "application/json"
 ```
 
-Si recibes recomendaciones con `compatibility_score` y `explanation`, **¡está funcionando!** 🎉
+If you receive the assigned cluster with `cluster_id`, cluster profile, and person's key features, **it's working!** 🎉
 
 ---
 
-## 🛠️ Comandos Útiles
+## 🛠️ Useful Commands
 
-```bash
-# Ver logs de un servicio
+```powershell
+# View logs of a service
 docker logs -f shelterai-ai-service
 docker logs -f shelterai-nodered
+docker logs -f shelterai-postgres
 
-# Reiniciar un servicio
+# Restart a service
 docker restart shelterai-ai-service
 
-# Detener todos los servicios
+# Stop all services
 docker compose down
 
-# Reconstruir y reiniciar
+# Rebuild and restart
 docker compose up -d --build
+
+# View container status
+docker ps
+
+# Access real-time logs
+docker compose logs -f
 ```
 
 ---
 
-## 📚 Documentación Completa
+## 📚 Complete Documentation
 
-- **[INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md)** - Guía de integración con el servicio IA
-- **[../ai-service/README_DOCKER.md](../ai-service/README_DOCKER.md)** - Deployment del servicio IA
-- **[../ai-service/README_MODEL_TRAINING.md](../ai-service/README_MODEL_TRAINING.md)** - Entrenamiento del modelo
-- **[../../docs/API.md](../../docs/API.md)** - Documentación de endpoints
+- **[INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md)** - Integration guide with AI service
+- **[../ai-service/README_DOCKER.md](../ai-service/README_DOCKER.md)** - AI service deployment
+- **[../ai-service/README_MODEL_TRAINING.md](../ai-service/README_MODEL_TRAINING.md)** - Model training
+- **[../../docs/API.md](../../docs/API.md)** - Endpoint documentation
 
 ---
 
 ## 🆘 Troubleshooting
 
 ### Error: "Could not connect to shelterai-ai-service"
-```bash
-# Verificar que están en la misma red
+```powershell
+# Verify they are on the same network
 docker network inspect shelterai-network
+
+# Verify the service is running
+docker ps | Select-String "shelterai-ai-service"
 ```
 
-### Error: "Model file not found"
-```bash
+### Error: "Model file not found" or "Predictor not initialized"
+```powershell
+# Train the model
 cd backend/ai-service/model_training
 python train_final_model.py
+
+# Verify the file exists
+ls ../models/shelter_model.pkl
 ```
 
 ### Error: "Database connection failed"
-```bash
-# Reiniciar PostgreSQL
+```powershell
+# Check PostgreSQL status
+docker ps -a | Select-String "postgres"
+
+# View PostgreSQL logs
+docker logs shelterai-postgres
+
+# Restart PostgreSQL
 docker restart shelterai-postgres
+```
+
+### Error: Container stops immediately
+```powershell
+# View container logs
+docker logs shelterai-ai-service
+
+# Verify the model exists before starting
+ls backend/ai-service/models/shelter_model.pkl
 ```
 
 ---

@@ -1,32 +1,36 @@
 # ShelterAI Backend - Node-RED API
 
-Backend desarrollado en Node-RED para el sistema de gestión de refugiados ShelterAI.
+Backend developed in Node-RED for the ShelterAI refugee management system. The system uses HDBSCAN clustering to classify refugees into vulnerability clusters, supporting humanitarian decision-making.
 
-## 🚀 Inicio Rápido
+## 🚀 Quick Start
 
-```bash
+```powershell
 cd backend/api-service
 
-# Primero construir la imagen del AI service
+# First build the AI service image
 cd ../ai-service
-docker compose build --no-cache
+docker build -t shelterai-ai-service:latest .
 
-# Volver y levantar todos los servicios
+# Return and start all services
 cd ../api-service
 docker compose up -d
 ```
 
-**Servicios disponibles:**
-- **Node-RED:** http://localhost:1880
-- **AI Service:** http://localhost:8000
-- **PostgreSQL:** localhost:5432
+**Available services:**
+- **Node-RED:** http://localhost:1880 (API Gateway and orchestration)
+- **AI Service:** http://localhost:8000 (Cluster Decision Support API)
+- **PostgreSQL:** localhost:5432 (Database)
 
-## 📚 Documentación
+**API Documentation:**
+- **Swagger UI:** http://localhost:8000/docs
+- **ReDoc:** http://localhost:8000/redoc
 
-- **[API.md](../../docs/API.md)** - Documentación completa de todos los endpoints
-- **[INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md)** - Guía de integración con el servicio de IA actualizado
+## 📚 Documentation
 
-## 🏗️ Arquitectura
+- **[API.md](../../docs/API.md)** - Complete documentation of all endpoints
+- **[INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md)** - Integration guide with updated AI service
+
+## 🏗️ Architecture
 
 ```
 ┌─────────────────┐
@@ -42,181 +46,258 @@ docker compose up -d
          │
          ▼
 ┌─────────────────┐
-│   AI Service    │  ← HDBSCAN Clustering + Multi-criteria Matching
-│   (FastAPI)     │
-└─────────────────┘
+│   AI Service    │  ← HDBSCAN Clustering for Vulnerability Classification
+│   (FastAPI)     │     • Assigns needs/vulnerability cluster
+└─────────────────┘     • Explains person's key features
+                        • Provides cluster profile
+                        • Does NOT assign shelters automatically
 ```
 
-## 📦 Servicios
+## 📦 Services
 
-### Node-RED (Puerto 1880)
-- API REST completa (CRUD)
-- Validación de datos con JSON Schemas
-- Integración con servicio de IA (FastAPI)
-- Gateway entre frontend y servicios backend
+### Node-RED (Port 1880)
+- Complete REST API (CRUD)
+- Data validation with JSON Schemas
+- Integration with AI service (FastAPI)
+- Gateway between frontend and backend services
+- Workflow orchestration
 
-### AI Service (Puerto 8000)
-- Clustering HDBSCAN para clasificación de vulnerabilidad
-- Sistema de matching multi-criterio
-- Consulta directa a PostgreSQL para refugios disponibles
-- Retorna top 3 recomendaciones con scores de compatibilidad
+### AI Service (Port 8000) - Cluster Decision Support API
+- **HDBSCAN Clustering**: Classifies refugees into vulnerability/needs clusters
+- **Explanations**: Provides the top 8 key features of each person compared to:
+  - The global population
+  - Their assigned cluster
+- **Cluster Profiles**: Describes the defining characteristics of each cluster
+- **Endpoints**:
+  - `GET /health` - Service status
+  - `GET /api/features` - List of 555 expected features
+  - `POST /api/cluster` - Assigns cluster and provides explanations
+  - `POST /api/recommend` - Alias for `/api/cluster`
+  - `GET /api/clusters` - Lists all available clusters
+  - `GET /api/clusters/{id}` - Gets profile of a specific cluster
 
-### PostgreSQL (Puerto 5432)
-- Base de datos principal
-- Tablas: shelters, refugees, families, assignments
+### PostgreSQL (Port 5432)
+- Main database
+- Tables: `shelters`, `refugees`, `families`, `assignments`
+- Used by Node-RED for CRUD operations
 
-## 🔑 Endpoints Principales
+## 🔑 Main Endpoints
 
-### Albergues
-- `GET /api/shelters` - Listar todos
-- `GET /api/shelters/available` - Con capacidad disponible
-- `POST /api/shelters` - Crear nuevo
-- `PUT /api/shelters/:id` - Actualizar
-- `DELETE /api/shelters/:id` - Eliminar
+### Shelters
+- `GET /api/shelters` - List all
+- `GET /api/shelters/available` - With available capacity
+- `POST /api/shelters` - Create new
+- `PUT /api/shelters/:id` - Update
+- `DELETE /api/shelters/:id` - Delete
 
-### Refugiados
-- `GET /api/refugees` - Listar todos
-- `GET /api/refugees/high-vulnerability` - Alta vulnerabilidad
-- `POST /api/refugees` - Crear nuevo
-- `PUT /api/refugees/:id` - Actualizar
-- `DELETE /api/refugees/:id` - Eliminar
+### Refugees
+- `GET /api/refugees` - List all
+- `GET /api/refugees/high-vulnerability` - High vulnerability
+- `POST /api/refugees` - Create new
+- `PUT /api/refugees/:id` - Update
+- `DELETE /api/refugees/:id` - Delete
 
-### Familias
-- `GET /api/families` - Listar todas
-- `POST /api/families` - Crear nueva
-- `PUT /api/families/:id` - Actualizar
-- `DELETE /api/families/:id` - Eliminar
+### Families
+- `GET /api/families` - List all
+- `POST /api/families` - Create new
+- `PUT /api/families/:id` - Update
+- `DELETE /api/families/:id` - Delete
 
-### Asignaciones
-- `GET /api/assignments` - Listar todas
-- `GET /api/assignments/status/:status` - Por estado
-- `POST /api/assignments` - Crear nueva
-- `PUT /api/assignments/:id` - Actualizar
-- `DELETE /api/assignments/:id` - Eliminar
+### Assignments
+- `GET /api/assignments` - List all
+- `GET /api/assignments/status/:status` - By status
+- `POST /api/assignments` - Create new
+- `PUT /api/assignments/:id` - Update
+- `DELETE /api/assignments/:id` - Delete
 
-### Integración IA (Actualizado)
-- `POST /api/ai/assign-shelter` - Obtener recomendación de refugio para un refugiado
-- `POST /api/refugees-with-assignment` - Crear refugiado Y asignarle refugio automáticamente
+### AI Integration
+- `POST /api/ai/assign-cluster` - Assigns vulnerability cluster to a refugee
+- Endpoints through Node-RED for frontend integration
 
-**Cambios importantes en la IA:**
-- Usa HDBSCAN clustering (54 clusters de vulnerabilidad)
-- Scoring multi-criterio: disponibilidad, necesidades médicas, cuidado infantil, accesibilidad, idiomas, tipo de refugio
-- Retorna top 3 recomendaciones con scores de compatibilidad (0-100)
-- Consulta refugios directamente desde PostgreSQL (ya no se envían desde Node-RED)
-- Explicaciones en lenguaje natural en inglés
+**AI System Operation:**
+- **HDBSCAN Clustering**: Identifies vulnerability/needs patterns
+- **Assisted Decision-Making**: The system does NOT assign shelters automatically
+- **Explainability**: Provides key features of each person and cluster
+- **Human Decision Support**: Staff interprets clusters and assigns shelters manually
+- **Ethical and Transparent**: Final decisions are made by informed humans
 
-Ver **[INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md)** para detalles de integración.
+**System Output:**
+- `cluster_id`: Assigned cluster (number)
+- `person_top_features`: Top 8 person features (vs global and vs cluster)
+- `cluster_profile`: Cluster defining features (vs global)
+- `n_people_in_cluster`: Number of people in the cluster
 
-## ✅ Validación de Datos
+See **[INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md)** for integration details.
 
-Todos los endpoints POST/PUT validan datos contra JSON Schemas:
+## ✅ Data Validation
 
-- `shelter-schema.json` - Albergues
-- `refugee-schema.json` - Refugiados
-- `family-schema.json` - Familias
-- `assignment-schema.json` - Asignaciones
+All POST/PUT endpoints validate data against JSON Schemas:
 
-Si la validación falla, se retorna **400 Bad Request** con detalles del error.
+- `shelter-schema.json` - Shelters
+- `refugee-schema.json` - Refugees
+- `family-schema.json` - Families
+- `assignment-schema.json` - Assignments
 
-## 🛠️ Desarrollo
+If validation fails, **400 Bad Request** is returned with error details.
 
-### Ver logs
-```bash
+## 🛠️ Development
+
+### View logs
+```powershell
+# Node-RED logs
 docker logs shelterai-nodered -f
+
+# AI Service logs
+docker logs shelterai-ai-service -f
+
+# PostgreSQL logs
+docker logs shelterai-postgres -f
+
+# All logs
+docker compose logs -f
 ```
 
-### Acceder a Node-RED
-Abre http://localhost:1880 en tu navegador para ver/editar los flows.
+### Access Node-RED
+Open http://localhost:1880 in your browser to view/edit flows.
 
-### Reiniciar servicios
-```bash
+### Access AI API documentation
+- **Swagger UI:** http://localhost:8000/docs
+- **ReDoc:** http://localhost:8000/redoc
+
+### Restart services
+```powershell
+# Restart all
 docker compose restart
+
+# Restart a specific one
+docker restart shelterai-ai-service
 ```
 
-### Backup de flows
-```bash
+### Backup flows
+```powershell
 docker exec shelterai-nodered cat /data/flows.json > backup-flows.json
 ```
 
-## 📊 Base de Datos
+### Rebuild AI Service after model changes
+```powershell
+cd ../ai-service
+docker build -t shelterai-ai-service:latest .
+cd ../api-service
+docker compose up -d --force-recreate ai-service
+```
 
-### Conectar a PostgreSQL
-```bash
+## 📊 Database
+
+### Connect to PostgreSQL
+```powershell
 docker exec -it shelterai-postgres psql -U root -d shelterai
 ```
 
-### Ver tablas
+### View tables
 ```sql
 \dt
 ```
 
-### Ejemplo de consulta
+### Query examples
 ```sql
+-- View available shelters
 SELECT * FROM shelters WHERE current_occupancy < max_capacity;
+
+-- View refugees by cluster (if stored)
+SELECT cluster_id, COUNT(*) FROM refugees 
+WHERE cluster_id IS NOT NULL 
+GROUP BY cluster_id;
+
+-- View active assignments
+SELECT * FROM assignments WHERE status = 'active';
 ```
 
-## 🔧 Configuración
+## 🔧 Configuration
 
-### Variables de entorno (compose.yaml)
+### Environment variables (compose.yaml)
 ```yaml
 environment:
   - TZ=Europe/Madrid
   - FLOWS=flows.json
 ```
 
-### Base de datos
+### Database
 ```yaml
 POSTGRES_DB: shelterai
 POSTGRES_USER: root
 POSTGRES_PASSWORD: root
 ```
 
-## 📝 Notas para el Equipo
+## 📝 Team Notes
 
-### Para el equipo de Web (Frontend)
-- Lee **[API.md](../../docs/API.md)** para saber cómo llamar a los endpoints
-- Todos los datos se envían/reciben en formato JSON
-- La validación es automática, recibirás error 400 si los datos son inválidos
+### For the Web Team (Frontend)
+- Read **[API.md](../../docs/API.md)** to learn how to call the endpoints
+- All data is sent/received in JSON format
+- Validation is automatic, you'll receive 400 error if data is invalid
 
-### Para el equipo de IA
-- Tu contenedor debe exponerse como `shelterai-ai:5000`
-- Implementa los endpoints documentados en API.md sección "IA"
-- Node-RED te llamará automáticamente cuando sea necesario
+### For the AI Team
+- Service is exposed at `shelterai-ai-service:8000`
+- Implements HDBSCAN clustering for vulnerability classification
+- Does NOT assign shelters automatically - provides information for human decisions
+- Complete documentation at: http://localhost:8000/docs
+- Node-RED calls the service to get clusters and explanations
 
-### Para el equipo de Simulación
-- Envía tus eventos a `POST /api/simulation/data`
-- Consulta el estado del sistema en `GET /api/simulation/status`
+### For the Simulation Team
+- Send your events to `POST /api/simulation/data`
+- Check system status at `GET /api/simulation/status`
 
-## 🎯 Cumplimiento de Rúbrica
+## 🎯 Rubric Compliance
 
-### Ingeniería Web II (Nivel 3)
-✅ "Use schemas to validate documents" - JSON Schemas implementados  
-✅ "Communications between systems" - API REST completa  
+### Web Engineering II (Level 3)
+✅ "Use schemas to validate documents" - JSON Schemas implemented  
+✅ "Communications between systems" - Complete REST API  
 
-### Inteligencia Artificial (Nivel 3)
-✅ "Services integrated in Node-RED" - Flows de integración con IA  
+### Artificial Intelligence (Level 3)
+✅ "Services integrated in Node-RED" - AI integration flows  
 
-### Gestión de Proyectos (Nivel 3)
-✅ "Defined interfaces between modules" - Documentación API.md  
-✅ "Clear communication with team" - Contratos y ejemplos
+### Project Management (Level 3)
+✅ "Defined interfaces between modules" - API.md documentation  
+✅ "Clear communication with team" - Contracts and examples
 
 ## 🐛 Troubleshooting
 
 ### Error: "Flows stopped due to missing node types"
-```bash
+```powershell
 docker exec shelterai-nodered sh -c "cd /data && npm install"
 docker restart shelterai-nodered
 ```
 
 ### Error: "EBUSY: resource busy or locked"
-No edites `flows.json` directamente desde VS Code. Usa la interfaz web de Node-RED.
+Do not edit `flows.json` directly from VS Code while Node-RED is running. Use the Node-RED web interface.
 
-### No se conecta a PostgreSQL
-Verifica que el contenedor esté healthy:
-```bash
+### Cannot connect to PostgreSQL
+Verify the container is healthy:
+```powershell
 docker ps
+docker logs shelterai-postgres
 ```
 
-## 📄 Licencia
+### Error: "Predictor not initialized" in AI Service
+Verify the model is trained:
+```powershell
+ls backend/ai-service/models/shelter_model.pkl
+```
+If it doesn't exist, train the model:
+```powershell
+cd backend/ai-service/model_training
+python train_final_model.py
+```
 
-Proyecto académico - Universidad de Deusto - PBL 2025
+### AI Service stops immediately
+Check the logs to see the specific error:
+```powershell
+docker logs shelterai-ai-service
+```
+Common issues:
+- Model not found: train the model first
+- Dependency error: rebuild the image with `--no-cache`
+- Port busy: verify port 8000 is available
+
+## 📄 License
+
+Academic project - Universidad de Deusto - PBL 2025
