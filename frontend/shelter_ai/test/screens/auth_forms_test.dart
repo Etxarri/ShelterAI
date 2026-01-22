@@ -94,13 +94,14 @@ void main() {
       });
 
       await tester.pumpWidget(createScreen(const RefugeeRegisterScreen()));
+      await tester.pumpAndSettle();
 
       await tester.enterText(find.widgetWithText(TextFormField, 'First Name'), 'Juan');
       await tester.enterText(find.widgetWithText(TextFormField, 'Last Name'), 'Perez');
       await tester.enterText(find.widgetWithText(TextFormField, 'Username'), 'juanp');
       await tester.enterText(find.widgetWithText(TextFormField, 'Age'), '25');
-      await tester.enterText(find.widgetWithText(TextFormField, 'Contraseña'), '123456');
-      await tester.enterText(find.widgetWithText(TextFormField, 'Confirmar contraseña'), '123456');
+      await tester.enterText(find.widgetWithText(TextFormField, 'Password'), '123456');
+      await tester.enterText(find.widgetWithText(TextFormField, 'Confirm Password'), '123456');
 
       // ✅ Tap por TEXTO (mucho más estable)
       await scrollAndTapByText(
