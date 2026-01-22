@@ -35,14 +35,6 @@
         "info": "API para autenticación y login"
     },
     {
-        "id": "be426f9addef674a",
-        "type": "tab",
-        "label": "Flow 2",
-        "disabled": false,
-        "info": "",
-        "env": []
-    },
-    {
         "id": "301245f94e1239d9",
         "type": "postgreSQLConfig",
         "name": "ShelterAI DB",
@@ -260,7 +252,7 @@
         "type": "postgresql",
         "z": "tab_refugees",
         "name": "Query All Refugees",
-        "query": "SELECT * FROM refugee WHERE assigned_shelter_id IS NULL OR status != 'assigned' ORDER BY id",
+        "query": "SELECT * FROM refugees WHERE assigned_shelter_id IS NULL OR status != 'assigned' ORDER BY id",
         "postgreSQLConfig": "301245f94e1239d9",
         "split": false,
         "rowsPerMsg": "",
@@ -295,7 +287,7 @@
         "type": "postgresql",
         "z": "tab_refugees",
         "name": "Query Assigned Refugees",
-        "query": "SELECT r.*, s.name as shelter_name, s.address as shelter_address FROM refugee r LEFT JOIN shelters s ON r.assigned_shelter_id = s.id WHERE r.assigned_shelter_id IS NOT NULL AND r.status = 'assigned' ORDER BY r.updated_at DESC",
+        "query": "SELECT r.*, s.name as shelter_name, s.address as shelter_address FROM refugees r LEFT JOIN shelters s ON r.assigned_shelter_id = s.id WHERE r.assigned_shelter_id IS NOT NULL AND r.status = 'assigned' ORDER BY r.updated_at DESC",
         "postgreSQLConfig": "301245f94e1239d9",
         "split": false,
         "rowsPerMsg": "",
@@ -330,7 +322,7 @@
         "type": "function",
         "z": "tab_refugees",
         "name": "Prepare Query",
-        "func": "const data = msg.payload;\n\nmsg.query = `INSERT INTO refugee (first_name, last_name, age, gender, nationality, languages_spoken, email, family_id, medical_conditions, has_disability, special_needs, vulnerability_score, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    parseInt(msg.req.params.id)\n];\n\nreturn msg;",
+        "func": "const data = msg.payload;\n\nmsg.query = `INSERT INTO refugees (first_name, last_name, age, gender, nationality, languages_spoken, email, family_size, has_children, children_count, medical_conditions, requires_medical_facilities, has_disability, special_needs, vulnerability_score, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, 'new', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    data.first_name, \n    data.last_name, \n    data.age, \n    data.gender,\n    data.nationality, \n    data.languages_spoken || null, \n    data.email || null,\n    data.family_size || 1,\n    data.has_children || false,\n    data.children_count || 0,\n    data.medical_conditions || null,\n    data.requires_medical_facilities || false,\n    data.has_disability || false,\n    data.special_needs || null, \n    data.vulnerability_score || 0\n];\n\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -442,8 +434,7 @@
         "y": 300,
         "wires": [
             [
-                "assignment_get_by_id_query",
-                "9aafc1cfb84bc8c1"
+                "assignment_get_by_id_query"
             ]
         ]
     },
@@ -461,7 +452,6 @@
         "y": 300,
         "wires": [
             [
-                "5685489b661371a8",
                 "assignment_http_response"
             ]
         ]
@@ -545,39 +535,6 @@
         "headers": {},
         "x": 1040,
         "y": 300,
-        "wires": []
-    },
-    {
-        "id": "5685489b661371a8",
-        "type": "debug",
-        "z": "tab_assignments",
-        "name": "debug 4",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 780,
-        "y": 360,
-        "wires": []
-    },
-    {
-        "id": "9aafc1cfb84bc8c1",
-        "type": "debug",
-        "z": "tab_assignments",
-        "name": "debug 5",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 560,
-        "y": 360,
         "wires": []
     },
     {
@@ -758,7 +715,7 @@
         "type": "function",
         "z": "tab_ai_integration",
         "name": "Prepare Update",
-        "func": "let body = msg.payload;\nif (typeof body === 'string') {\n  try { body = JSON.parse(body); } catch (e) { body = {}; }\n}\n\nconst rawRefugeeId = body.refugee_id;\nconst rawShelterId = body.shelter_id;\n\nconst refugee_id = Number(rawRefugeeId);\nconst shelter_id = Number(rawShelterId);\n\nif (!Number.isInteger(refugee_id) || !Number.isInteger(shelter_id) || refugee_id <= 0 || shelter_id <= 0) {\n    msg.statusCode = 400;\n    msg.payload = { error: 'refugee_id y shelter_id deben ser enteros > 0' };\n    return [null, msg];\n}\n\n// Preparar query para actualizar refugiado\nmsg.query = `UPDATE refugee \n             SET assigned_shelter_id = $1, \n                 status = 'assigned',\n                 updated_at = NOW()\n             WHERE id = $2\n             RETURNING id, assigned_shelter_id, status`;\n\nmsg.params = [shelter_id, refugee_id];\nmsg.payload = null;\n\nconsole.log('[ASSIGN] Updating refugee', refugee_id, 'with shelter', shelter_id);\n\nreturn [msg, null];",
+        "func": "let body = msg.payload;\nif (typeof body === 'string') {\n  try { body = JSON.parse(body); } catch (e) { body = {}; }\n}\n\nconst rawRefugeeId = body.refugee_id;\nconst rawShelterId = body.shelter_id;\n\nconst refugee_id = Number(rawRefugeeId);\nconst shelter_id = Number(rawShelterId);\n\nif (!Number.isInteger(refugee_id) || !Number.isInteger(shelter_id) || refugee_id <= 0 || shelter_id <= 0) {\n    msg.statusCode = 400;\n    msg.payload = { error: 'refugee_id y shelter_id deben ser enteros > 0' };\n    return [null, msg];\n}\n\n// Preparar query para actualizar refugiado\nmsg.query = `UPDATE refugees \n             SET assigned_shelter_id = $1, \n                 status = 'assigned',\n                 updated_at = NOW()\n             WHERE id = $2\n             RETURNING id, assigned_shelter_id, status`;\n\nmsg.params = [shelter_id, refugee_id];\nmsg.payload = null;\n\nconsole.log('[ASSIGN] Updating refugee', refugee_id, 'with shelter', shelter_id);\n\nreturn [msg, null];",
         "outputs": 2,
         "timeout": "",
         "noerr": 0,
@@ -820,6 +777,7 @@
         "z": "tab_ai_integration",
         "name": "Error Response",
         "statusCode": "",
+        "headers": {},
         "x": 620,
         "y": 600,
         "wires": []
@@ -910,11 +868,11 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 220,
+        "x": 140,
         "y": 700,
         "wires": [
             [
-                "83baf60cae5aa497"
+                "b58ca6def0b1b4a3"
             ]
         ]
     },
@@ -923,7 +881,7 @@
         "type": "function",
         "z": "tab_ai_integration",
         "name": "Preparar INSERT refugiado",
-        "func": "const data = msg.payload;\n\nmsg.query = `INSERT INTO refugee (first_name, last_name, age, gender, nationality, languages_spoken, email, medical_conditions, has_disability, special_needs, vulnerability_score, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    data.first_name, \n    data.last_name, \n    data.age, \n    data.gender,\n    data.nationality, \n    data.languages_spoken, \n    data.email,\n    data.medical_conditions,\n    data.has_disability,\n    data.special_needs, \n    data.vulnerability_score || 0\n];\n\nreturn msg;",
+        "func": "const data = msg.payload;\n\nmsg.query = `INSERT INTO refugees (first_name, last_name, age, gender, nationality, languages_spoken, email, family_size, has_children, children_count, medical_conditions, requires_medical_facilities, has_disability, special_needs, vulnerability_score, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, 'new', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`;\n\nmsg.params = [\n    data.first_name, \n    data.last_name, \n    data.age, \n    data.gender,\n    data.nationality, \n    data.languages_spoken || null, \n    data.email || null,\n    data.family_size || 1,\n    data.has_children || false,\n    data.children_count || 0,\n    data.medical_conditions || null,\n    data.requires_medical_facilities || false,\n    data.has_disability || false,\n    data.special_needs || null, \n    data.vulnerability_score || 0\n];\n\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -992,7 +950,7 @@
         "type": "function",
         "z": "tab_ai_integration",
         "name": "Format GET refugee",
-        "func": "// 1. Recuperamos la info de la asignación (del nodo anterior)\n// Asumimos que msg.payload es el resultado del UPDATE o el objeto que creaste\nvar asignacion = msg.payload;\n\n// Si viene de un nodo Postgres puro, suele ser un array, cogemos el primero\nif (Array.isArray(asignacion)) {\n    asignacion = asignacion[0];\n}\n\n// 2. GUARDAR CONTEXTO (¡Importante!)\n// Guardamos la info de la asignación en una propiedad aparte 'msg.assignmentContext'\n// para que sobreviva a la siguiente consulta SQL.\nmsg.assignmentContext = {\n    refugee_id: asignacion.refugee_id || msg.refugee_id, // Asegura tener el ID\n    shelter_id: asignacion.assigned_shelter_id,\n    shelter_name: asignacion.shelter_name, // Si lo tienes. Si no, saldrá undefined.\n    explanation: \"Asignación prioritaria por vulnerabilidad\" // O el dato real si lo tienes\n};\n\n// 3. Preparar la Query para obtener EMAIL y NOMBRE\n// Usamos el refugee_id para buscar sus datos personales en la tabla 'refugee'\nmsg.query = \"SELECT first_name, last_name, email FROM refugee WHERE id = $1\";\nmsg.params = [msg.assignmentContext.refugee_id];\n\nreturn msg;",
+        "func": "// 1. Recuperamos la info de la asignación (del nodo anterior)\n// Asumimos que msg.payload es el resultado del UPDATE o el objeto que creaste\nvar asignacion = msg.payload;\n\n// Si viene de un nodo Postgres puro, suele ser un array, cogemos el primero\nif (Array.isArray(asignacion)) {\n    asignacion = asignacion[0];\n}\n\n// 2. GUARDAR CONTEXTO (¡Importante!)\n// Guardamos la info de la asignación en una propiedad aparte 'msg.assignmentContext'\n// para que sobreviva a la siguiente consulta SQL.\nmsg.assignmentContext = {\n    refugee_id: asignacion.refugee_id || msg.refugee_id, // Asegura tener el ID\n    shelter_id: asignacion.assigned_shelter_id,\n    shelter_name: asignacion.shelter_name, // Si lo tienes. Si no, saldrá undefined.\n    explanation: \"Asignación prioritaria por vulnerabilidad\" // O el dato real si lo tienes\n};\n\n// 3. Preparar la Query para obtener EMAIL y NOMBRE\n// Usamos el refugee_id para buscar sus datos personales en la tabla 'refugees'\nmsg.query = \"SELECT first_name, last_name, email FROM refugees WHERE id = $1\";\nmsg.params = [msg.assignmentContext.refugee_id];\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -1035,8 +993,8 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 260,
-        "y": 240,
+        "x": 200,
+        "y": 220,
         "wires": [
             [
                 "a0f919fb54ea63ae"
@@ -1047,7 +1005,7 @@
         "id": "a0f919fb54ea63ae",
         "type": "function",
         "z": "tab_ai_integration",
-        "name": "Preparar ID",
+        "name": "Prepare ID",
         "func": "const refugeeId = msg.req.params.refugeeId;\nmsg.params = [refugeeId];\nreturn msg;",
         "outputs": 1,
         "timeout": "",
@@ -1055,8 +1013,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 490,
-        "y": 240,
+        "x": 430,
+        "y": 220,
         "wires": [
             [
                 "14b75a1e37d6e733"
@@ -1073,8 +1031,8 @@
         "split": false,
         "rowsPerMsg": "",
         "outputs": 1,
-        "x": 680,
-        "y": 240,
+        "x": 600,
+        "y": 220,
         "wires": [
             [
                 "ab9b2f97ef6f4fdc"
@@ -1085,7 +1043,7 @@
         "id": "ab9b2f97ef6f4fdc",
         "type": "function",
         "z": "tab_ai_integration",
-        "name": "Preparar Payload IA",
+        "name": "Preparare Payload IA",
         "func": "if (!msg.payload || msg.payload.length === 0) {\n    msg.statusCode = 404;\n    msg.payload = { error: 'Refugiado no encontrado' };\n    return [null, msg];\n}\n\nconst refugee = msg.payload[0];\n// Guardamos el refugiado original para usar su nombre al final\nflow.set('tempRefugeeInfo', refugee);\n\n// AQUI ADAPTAMOS LOS DATOS A LO QUE ESPERA EL MODELO NUEVO\n// El modelo espera un JSON con features. Le enviamos los datos raw\n// y dejamos que la API de Python los procese.\nmsg.payload = {\n    person_id: refugee.id,\n    age: refugee.age,\n    gender: refugee.gender,\n    nationality: refugee.nationality,\n    medical_conditions: refugee.medical_conditions,\n    has_disability: refugee.has_disability,\n    special_needs: refugee.special_needs,\n    // Añadimos campos clave para el clustering si existen\n    vulnerability_score: refugee.vulnerability_score || 0\n};\n\nreturn [msg, null];",
         "outputs": 2,
         "timeout": "",
@@ -1093,8 +1051,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 900,
-        "y": 240,
+        "x": 800,
+        "y": 220,
         "wires": [
             [
                 "f329200600f357ec"
@@ -1127,8 +1085,8 @@
                 "valueValue": ""
             }
         ],
-        "x": 1130,
-        "y": 240,
+        "x": 270,
+        "y": 300,
         "wires": [
             [
                 "d2fe4496af634b12"
@@ -1148,7 +1106,7 @@
         "finalize": "",
         "libs": [],
         "x": 490,
-        "y": 360,
+        "y": 300,
         "wires": [
             [
                 "fd491f2c5c499e5e"
@@ -1159,14 +1117,14 @@
         "id": "fd491f2c5c499e5e",
         "type": "postgresql",
         "z": "tab_ai_integration",
-        "name": "Buscar Refugios",
+        "name": "Search Refugees",
         "query": "",
         "postgreSQLConfig": "301245f94e1239d9",
         "split": false,
         "rowsPerMsg": "",
         "outputs": 1,
-        "x": 700,
-        "y": 360,
+        "x": 710,
+        "y": 300,
         "wires": [
             [
                 "0943016d52547831"
@@ -1177,16 +1135,16 @@
         "id": "0943016d52547831",
         "type": "function",
         "z": "tab_ai_integration",
-        "name": "Formatear para Flutter",
-        "func": "// Recuperamos datos\nconst shelters = msg.payload || [];\nconst originalRefugee = flow.get('tempRefugeeInfo') || {};\nconst context = msg.aiContext || {};\n\n// Mapeamos los refugios encontrados al formato RecommendationResponse\nconst recommendations = shelters.map(s => ({\n    shelter_id: s.id,\n    shelter_name: s.name,\n    address: s.address || \"Ubicación confidencial\",\n    // Simulamos score ya que ahora es por lógica estricta\n    compatibility_score: 95, \n    available_space: s.available_space,\n    max_capacity: s.capacity,\n    has_medical_facilities: s.has_medical_facilities,\n    has_disability_access: s.has_disability_access,\n    explanation: context.explanation\n}));\n\n// Respuesta Final JSON\nmsg.payload = {\n    refugee_name: `${originalRefugee.first_name} ${originalRefugee.last_name}`,\n    cluster_id: context.cluster_id,\n    cluster_label: context.needs.join(\", \") || \"Estándar\",\n    vulnerability_level: context.needs.length > 0 ? \"High\" : \"Standard\",\n    recommendations: recommendations,\n    message: recommendations.length > 0 ? \"Refugios encontrados\" : \"Sin disponibilidad\"\n};\n\nmsg.statusCode = 200;\nreturn msg;",
+        "name": "Format for Flutter",
+        "func": "// Recuperamos datos\nconst shelters = msg.payload || [];\nconst originalRefugee = flow.get('tempRefugeeInfo') || {};\nconst contexttt = msg.aicontextt || {};\n\n// Mapeamos los refugios encontrados al formato RecommendationResponse\nconst recommendations = shelters.map(s => ({\n    shelter_id: s.id,\n    shelter_name: s.name,\n    address: s.address || \"Ubicación confidencial\",\n    // Simulamos score ya que ahora es por lógica estricta\n    compatibility_score: 95, \n    available_space: s.available_space,\n    max_capacity: s.capacity,\n    has_medical_facilities: s.has_medical_facilities,\n    has_disability_access: s.has_disability_access,\n    explanation: contexttt.explanation\n}));\n\n// Respuesta Final JSON\nmsg.payload = {\n    refugee_name: `${originalRefugee.first_name} ${originalRefugee.last_name}`,\n    cluster_id: contexttt.cluster_id,\n    cluster_label: contexttt.needs.join(\", \") || \"Estándar\",\n    vulnerability_level: contexttt.needs.length > 0 ? \"High\" : \"Standard\",\n    recommendations: recommendations,\n    message: recommendations.length > 0 ? \"Refugios encontrados\" : \"Sin disponibilidad\"\n};\n\nmsg.statusCode = 200;\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 920,
-        "y": 360,
+        "x": 910,
+        "y": 300,
         "wires": [
             [
                 "2123731b476fc94e"
@@ -1197,11 +1155,73 @@
         "id": "2123731b476fc94e",
         "type": "http response",
         "z": "tab_ai_integration",
-        "name": "Responder",
+        "name": "Response",
         "statusCode": "",
         "headers": {},
-        "x": 1130,
-        "y": 360,
+        "x": 1120,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "b58ca6def0b1b4a3",
+        "type": "json-schema-validator",
+        "z": "tab_ai_integration",
+        "name": "",
+        "func": "{\n    \"type\": \"object\",\n    \"properties\": {\n        \"first_name\": { \"type\": \"string\", \"minLength\": 1 },\n        \"last_name\": { \"type\": \"string\", \"minLength\": 1 },\n        \"age\": { \"type\": \"integer\", \"minimum\": 0 },\n        \"gender\": { \"type\": \"string\", \"enum\": [\"Male\", \"Female\", \"Other\"] },\n        \"nationality\": { \"type\": \"string\" },\n        \"family_size\": { \"type\": \"integer\", \"minimum\": 1 },\n        \"has_children\": { \"type\": \"boolean\" }\n    },\n    \"required\": [\"first_name\", \"last_name\", \"age\", \"gender\", \"nationality\"]\n}",
+        "x": 350,
+        "y": 780,
+        "wires": [
+            [
+                "83baf60cae5aa497"
+            ]
+        ]
+    },
+    {
+        "id": "catch_validation_error",
+        "type": "catch",
+        "z": "tab_ai_integration",
+        "name": "Capturar Error Validación",
+        "scope": [
+            "f7d9550979f67a08"
+        ],
+        "uncaught": false,
+        "x": 400,
+        "y": 1020,
+        "wires": [
+            [
+                "format_400_error"
+            ]
+        ]
+    },
+    {
+        "id": "format_400_error",
+        "type": "function",
+        "z": "tab_ai_integration",
+        "name": "Generar Error 400",
+        "func": "msg.statusCode = 400;\nmsg.payload = {\n    error: \"Bad Request\",\n    message: \"Schema Validation Failed: Los datos enviados no cumplen el formato requerido.\",\n    details: msg.error.message // Aquí Node-RED guarda el detalle del fallo\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 640,
+        "y": 1020,
+        "wires": [
+            [
+                "http_response_error"
+            ]
+        ]
+    },
+    {
+        "id": "http_response_error",
+        "type": "http response",
+        "z": "tab_ai_integration",
+        "name": "Respuesta Error",
+        "statusCode": "",
+        "headers": {},
+        "x": 840,
+        "y": 1020,
         "wires": []
     },
     {
@@ -1503,201 +1523,5 @@
         "x": 1240,
         "y": 640,
         "wires": []
-    },
-    {
-        "id": "0c79f87c814aab65",
-        "type": "inject",
-        "z": "be426f9addef674a",
-        "name": "Iniciar Análisis",
-        "props": [
-            {
-                "p": "payload"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 160,
-        "y": 240,
-        "wires": [
-            [
-                "8d9f8c24fb9afaf2"
-            ]
-        ]
-    },
-    {
-        "id": "8d9f8c24fb9afaf2",
-        "type": "http request",
-        "z": "be426f9addef674a",
-        "name": "GET /clusters",
-        "method": "GET",
-        "ret": "obj",
-        "paytoqs": "ignore",
-        "url": "http://ai-service:8000/api/clusters",
-        "tls": "",
-        "persist": false,
-        "proxy": "",
-        "insecureHTTPParser": false,
-        "authType": "",
-        "senderr": false,
-        "headers": [],
-        "x": 360,
-        "y": 240,
-        "wires": [
-            [
-                "47e27f4074a5b3b9"
-            ]
-        ]
-    },
-    {
-        "id": "47e27f4074a5b3b9",
-        "type": "change",
-        "z": "be426f9addef674a",
-        "name": "Extraer Lista IDs",
-        "rules": [
-            {
-                "t": "set",
-                "p": "payload",
-                "pt": "msg",
-                "to": "payload.clusters",
-                "tot": "msg"
-            }
-        ],
-        "action": "",
-        "property": "",
-        "from": "",
-        "to": "",
-        "reg": false,
-        "x": 570,
-        "y": 240,
-        "wires": [
-            [
-                "dd71eddf2bdbe5e1"
-            ]
-        ]
-    },
-    {
-        "id": "dd71eddf2bdbe5e1",
-        "type": "split",
-        "z": "be426f9addef674a",
-        "name": "Iterar Clústeres",
-        "splt": "\\n",
-        "spltType": "str",
-        "arraySplt": 1,
-        "arraySpltType": "len",
-        "stream": false,
-        "addname": "",
-        "property": "payload",
-        "x": 780,
-        "y": 240,
-        "wires": [
-            [
-                "eed589fd08505511"
-            ]
-        ]
-    },
-    {
-        "id": "f844740d53a33187",
-        "type": "template",
-        "z": "be426f9addef674a",
-        "name": "Construir URL",
-        "field": "url",
-        "fieldType": "msg",
-        "format": "handlebars",
-        "syntax": "mustache",
-        "template": "http://ai-service:8000/api/clusters/{{payload}}",
-        "output": "str",
-        "x": 580,
-        "y": 520,
-        "wires": [
-            [
-                "a212fc4dc33b2e8d"
-            ]
-        ]
-    },
-    {
-        "id": "a212fc4dc33b2e8d",
-        "type": "http request",
-        "z": "be426f9addef674a",
-        "name": "GET Detalle",
-        "method": "GET",
-        "ret": "obj",
-        "paytoqs": false,
-        "url": "",
-        "tls": "",
-        "persist": false,
-        "proxy": "",
-        "insecureHTTPParser": false,
-        "authType": "",
-        "senderr": false,
-        "headers": [],
-        "x": 770,
-        "y": 520,
-        "wires": [
-            [
-                "b80b391f3e2b799c"
-            ]
-        ]
-    },
-    {
-        "id": "b80b391f3e2b799c",
-        "type": "function",
-        "z": "be426f9addef674a",
-        "name": "Analizar Perfil",
-        "func": "var data = msg.payload;\n\n// 1. DETECCIÓN DE ERROR DE API (FastAPI)\nif (data.detail) {\n    // Esto imprimirá el mensaje de error exacto en color naranja en tu pestaña Debug\n    node.warn(\"❌ LA API DEVOLVIÓ UN ERROR: \" + JSON.stringify(data.detail));\n\n    // Devolvemos el error para verlo también en el debug normal\n    msg.payload = { ERROR_CRITICO: data.detail };\n    return msg;\n}\n\n// 2. Extracción normal (si no hay error)\nif (typeof data === 'string') {\n    try { data = JSON.parse(data); } catch (e) { }\n}\n\nvar clusterId = data.cluster_id;\nvar profile = data.profile || {};\nvar topFeatures = profile.top_positive || [];\n\n// 3. Lógica de Etiquetas\nvar tags = [];\ntopFeatures.forEach(f => {\n    var name = (f.feature || \"\").toLowerCase();\n    if (name.includes('disability') || name.includes('mobility')) tags.push('ACCESSIBLE');\n    if (name.includes('elder') || name.includes('age')) tags.push('ELDERLY_CARE');\n    if (name.includes('family') || name.includes('child')) tags.push('FAMILY');\n    if (name.includes('medical') || name.includes('health')) tags.push('MEDICAL');\n    if (name.includes('documentation') || name.includes('legal')) tags.push('LEGAL_SUPPORT');\n});\n\nmsg.payload = {\n    id: clusterId,\n    needs: [...new Set(tags)]\n};\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 960,
-        "y": 520,
-        "wires": [
-            [
-                "1c7ff12fbf8501be"
-            ]
-        ]
-    },
-    {
-        "id": "1c7ff12fbf8501be",
-        "type": "debug",
-        "z": "be426f9addef674a",
-        "name": "Resultados",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1150,
-        "y": 520,
-        "wires": []
-    },
-    {
-        "id": "eed589fd08505511",
-        "type": "function",
-        "z": "be426f9addef674a",
-        "name": "function 1",
-        "func": "// El nodo anterior nos da un item de la lista.\n// A veces es un número simple (6), a veces un objeto ({cluster_id: 6}).\n\nvar item = msg.payload;\n\n// CASO 1: Si ya es un número, todo perfecto.\nif (typeof item === 'number') {\n    return msg;\n}\n\n// CASO 2: Si es un objeto, buscamos el número dentro.\nif (typeof item === 'object') {\n    // Intentamos encontrar la clave correcta (probamos las más habituales)\n    if (item.cluster_id !== undefined) {\n        msg.payload = item.cluster_id;\n    } else if (item.id !== undefined) {\n        msg.payload = item.id;\n    } else {\n        // Si no encontramos el número, avisamos por consola para verlo\n        node.warn(\"⚠️ Recibí un objeto pero no encuentro el ID. Contenido: \" + JSON.stringify(item));\n    }\n}\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 680,
-        "y": 360,
-        "wires": [
-            [
-                "f844740d53a33187"
-            ]
-        ]
     }
 ]

@@ -467,5 +467,24 @@
                 "file": "/data/node_modules/node-red-node-email/61-email.js"
             }
         }
+    },
+    "node-red-contrib-json-schema-validator": {
+        "name": "node-red-contrib-json-schema-validator",
+        "version": "0.0.3",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "json-schema": {
+                "name": "json-schema",
+                "types": [
+                    "json-schema-validator"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-json-schema-validator",
+                "file": "/data/node_modules/node-red-contrib-json-schema-validator/schema.js"
+            }
+        }
     }
 }
