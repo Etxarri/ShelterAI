@@ -193,7 +193,7 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen>
                   TextFormField(
                     controller: _addressCtrl,
                     decoration: const InputDecoration(
-                      labelText: 'Dirección (opcional)',
+                      labelText: 'Direction (optional)',
                       prefixIcon: Icon(Icons.location_on),
                       border: OutlineInputBorder(),
                     ),
@@ -219,7 +219,7 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen>
                   TextFormField(
                     controller: _passwordCtrl,
                     decoration: const InputDecoration(
-                      labelText: 'Contraseña',
+                      labelText: 'Password',
                       prefixIcon: Icon(Icons.lock),
                       border: OutlineInputBorder(),
                     ),
@@ -231,7 +231,7 @@ class _RefugeeRegisterScreenState extends State<RefugeeRegisterScreen>
                   TextFormField(
                     controller: _confirmCtrl,
                     decoration: const InputDecoration(
-                      labelText: 'Confirmar contraseña',
+                      labelText: 'Confirm Password',
                       prefixIcon: Icon(Icons.lock_outline),
                       border: OutlineInputBorder(),
                     ),
