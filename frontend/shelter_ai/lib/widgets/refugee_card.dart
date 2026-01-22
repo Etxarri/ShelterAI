@@ -8,7 +8,13 @@ import 'package:shelter_ai/widgets/custom_snackbar.dart';
 
 class RefugeeCard extends StatelessWidget {
   final Map<String, dynamic> data;
-  const RefugeeCard({super.key, required this.data});
+  final VoidCallback? onAssignmentChanged;
+  
+  const RefugeeCard({
+    super.key, 
+    required this.data,
+    this.onAssignmentChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -264,7 +270,7 @@ class RefugeeCard extends StatelessWidget {
         final refugeeIdInt = int.parse(refugeeId.toString());
 
         // Navigate to the recommendation selection screen
-        Navigator.of(context).push(
+        final result = await Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => RecommendationSelectionScreen(
               recommendationResponse: recommendationResponse,
@@ -272,6 +278,11 @@ class RefugeeCard extends StatelessWidget {
             ),
           ),
         );
+        
+        // If assignment was successful, notify parent to refresh
+        if (result == true && onAssignmentChanged != null) {
+          onAssignmentChanged!();
+        }
       }
     } catch (e) {
       if (!context.mounted) return;

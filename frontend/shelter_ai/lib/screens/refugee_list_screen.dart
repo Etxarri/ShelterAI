@@ -138,7 +138,10 @@ class _RefugeeListScreenState extends State<RefugeeListScreen>
           },
           child: ListView.separated(
             padding: const EdgeInsets.all(8),
-            itemBuilder: (context, index) => RefugeeCard(data: items[index]),
+            itemBuilder: (context, index) => RefugeeCard(
+              data: items[index],
+              onAssignmentChanged: _loadRefugees,
+            ),
             separatorBuilder: (_, __) => const SizedBox(height: 8),
             itemCount: items.length,
           ),

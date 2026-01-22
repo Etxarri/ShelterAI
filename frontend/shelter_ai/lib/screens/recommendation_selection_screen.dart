@@ -377,6 +377,58 @@ class _RecommendationSelectionScreenState
                               ],
                             ),
 
+                            // Motivos específicos de este refugio
+                            if (recommendation.matchingReasons.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              Divider(color: Colors.grey.shade300),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.info_outline,
+                                    size: 16,
+                                    color: Colors.blue.shade700,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Why this shelter?',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.blue.shade900,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              ...recommendation.matchingReasons.map((reason) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 6),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Icon(
+                                        Icons.check_circle,
+                                        color: Colors.green.shade600,
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          reason.replaceFirst('✓ ', ''),
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey.shade800,
+                                            height: 1.3,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                            ],
+
                             // Selection button or loading indicator
                             const SizedBox(height: 8),
                             if (canSelect &&
