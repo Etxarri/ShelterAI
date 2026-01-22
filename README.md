@@ -124,5 +124,5 @@ docker compose down
 docker compose up -d --build
 ```
 
-**For detailed setup instructions, see [docs/backend/QUICK_START.md](docs/backend/QUICK_START.md)**
+**For detailed setup instructions, see [backend/api-service/QUICK_START.md](backend/api-service/QUICK_START.md)**
 
