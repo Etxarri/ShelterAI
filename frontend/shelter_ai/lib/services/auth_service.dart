@@ -158,7 +158,6 @@ class AuthService {
   }
 
   /// Registro para trabajadores
-  /// ✅ IMPORTANTE: usa ApiService.client (así MockClient funciona en tests)
   static Future<LoginResponse> register({
     required String name,
     required String email,

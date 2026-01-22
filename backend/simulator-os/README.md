@@ -1,4 +1,4 @@
-# Simulator OS - Sistema de Gestión Concurrente de Refugios
+# Simulator OS - Concurrent Shelter Management System
 
 [![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://www.oracle.com/java/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.0-green.svg)](https://spring.io/projects/spring-boot)
@@ -7,49 +7,49 @@
 
 ---
 
-## 📋 Descripción General
+## 📋 General Description
 
-**Simulator OS** es un sistema de simulación de **Sistemas Operativos** que implementa la gestión concurrente y distribuida de refugiados en múltiples centros de acogida. Resuelve el problema clásico de **Productor-Consumidor con Prioridades** aplicando sincronización avanzada, paso de mensajes y arquitectura multinúcleo.
+**Simulator OS** is an **Operating Systems** simulation system that implements concurrent and distributed management of refugees in multiple reception centers. It solves the classic **Producer-Consumer with Priorities** problem by applying advanced synchronization, message passing, and multi-core architecture.
 
-### 🎯 Objetivos del Proyecto
+### 🎯 Project Objectives
 
-- **Resolver problema Productor-Consumidor**: Cola global con múltiples productores (clientes TCP) y consumidores (refugios)
-- **Implementar sincronización avanzada**: Uso de primitivas thread-safe (`BlockingQueue`, `Semaphore`, `ConcurrentHashMap`, `AtomicInteger`)
-- **Priorización dinámica**: Atender primero a refugiados con mayor vulnerabilidad sin inanición
-- **Arquitectura escalable**: Capacidad de agregar nuevos refugios sin modificar código
-- **Interfaz distribuida**: Comunicación TCP/Socket para integración con sistemas externos (Node-RED)
+- **Solve Producer-Consumer problem**: Global queue with multiple producers (TCP clients) and consumers (shelters)
+- **Implement advanced synchronization**: Use of thread-safe primitives (`BlockingQueue`, `Semaphore`, `ConcurrentHashMap`, `AtomicInteger`)
+- **Dynamic prioritization**: Attend first to refugees with higher vulnerability without starvation
+- **Scalable architecture**: Ability to add new shelters without modifying code
+- **Distributed interface**: TCP/Socket communication for integration with external systems (Node-RED)
 
 ---
 
-## 🏗️ Arquitectura del Sistema
+## 🏗️ System Architecture
 
-### Diagrama General
+### General Diagram
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                    CLIENTES TCP                              │
-│          (Node-RED, telnet, aplicaciones)                    │
+│                    TCP CLIENTS                               │
+│          (Node-RED, telnet, applications)                    │
 └──────────────────────┬───────────────────────────────────────┘
                        │
                        ▼
         ┌──────────────────────────────┐
-        │   ServerListener (Puerto 9999) │
+        │   ServerListener (Port 9999)   │
         │        TCP Socket Server       │
         └──────────────┬─────────────────┘
                        │
                        ▼
         ┌──────────────────────────────┐
         │   ClientHandler (Per Connection)│
-        │  - Procesa comandos          │
-        │  - Comunica con Manager      │
+        │  - Process commands          │
+        │  - Communicates with Manager │
         └──────────────┬─────────────────┘
                        │
                        ▼
         ┌──────────────────────────────┐
         │    ShelterManager            │
-        │  - Orquestador Central       │
-        │  - Gestiona refugios         │
-        │  - Coordina cola global      │
+        │  - Central Orchestrator      │
+        │  - Manages shelters          │
+        │  - Coordinates global queue  │
         └──────────────┬─────────────────┘
                        │
         ┌──────────────┴──────────────┐
@@ -57,7 +57,7 @@
         ▼                             ▼
    ┌─────────────┐           ┌─────────────┐
    │  Shelter    │           │  Shelter    │
-   │  "Norte"    │           │  "Sur"      │
+   │  "North"    │           │  "South"    │
    │ (Cap: 3)    │           │ (Cap: 3)    │
    │ [Thread]    │           │ [Thread]    │
    └─────────────┘           └─────────────┘
@@ -68,32 +68,32 @@
     ┌──────────────────────────────────────┐
     │  BlockingQueue<Refugee> Global       │
     │  (PriorityBlockingQueue)             │
-    │  - Ordenada por prioridad + FIFO     │
+    │  - Sorted by priority + FIFO         │
     │  - Thread-Safe                       │
-    │  - Bloquea si no hay elementos       │
+    │  - Blocks if no elements             │
     └──────────────────────────────────────┘
 ```
 
-### Flujo de Procesamiento
+### Processing Flow
 
 ```
-1. LLEGADA          2. ENCOLAMIENTO         3. ASIGNACIÓN
-   (TCP)         (Cola Global Ordenada)   (Semaphore)
+1. ARRIVAL          2. ENQUEUING            3. ASSIGNMENT
+   (TCP)         (Sorted Global Queue)    (Semaphore)
       │                   │                    │
       └──→ ClientHandler──→ globalQueue ←──── Shelter
                                 │
                                 ▼
-                           4. PROCESAMIENTO
-                          (Thread Separado)
+                           4. PROCESSING
+                          (Separate Thread)
                                 │
                                 ▼
-                           5. LIBERACIÓN
+                           5. RELEASE
                          (Release Semaphore)
 ```
 
 ---
 
-## 📁 Estructura del Proyecto
+## 📁 Project Structure
 
 ```
 simulator-os/
@@ -101,25 +101,25 @@ simulator-os/
 │   ├── main/
 │   │   ├── java/com/shelterai/simulator_os/
 │   │   │   ├── SimulatorOsApplication.java
-│   │   │   │   └─ Entrada Spring Boot + Servidor
+│   │   │   │   └─ Spring Boot entry + Server
 │   │   │   │
 │   │   │   ├── core/
 │   │   │   │   ├── ShelterManager.java
-│   │   │   │   │   └─ Orquestador central de refugios
+│   │   │   │   │   └─ Central shelter orchestrator
 │   │   │   │   └── Shelter.java
-│   │   │   │       └─ Lógica de procesamiento (Runnable)
+│   │   │   │       └─ Processing logic (Runnable)
 │   │   │   │
 │   │   │   ├── model/
 │   │   │   │   ├── Refugee.java
-│   │   │   │   │   └─ Entidad: refugiado (Comparable)
+│   │   │   │   │   └─ Entity: refugee (Comparable)
 │   │   │   │   └── PriorityLevel.java
-│   │   │   │       └─ Enum: BAJO, MEDIO, ALTO, CRITICO
+│   │   │   │       └─ Enum: LOW, MEDIUM, HIGH, CRITICAL
 │   │   │   │
 │   │   │   └── network/
 │   │   │       ├── ServerListener.java
-│   │   │       │   └─ Servidor TCP (Puerto 9999)
+│   │   │       │   └─ TCP Server (Port 9999)
 │   │   │       └── ClientHandler.java
-│   │   │           └─ Handler por cliente (Runnable)
+│   │   │           └─ Handler per client (Runnable)
 │   │   │
 │   │   └── resources/
 │   │       └── application.properties
@@ -127,64 +127,64 @@ simulator-os/
 │   └── test/
 │       └── java/.../SimulatorOsApplicationTests.java
 │
-├── pom.xml                    # Dependencias Maven
+├── pom.xml                    # Maven Dependencies
 ├── mvnw / mvnw.cmd           # Maven Wrapper
 ├── compose.yaml              # Docker Compose (Node-RED)
-└── README.md                 # Esta documentación
+└── README.md                 # This documentation
 ```
 
 ---
 
-## 🔑 Componentes Principales
+## 🔑 Main Components
 
-### 1. `SimulatorOsApplication.java` - Punto de Entrada
+### 1. `SimulatorOsApplication.java` - Entry Point
 
-**Rol**: Inicializa Spring Boot e inicia el servidor TCP.
+**Role**: Initializes Spring Boot and starts the TCP server.
 
 ```java
 @SpringBootApplication
 public class SimulatorOsApplication implements CommandLineRunner {
     
     public void run(String... args) throws Exception {
-        System.out.println("--- INICIANDO SISTEMA DE REFUGIOS (OS PROJECT) ---");
+        System.out.println("--- STARTING SHELTER SYSTEM (OS PROJECT) ---");
         ServerListener server = new ServerListener(9999);
         server.start();
     }
 }
 ```
 
-**Responsabilidades**:
-- Inicialización de Spring Boot
-- Arranque del servidor TCP en puerto 9999
-- Ejecución automática al iniciar la aplicación
+**Responsibilities**:
+- Spring Boot initialization
+- TCP server startup on port 9999
+- Automatic execution on application start
 
 ---
 
-### 2. `ShelterManager.java` - Orquestador Central
+### 2. `ShelterManager.java` - Central Orchestrator
 
-**Rol**: Coordina el sistema completo.
+**Role**: Coordinates the complete system.
 
-#### Arquitectura Interna
+#### Internal Architecture
 
 ```java
 public class ShelterManager {
     
-    // Cola Global Compartida (Thread-Safe)
+    // Shared Global Queue (Thread-Safe)
     private final BlockingQueue<Refugee> globalQueue = new PriorityBlockingQueue<>();
     
-    // Registro de Refugios (Thread-Safe)
+    // Shelter Registry (Thread-Safe)
     private final Map<String, Shelter> shelters = new ConcurrentHashMap<>();
 }
 ```
 
-#### Métodos Principales
+#### Main Methods
 
-| Método | Parámetros | Descripción |
+| Method | Parameters | Description |
 |--------|------------|-------------|
-| `addRefugeeToGlobalQueue()` | `Refugee` | Añade refugiado a la cola global ordenada |
-| `createShelter()` | `id`, `capacity` | Crea un nuevo refugio y lo arranca |
-| `updateCapacity()` | `shelterId`, `capacity` | Modifica dinámicamente la capacidad |
-| `getAllStatuses()` | - | Retorna JSON con estado del sistema |
+| `addRefugeeToGlobalQueue()` | `Refugee` | Adds refugee to sorted global queue |
+| `createShelter()` | `id`, `capacity` | Creates a new shelter and starts it |
+| `updateCapacity()` | `shelterId`, `capacity` | Dynamically modifies capacity |
+| `getAllStatuses()` | - | Returns JSON with system status |
 
 #### Thread Safety
 

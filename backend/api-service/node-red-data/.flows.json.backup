@@ -1185,8 +1185,8 @@
             "f7d9550979f67a08"
         ],
         "uncaught": false,
-        "x": 400,
-        "y": 1020,
+        "x": 230,
+        "y": 920,
         "wires": [
             [
                 "format_400_error"
@@ -1205,8 +1205,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 640,
-        "y": 1020,
+        "x": 470,
+        "y": 920,
         "wires": [
             [
                 "http_response_error"
@@ -1220,8 +1220,8 @@
         "name": "Respuesta Error",
         "statusCode": "",
         "headers": {},
-        "x": 840,
-        "y": 1020,
+        "x": 670,
+        "y": 920,
         "wires": []
     },
     {

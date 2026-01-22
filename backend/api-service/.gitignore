@@ -40,10 +40,10 @@ node_modules/
 # --- Ignorar basura de Node-RED pero guardar los flujos ---
 # --- IMPORTANTE: No subir librerías
 node-red-data/node_modules/  
-# Configuración local de runtime, mejor ignorar
+# Local runtime configuration, better to ignore
 node-red-data/.config.json   
 # node-red-data/flows_cred.json # (Opcional: Descomenta si queréis compartir contraseñas cifradas, para clase suele ser mejor subirlo)
 
-# --- Ignorar datos de base de datos ---
+# --- Ignore database data ---
 # --- IMPORTANTE: Nunca subir la BBDD real a Git
 postgres-data/               
