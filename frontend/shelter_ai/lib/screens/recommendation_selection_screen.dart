@@ -177,6 +177,69 @@ class _RecommendationSelectionScreenState
               ),
               const SizedBox(height: 16),
 
+              // Razones de recomendación generales
+              if (recommendations.isNotEmpty && recommendations.first.matchingReasons.isNotEmpty)
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.green.shade200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.tips_and_updates,
+                            color: Colors.green.shade700,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Reasons for the recommendation',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green.shade900,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      ...recommendations.first.matchingReasons.map((reason) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.check_circle,
+                                color: Colors.green.shade700,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  reason.replaceFirst('✓ ', ''),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade800,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 8),
+
               // Message if no recommendations
               if (recommendations.isEmpty)
                 Padding(
@@ -294,129 +357,21 @@ class _RecommendationSelectionScreenState
 
                             const SizedBox(height: 12),
 
-                            // Compatibility score
+                            // Espacio disponible
                             Row(
                               children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Compatibility',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey.shade600,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              child: LinearProgressIndicator(
-                                                value: recommendation
-                                                        .compatibilityScore /
-                                                    100,
-                                                minHeight: 6,
-                                                backgroundColor:
-                                                    Colors.grey.shade300,
-                                                valueColor:
-                                                    AlwaysStoppedAnimation<
-                                                        Color>(
-                                                  _getScoreColor(recommendation
-                                                      .compatibilityScore),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            '${recommendation.compatibilityScore.toStringAsFixed(1)}%',
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.bold,
-                                              color: _getScoreColor(
-                                                recommendation
-                                                    .compatibilityScore,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 12),
-
-                            // Capacity and facilities
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _buildInfoChip(
-                                    icon: Icons.group,
-                                    label: 'Available',
-                                    value: '${recommendation.availableSpace}',
-                                  ),
+                                Icon(
+                                  Icons.people,
+                                  size: 18,
+                                  color: Colors.grey.shade600,
                                 ),
                                 const SizedBox(width: 8),
-                                Expanded(
-                                  child: _buildInfoChip(
-                                    icon: Icons.medical_services,
-                                    label: 'Medical',
-                                    value: recommendation.hasMedicalFacilities
-                                        ? '✓'
-                                        : '✗',
-                                    valueColor:
-                                        recommendation.hasMedicalFacilities
-                                            ? Colors.green
-                                            : Colors.grey,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: _buildInfoChip(
-                                    icon: Icons.accessibility,
-                                    label: 'Accessible',
-                                    value: recommendation.hasDisabilityAccess
-                                        ? '✓'
-                                        : '✗',
-                                    valueColor: recommendation.hasDisabilityAccess
-                                        ? Colors.green
-                                        : Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 12),
-
-                            // Explanation (expandable)
-                            ExpansionTile(
-                              title: const Text(
-                                'Why this shelter is recommended',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              childrenPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              children: [
                                 Text(
-                                  recommendation.explanation,
+                                  'Available space: ${recommendation.availableSpace} people',
                                   style: TextStyle(
-                                    fontSize: 13,
+                                    fontSize: 14,
                                     color: Colors.grey.shade700,
-                                    height: 1.5,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ],

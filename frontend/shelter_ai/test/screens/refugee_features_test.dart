@@ -104,6 +104,7 @@ void main() {
               hasMedicalFacilities: true,
               hasDisabilityAccess: true,
               explanation: "Good fit",
+              matchingReasons: ["Space available"],
             ),
           ],
         );

@@ -7,6 +7,7 @@ class Recommendation {
   final bool hasMedicalFacilities;
   final bool hasDisabilityAccess;
   final String explanation;
+  final List<String> matchingReasons;
 
   Recommendation({
     required this.shelterId,
@@ -17,9 +18,17 @@ class Recommendation {
     required this.hasMedicalFacilities,
     required this.hasDisabilityAccess,
     required this.explanation,
+    required this.matchingReasons,
   });
 
   factory Recommendation.fromJson(Map<String, dynamic> json) {
+    var reasons = <String>[];
+    if (json['matching_reasons'] != null) {
+      reasons = (json['matching_reasons'] as List)
+          .map((r) => r.toString())
+          .toList();
+    }
+
     return Recommendation(
       shelterId: _parseInt(json['shelter_id']) ?? 0,
       shelterName: json['shelter_name']?.toString() ?? '',
@@ -29,6 +38,7 @@ class Recommendation {
       hasMedicalFacilities: json['has_medical_facilities'] == true || json['has_medical_facilities'] == 'true',
       hasDisabilityAccess: json['has_disability_access'] == true || json['has_disability_access'] == 'true',
       explanation: json['explanation']?.toString() ?? 'Refugio recomendado',
+      matchingReasons: reasons,
     );
   }
 

@@ -21,7 +21,8 @@ void main() {
             'available_space': 50,
             'has_medical_facilities': false,
             'has_disability_access': false,
-            'explanation': 'Asignación por disponibilidad general'
+            'explanation': 'Asignación por disponibilidad general',
+            'matching_reasons': ['✓ Refugio general con disponibilidad']
           },
           {
             'shelter_id': 2,
@@ -31,7 +32,8 @@ void main() {
             'available_space': 10,
             'has_medical_facilities': true,
             'has_disability_access': true,
-            'explanation': 'Asignación por disponibilidad general'
+            'explanation': 'Asignación por disponibilidad general',
+            'matching_reasons': ['✓ Cuenta con instalaciones médicas', '✓ Tiene accesibilidad para personas con discapacidad']
           }
         ]
       };
@@ -46,6 +48,8 @@ void main() {
       expect(response.recommendations.length, 2);
       expect(response.recommendations.first.shelterName, 'Refugio Central Madrid');
       expect(response.recommendations.first.compatibilityScore, 95);
+      expect(response.recommendations.first.matchingReasons.length, 1);
+      expect(response.recommendations[1].matchingReasons.length, 2);
     });
 
     test('Maneja valores nulos y aplica defaults correctamente', () {
@@ -102,7 +106,8 @@ void main() {
         'available_space': 45,
         'has_medical_facilities': true,
         'has_disability_access': false,
-        'explanation': 'Perfect match'
+        'explanation': 'Perfect match',
+        'matching_reasons': ['Reason 1', 'Reason 2']
       };
 
       final rec = Recommendation.fromJson(json);
@@ -115,6 +120,8 @@ void main() {
       expect(rec.hasMedicalFacilities, true);
       expect(rec.hasDisabilityAccess, false);
       expect(rec.explanation, 'Perfect match');
+      expect(rec.matchingReasons.length, 2);
+      expect(rec.matchingReasons.first, 'Reason 1');
     });
     
     test('Maneja valores nulos con defaults', () {
@@ -127,6 +134,7 @@ void main() {
         'has_medical_facilities': null,
         'has_disability_access': null,
         'explanation': null,
+        'matching_reasons': null,
       };
       
       final rec = Recommendation.fromJson(json);
@@ -139,6 +147,7 @@ void main() {
       expect(rec.hasMedicalFacilities, false);
       expect(rec.hasDisabilityAccess, false);
       expect(rec.explanation, 'Refugio recomendado');
+      expect(rec.matchingReasons, isEmpty);
     });
   });
 }
